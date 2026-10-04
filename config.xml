@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" 
+        xmlns:tizen="http://tizen.org/ns/widgets" 
+        id="http://vionplayer.app/tizen" 
+        version="1.0.0" 
+        viewmodes="maximized">
+    <tizen:application id="vionplayer.VionPlayer" package="vionplayer" exec="index.html" screen-orientation="landscape"/>
+    <content src="index.html"/>
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <feature name="http://tizen.org/feature/network.internet"/>
+    <icon src="icon.png"/>
+    <name>Vion Player</name>
+    <description>Vion Player is a fast, modern media player designed for Smart TVs to stream personal M3U playlists.</description>
+    <tizen:profile name="tv"/>
+    
+    <!-- Permissões obrigatórias para reprodução de vídeo e controle remoto no Tizen -->
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/network.public"/>
+    <tizen:setting screen-orientation="landscape" background-support="disable" context-menu="enable" auto-restart="disable"/>
+</widget>

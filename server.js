@@ -1,0 +1,816 @@
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const PORT = process.env.PORT || 3000;
+const ROOT_PLAYER = __dirname;
+let ROOT_PORTAL = path.join(__dirname, 'vion-portal');
+if (!fs.existsSync(ROOT_PORTAL)) {
+  ROOT_PORTAL = path.join(__dirname, '..', 'vion-portal');
+}
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+const DATA_FILE = path.join(DATA_DIR, 'devices.json');
+const DATA_PARTNERSHIPS = path.join(DATA_DIR, 'partnerships.json');
+const DATA_RESELLERS = path.join(DATA_DIR, 'resellers.json');
+
+// Garante que o arquivo de dados de dispositivos exista
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify({}, null, 2), 'utf8');
+}
+
+// Inicializa códigos de parceria com o código padrão TOURO
+if (!fs.existsSync(DATA_PARTNERSHIPS)) {
+  const initialPartnerships = [
+    {
+      id: 'code_touro',
+      code: 'TOURO',
+      name: 'Projeto Touro',
+      server: 'http://projetotourov2.pro',
+      active: true,
+      createdAt: Date.now()
+    }
+  ];
+  fs.writeFileSync(DATA_PARTNERSHIPS, JSON.stringify(initialPartnerships, null, 2), 'utf8');
+}
+
+// Inicializa revendedores com a conta do Administrador Geral
+if (!fs.existsSync(DATA_RESELLERS)) {
+  const initialResellers = {
+    'joaovitordc1010@gmail.com': {
+      id: 'reseller_master',
+      email: 'joaovitordc1010@gmail.com',
+      password: 'admin',
+      company: 'Vion Player Master',
+      firstName: 'João',
+      lastName: 'Vitor',
+      country: 'Brasil',
+      address: 'Administração Geral',
+      phone: '+55 11 99999-9999',
+      partnerTypes: ['reseller', 'reference'],
+      credits: 9999,
+      activations: [],
+      creditHistory: [
+        { id: 'h1', type: 'initial', amount: 9999, desc: 'Créditos Iniciais de Administrador', date: Date.now() }
+      ],
+      links: [
+        { id: 'l1', name: 'Link Oficial de Parceria', code: 'VION-JV', clicks: 28, activations: 5, url: 'http://192.168.1.197:3000/portal#reseller?ref=VION-JV' }
+      ],
+      subs: [
+        { id: 's1', name: 'Sub-revenda São Paulo', email: 'sp@vionplayer.app', credits: 50, active: true, date: Date.now() }
+      ],
+      withdrawals: [],
+      earnings: 850.00,
+      role: 'master_admin',
+      createdAt: Date.now()
+    }
+  };
+  fs.writeFileSync(DATA_RESELLERS, JSON.stringify(initialResellers, null, 2), 'utf8');
+}
+
+function loadDevices() {
+  try {
+    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    return JSON.parse(raw || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveDevices(data) {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Erro ao salvar dados de dispositivos:', e);
+  }
+}
+
+function loadPartnerships() {
+  try {
+    const raw = fs.readFileSync(DATA_PARTNERSHIPS, 'utf8');
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function savePartnerships(data) {
+  try {
+    fs.writeFileSync(DATA_PARTNERSHIPS, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Erro ao salvar códigos de parceria:', e);
+  }
+}
+
+function loadResellers() {
+  try {
+    const raw = fs.readFileSync(DATA_RESELLERS, 'utf8');
+    return JSON.parse(raw || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveResellers(data) {
+  try {
+    fs.writeFileSync(DATA_RESELLERS, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Erro ao salvar revendedores:', e);
+  }
+}
+
+const MIME_TYPES = {
+  '.html': 'text/html; charset=UTF-8',
+  '.css': 'text/css; charset=UTF-8',
+  '.js': 'application/javascript; charset=UTF-8',
+  '.json': 'application/json; charset=UTF-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.m3u': 'text/plain; charset=UTF-8',
+  '.m3u8': 'application/vnd.apple.mpegurl',
+  '.apk': 'application/vnd.android.package-archive'
+};
+
+const server = http.createServer((req, res) => {
+  // CORS universal
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, *');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const pathname = decodeURI(urlObj.pathname);
+
+  // ===================================================================
+  // 1a. ENDPOINTS DE API PARA CÓDIGOS DE PARCERIA (/api/partnerships)
+  // ===================================================================
+  if (pathname === '/api/partnerships' || pathname.startsWith('/api/partnerships/')) {
+    if (req.method === 'GET') {
+      const partnerships = loadPartnerships();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ success: true, partnerships }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+
+          // Validação Estrita: Apenas joaovitordc1010@gmail.com tem privilégio de alterar parcerias
+          const adminHeader = (req.headers['x-admin-email'] || '').trim().toLowerCase();
+          const adminBody = (payload.adminEmail || '').trim().toLowerCase();
+          const authorizedAdmin = 'joaovitordc1010@gmail.com';
+
+          if (adminHeader !== authorizedAdmin && adminBody !== authorizedAdmin) {
+            console.warn(`[API] Acesso não autorizado a parcerias por: ${adminHeader || adminBody || 'desconhecido'}`);
+            res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
+            res.end(JSON.stringify({
+              success: false,
+              error: 'Acesso negado: Apenas o Administrador Geral (joaovitordc1010@gmail.com) tem permissão para gerenciar Códigos de Parceria.'
+            }));
+            return;
+          }
+
+          let partnerships = loadPartnerships();
+          const action = payload.action || 'save_all';
+
+          if (action === 'create') {
+            const rawCode = (payload.code || '').trim().toUpperCase().replace(/\s+/g, '');
+            let serverUrl = (payload.server || '').trim().replace(/\/+$/, '');
+            const name = (payload.name || '').trim() || rawCode;
+
+            if (!rawCode || !serverUrl) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Código e servidor são obrigatórios' }));
+              return;
+            }
+
+            if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://') && serverUrl.toLowerCase() !== 'demo') {
+              serverUrl = 'http://' + serverUrl;
+            }
+
+            const existingIdx = partnerships.findIndex(p => (p.code || '').toUpperCase() === rawCode);
+            if (existingIdx >= 0) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Código já cadastrado' }));
+              return;
+            }
+
+            partnerships.unshift({
+              id: 'code_' + Date.now(),
+              code: rawCode,
+              name,
+              server: serverUrl,
+              active: true,
+              createdAt: Date.now()
+            });
+
+            savePartnerships(partnerships);
+            console.log(`[API] Código de parceria "${rawCode}" criado: ${serverUrl}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, partnerships }));
+            return;
+          }
+
+          if (action === 'toggle') {
+            const id = payload.id || payload.code;
+            const item = partnerships.find(p => p.id === id || p.code === id);
+            if (item) {
+              item.active = !item.active;
+              savePartnerships(partnerships);
+              console.log(`[API] Código de parceria "${item.code}" status alterado para: ${item.active ? 'ATIVO' : 'DESATIVADO'}`);
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, partnerships }));
+            return;
+          }
+
+          if (action === 'delete') {
+            const id = payload.id || payload.code;
+            const item = partnerships.find(p => p.id === id || p.code === id);
+            const codeName = item ? item.code : id;
+            partnerships = partnerships.filter(p => p.id !== id && p.code !== id);
+            savePartnerships(partnerships);
+            console.log(`[API] Código de parceria "${codeName}" excluído`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, partnerships }));
+            return;
+          }
+
+          if (action === 'save_all' && Array.isArray(payload.partnerships)) {
+            partnerships = payload.partnerships;
+            savePartnerships(partnerships);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, partnerships }));
+            return;
+          }
+
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Ação inválida' }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // ===================================================================
+  // 1b. ENDPOINTS DE API DO REVENDEDOR (/api/reseller/*)
+  // ===================================================================
+  if (pathname.startsWith('/api/reseller')) {
+    // 1. Obter Perfil e Dados do Revendedor
+    if (pathname === '/api/reseller/profile' || pathname === '/api/reseller/data') {
+      const email = (urlObj.searchParams.get('email') || '').trim().toLowerCase();
+      const resellers = loadResellers();
+      const reseller = resellers[email];
+
+      if (!reseller) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ success: false, error: 'Revendedor não encontrado' }));
+        return;
+      }
+
+      const safeReseller = { ...reseller };
+      delete safeReseller.password;
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const resellers = loadResellers();
+
+          // 2. Registro de Novo Revendedor / Parceiro (Etapas 1 e 2)
+          if (pathname === '/api/reseller/register') {
+            const email = (payload.email || '').trim().toLowerCase();
+            const password = (payload.password || '').trim();
+            const company = (payload.company || '').trim();
+            const firstName = (payload.firstName || '').trim();
+            const lastName = (payload.lastName || '').trim();
+            const country = (payload.country || 'Brasil').trim();
+            const address = (payload.address || '').trim();
+            const phone = (payload.phone || '').trim();
+            const partnerTypes = Array.isArray(payload.partnerTypes) ? payload.partnerTypes : ['reseller'];
+
+            if (!email || !password || !firstName) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Campos obrigatórios ausentes.' }));
+              return;
+            }
+
+            if (resellers[email]) {
+              res.writeHead(409, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Este e-mail já está cadastrado como parceiro. Por favor, faça login.' }));
+              return;
+            }
+
+            const isMaster = (email === 'joaovitordc1010@gmail.com');
+            const cleanCode = (firstName + Math.floor(100 + Math.random() * 900)).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const newReseller = {
+              id: 'reseller_' + Date.now(),
+              email,
+              password,
+              company: company || (firstName + ' ' + lastName),
+              firstName,
+              lastName,
+              country,
+              address,
+              phone,
+              partnerTypes,
+              credits: isMaster ? 9999 : 10,
+              activations: [],
+              creditHistory: [
+                {
+                  id: 'h_' + Date.now(),
+                  type: 'bonus',
+                  amount: isMaster ? 9999 : 10,
+                  desc: 'Bônus de Boas-Vindas de Cadastro',
+                  date: Date.now()
+                }
+              ],
+              links: [
+                {
+                  id: 'l_' + Date.now(),
+                  name: 'Link Principal de Divulgação',
+                  code: cleanCode,
+                  clicks: 0,
+                  activations: 0,
+                  url: `http://${req.headers.host || 'localhost:3000'}/portal#reseller?ref=${cleanCode}`
+                }
+              ],
+              subs: [],
+              withdrawals: [],
+              earnings: 0.00,
+              role: isMaster ? 'master_admin' : 'reseller',
+              createdAt: Date.now()
+            };
+
+            resellers[email] = newReseller;
+            saveResellers(resellers);
+            console.log(`[Reseller API] Novo parceiro registrado: ${email} (${company})`);
+
+            const safeReseller = { ...newReseller };
+            delete safeReseller.password;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+            return;
+          }
+
+          // 3. Login de Revendedor
+          if (pathname === '/api/reseller/login') {
+            const user = (payload.username || payload.email || '').trim().toLowerCase();
+            const pass = (payload.password || '').trim();
+
+            if (!user || !pass) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Informe usuário e senha.' }));
+              return;
+            }
+
+            // Administrador Geral
+            if (user === 'joaovitordc1010@gmail.com') {
+              let master = resellers[user];
+              if (!master) {
+                master = {
+                  id: 'reseller_master',
+                  email: user,
+                  password: pass,
+                  company: 'Vion Player Master',
+                  firstName: 'João',
+                  lastName: 'Vitor',
+                  country: 'Brasil',
+                  address: 'Admin Master',
+                  phone: '+55 11 99999-9999',
+                  partnerTypes: ['reseller', 'reference'],
+                  credits: 9999,
+                  activations: [],
+                  creditHistory: [{ id: 'h1', type: 'initial', amount: 9999, desc: 'Créditos Iniciais Master', date: Date.now() }],
+                  links: [{ id: 'l1', name: 'Link Oficial', code: 'VION-JV', clicks: 28, activations: 5, url: `http://${req.headers.host || 'localhost:3000'}/portal#ref=VION-JV` }],
+                  subs: [],
+                  withdrawals: [],
+                  earnings: 850.00,
+                  role: 'master_admin',
+                  createdAt: Date.now()
+                };
+                resellers[user] = master;
+                saveResellers(resellers);
+              }
+              const safeMaster = { ...master };
+              delete safeMaster.password;
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, reseller: safeMaster, isMaster: true }));
+              return;
+            }
+
+            // Revendedor cadastrado
+            const existing = resellers[user];
+            if (!existing || existing.password !== pass) {
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'E-mail ou senha incorretos.' }));
+              return;
+            }
+
+            const safeReseller = { ...existing };
+            delete safeReseller.password;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, reseller: safeReseller, isMaster: existing.role === 'master_admin' }));
+            return;
+          }
+
+          // 4. Comprar Créditos Diretamente no Painel
+          if (pathname === '/api/reseller/buy-credits') {
+            const email = (payload.email || '').trim().toLowerCase();
+            const amount = parseInt(payload.amount, 10);
+            const method = payload.method || 'PIX Instantâneo';
+
+            if (!email || !amount || amount <= 0) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Quantidade de créditos inválida.' }));
+              return;
+            }
+
+            const reseller = resellers[email];
+            if (!reseller) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Revendedor não encontrado.' }));
+              return;
+            }
+
+            reseller.credits = (reseller.credits || 0) + amount;
+            if (!Array.isArray(reseller.creditHistory)) reseller.creditHistory = [];
+            reseller.creditHistory.unshift({
+              id: 'buy_' + Date.now(),
+              type: 'purchase',
+              amount: amount,
+              desc: `Compra de ${amount} créditos via ${method}`,
+              date: Date.now()
+            });
+
+            saveResellers(resellers);
+            console.log(`[Reseller API] Créditos adicionados: +${amount} para ${email}. Novo saldo: ${reseller.credits}`);
+
+            const safeReseller = { ...reseller };
+            delete safeReseller.password;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+            return;
+          }
+
+          // 5. Ativar Dispositivo
+          if (pathname === '/api/reseller/activate-device') {
+            const email = (payload.email || '').trim().toLowerCase();
+            const mac = (payload.mac || '').trim().toUpperCase();
+            const plan = payload.plan || '1year';
+            const cost = plan === 'lifetime' ? 2 : 1;
+            const comment = (payload.comment || 'Ativação via Revendedor').trim();
+
+            const reseller = resellers[email];
+            if (!reseller) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Revendedor não encontrado.' }));
+              return;
+            }
+
+            if ((reseller.credits || 0) < cost) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: `Saldo insuficiente. Necessário ${cost} crédito(s).` }));
+              return;
+            }
+
+            // Deduz créditos
+            reseller.credits -= cost;
+            const newAct = {
+              id: 'act_' + Date.now(),
+              mac,
+              comment,
+              plan,
+              cost,
+              date: Date.now(),
+              expiresAt: plan === 'lifetime' ? null : Date.now() + 365 * 24 * 60 * 60 * 1000,
+              status: 'Ativo'
+            };
+
+            if (!Array.isArray(reseller.activations)) reseller.activations = [];
+            reseller.activations.unshift(newAct);
+
+            if (!Array.isArray(reseller.creditHistory)) reseller.creditHistory = [];
+            reseller.creditHistory.unshift({
+              id: 'use_' + Date.now(),
+              type: 'activation',
+              amount: -cost,
+              desc: `Ativação do dispositivo MAC ${mac} (${plan === 'lifetime' ? 'Vitalícia' : '1 Ano'})`,
+              date: Date.now()
+            });
+
+            // Registra dispositivo no devices.json se não existir
+            const devices = loadDevices();
+            if (!devices[mac]) {
+              const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+              devices[mac] = { mac, key: fallbackKey, playlists: [], activated: true, expiresAt: newAct.expiresAt };
+            } else {
+              devices[mac].activated = true;
+              devices[mac].expiresAt = newAct.expiresAt;
+            }
+            saveDevices(devices);
+            saveResellers(resellers);
+
+            const safeReseller = { ...reseller };
+            delete safeReseller.password;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+            return;
+          }
+
+          // 6. Solicitar Retirada / Saque
+          if (pathname === '/api/reseller/withdraw') {
+            const email = (payload.email || '').trim().toLowerCase();
+            const amount = parseFloat(payload.amount);
+            const pixKey = (payload.pixKey || '').trim();
+            const pixType = (payload.pixType || 'CPF').trim();
+
+            const reseller = resellers[email];
+            if (!reseller) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Revendedor não encontrado.' }));
+              return;
+            }
+
+            if (!amount || amount <= 0 || amount > (reseller.earnings || 0)) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Valor de retirada inválido ou saldo insuficiente.' }));
+              return;
+            }
+
+            reseller.earnings -= amount;
+            if (!Array.isArray(reseller.withdrawals)) reseller.withdrawals = [];
+            reseller.withdrawals.unshift({
+              id: 'with_' + Date.now(),
+              amount,
+              pixKey,
+              pixType,
+              status: 'Pendente',
+              date: Date.now()
+            });
+
+            saveResellers(resellers);
+            const safeReseller = { ...reseller };
+            delete safeReseller.password;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+            return;
+          }
+
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Ação não reconhecida.' }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // ===================================================================
+  // 1c. ENDPOINTS DE API PARA SINCRONIZAÇÃO PORTAL <-> TV / APP
+  // ===================================================================
+  if (pathname.startsWith('/api/device')) {
+    if (req.method === 'GET') {
+      const mac = (urlObj.searchParams.get('mac') || '').toUpperCase().trim();
+      const devices = loadDevices();
+      const device = devices[mac];
+
+      if (!device) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ success: false, error: 'Dispositivo não encontrado' }));
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ success: true, device, playlists: device.playlists || [] }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const mac = (payload.mac || '').toUpperCase().trim();
+          const key = (payload.key || '').toString().trim();
+
+          if (!mac) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'MAC Address obrigatório' }));
+            return;
+          }
+
+          const devices = loadDevices();
+
+          // 1. Registro automático disparado pelo App (TV / Celular / Web)
+          if (pathname === '/api/device/register') {
+            if (!devices[mac]) {
+              const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+              devices[mac] = { mac, key: key || fallbackKey, playlists: [] };
+            } else if (key) {
+              devices[mac].key = key;
+            }
+            saveDevices(devices);
+            console.log(`[API] Dispositivo registrado/atualizado: MAC ${mac} | KEY ${devices[mac].key}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, device: devices[mac] }));
+            return;
+          }
+
+          // 2. Validação estrita de Login do Portal (apenas MAC e Key existentes)
+          if (pathname === '/api/device/validate' || pathname === '/api/device/login') {
+            const existing = devices[mac];
+            if (!existing) {
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                success: false,
+                error: 'Dispositivo não encontrado no sistema. Abra o Vion Player na sua TV ou celular primeiro para inicializar este MAC.'
+              }));
+              return;
+            }
+
+            if (existing.key && existing.key !== key) {
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                success: false,
+                error: 'Device Key incorreta! Verifique os 4 a 6 dígitos exibidos na tela do seu aplicativo.'
+              }));
+              return;
+            }
+
+            // Se o aparelho estava sem chave gravada, associa a chave informada
+            if (!existing.key && key) {
+              existing.key = key;
+              saveDevices(devices);
+            }
+
+            console.log(`[Portal Login] Acesso AUTORIZADO para MAC: ${mac}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              device: existing,
+              playlists: existing.playlists || []
+            }));
+            return;
+          }
+
+          // Para gerenciar playlists, o dispositivo deve existir
+          if (!devices[mac]) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Dispositivo não autorizado ou inexistente' }));
+            return;
+          }
+
+          if (pathname === '/api/device/playlist') {
+            const playlist = payload.playlist;
+            if (!playlist || !playlist.url) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Playlist inválida' }));
+              return;
+            }
+
+            const existingIdx = devices[mac].playlists.findIndex(p => p.id === playlist.id);
+            if (existingIdx !== -1) {
+              devices[mac].playlists[existingIdx] = playlist;
+            } else {
+              devices[mac].playlists.push(playlist);
+            }
+            saveDevices(devices);
+
+            console.log(`[API] Playlist adicionada para MAC ${mac}: ${playlist.name}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, playlists: devices[mac].playlists }));
+            return;
+          }
+
+          if (pathname === '/api/device/delete-playlist') {
+            const id = payload.id;
+            devices[mac].playlists = devices[mac].playlists.filter(p => p.id !== id);
+            saveDevices(devices);
+
+            console.log(`[API] Playlist ${id} removida para MAC ${mac}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, playlists: devices[mac].playlists }));
+            return;
+          }
+
+          if (pathname === '/api/device/clear') {
+            devices[mac].playlists = [];
+            saveDevices(devices);
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, playlists: [] }));
+            return;
+          }
+
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Ação não encontrada' }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // ===================================================================
+  // 2. SERVIR ARQUIVOS ESTÁTICOS DO PORTAL WEB (/portal)
+  // ===================================================================
+  if (pathname === '/portal') {
+    res.writeHead(301, { 'Location': '/portal/' });
+    res.end();
+    return;
+  }
+
+  if (pathname.startsWith('/portal/')) {
+    let subPath = pathname.replace(/^\/portal/, '');
+    if (subPath === '/' || subPath === '') subPath = '/index.html';
+    const filePath = path.join(ROOT_PORTAL, subPath);
+
+    serveStaticFile(res, filePath, subPath);
+    return;
+  }
+
+  // ===================================================================
+  // 3. SERVIR ARQUIVOS DO PLAYER TV / WEB APP (/)
+  // ===================================================================
+  if (pathname === '/' || pathname === '') {
+    res.writeHead(302, { 'Location': '/portal/' });
+    res.end();
+    return;
+  }
+
+  if (pathname === '/tv' || pathname === '/tv/' || pathname === '/player' || pathname === '/player/') {
+    serveStaticFile(res, path.join(ROOT_PLAYER, 'index.html'), '/index.html');
+    return;
+  }
+
+  let reqFile = pathname;
+  const filePath = path.join(ROOT_PLAYER, reqFile);
+
+  if (!fs.existsSync(filePath)) {
+    const portalFallback = path.join(ROOT_PORTAL, reqFile);
+    if (fs.existsSync(portalFallback) && fs.statSync(portalFallback).isFile()) {
+      serveStaticFile(res, portalFallback, reqFile);
+      return;
+    }
+  }
+
+  serveStaticFile(res, filePath, reqFile);
+});
+
+function serveStaticFile(res, filePath, publicPath) {
+  fs.stat(filePath, (err, stats) => {
+    if (err || !stats.isFile()) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
+      res.end('Arquivo não encontrado: ' + publicPath);
+      return;
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Content-Length': stats.size,
+      'Cache-Control': 'no-cache'
+    });
+
+    const stream = fs.createReadStream(filePath);
+    stream.pipe(res);
+  });
+}
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Vion TV Server] Servidor ativo em http://0.0.0.0:${PORT}`);
+  console.log(`[Vion Portal] Acesso ao portal em http://192.168.1.197:${PORT}/portal`);
+  console.log(`[Vion Player] Acesso ao player em http://192.168.1.197:${PORT}/`);
+});

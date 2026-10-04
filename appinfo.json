@@ -1,0 +1,24 @@
+{
+  "id": "com.vionplayer.tv",
+  "version": "1.1.8",
+  "vendor": "Vion Media",
+  "type": "web",
+  "main": "index.html",
+  "title": "Vion Player",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "resolution": "1920x1080",
+  "bgColor": "#0a0e17",
+  "transparent": false,
+  "disableBackHistoryAPI": false,
+  "handlesRelaunch": false,
+  "supportTouchMode": false,
+  "requiredPermissions": [
+    "network.query",
+    "network.operation",
+    "audio.media",
+    "video.media",
+    "storage.read",
+    "storage.write"
+  ]
+}

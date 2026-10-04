@@ -1,0 +1,6605 @@
+/* ===================================================================
+   VION PLAYER - TEMA IPTV MODERNO (ASSIST PLUS / LAZER PLAY STYLE)
+   Design Premium com vidro fosco, tons profundos e acentos dourados
+   =================================================================== */
+
+:root {
+  /* Fundos profundos (modo cinema) */
+  --bg-dark: #07090f;
+  --bg-surface: #0e131f;
+  --bg-card: rgba(17, 23, 37, 0.85);
+
+  /* Identidade Monocromática Preto e Branco (Black & White Minimalist IPTV) */
+  --primary-gold: #ffffff;
+  --primary-yellow: #ffffff;
+  --gold-glow: rgba(255, 255, 255, 0.35);
+  --yellow-glow: rgba(255, 255, 255, 0.45);
+  --accent-amber: #ffffff;
+  --amber-glow: rgba(255, 255, 255, 0.35);
+
+  /* Gradiente de destaque (foco/botões primários) */
+  --grad-gold: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+  --grad-gold-soft: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+
+  /* Texto */
+  --text-primary: #f8f9fa;
+  --text-secondary: #a8b2c1;
+  --text-muted: #7d8aa1;
+  --text-white: #ffffff;
+
+  /* Estrutura */
+  --border-glass: rgba(255, 255, 255, 0.10);
+  --danger: #f87171;
+  --success: #38bdf8;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+
+  /* Movimento */
+  --ease-modern: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Remove 100% de barras de rolagem em Smart TVs */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+body {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ===================================================================
+   FUNDO COM CENAS CINEMATOGRÁFICAS (WIDESCREEN 16:9 COM TRANSIÇÃO SUAVE)
+   =================================================================== */
+.cinema-backdrop-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background: #0a0d14;
+}
+
+.cinema-backdrop-layer {
+  position: absolute;
+  inset: -15px;
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1);
+  filter: saturate(1.05) contrast(1.05);
+  transition: opacity 1.8s ease-in-out, transform 10s ease-out;
+  will-change: opacity, transform;
+}
+
+.cinema-backdrop-layer.active {
+  opacity: 0.38;
+  transform: scale(1.04);
+}
+
+/* Vinheta escura profissional: garante legibilidade impecável dos cards e texto */
+.cinema-backdrop-vignette {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(to bottom, rgba(10, 13, 20, 0.72) 0%, rgba(10, 13, 20, 0.42) 35%, rgba(10, 13, 20, 0.88) 80%, #0a0d14 100%),
+    radial-gradient(circle at 50% 50%, rgba(10, 13, 20, 0.45) 0%, rgba(10, 13, 20, 0.95) 100%);
+  z-index: 1;
+}
+
+.ambient-cinema-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 15% 20%, rgba(250, 204, 21, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+  z-index: 2;
+}
+
+/* ===================================================================
+   ESTRUTURA DAS TELAS
+   =================================================================== */
+.screen {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 20px 24px 24px 24px;
+  flex-direction: column;
+  gap: 24px;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.screen.active {
+  display: flex;
+}
+
+#screen-channels,
+#screen-vod {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===================================================================
+   TELA 1: LOGIN POR CÓDIGO DO PROVEDOR
+   =================================================================== */
+#screen-reseller-login {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+#screen-reseller-login.active {
+  display: flex;
+}
+
+.reseller-login-card {
+  margin: auto;
+  background: rgba(14, 20, 34, 0.94);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1.5px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 22px 32px;
+  width: 100%;
+  max-width: 460px;
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+  box-sizing: border-box;
+  z-index: 15;
+}
+
+.reseller-card-header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.reseller-card-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 6px;
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  box-shadow: 0 4px 15px rgba(250, 204, 21, 0.25);
+}
+
+.reseller-card-header h2 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.reseller-card-header h2 span {
+  color: var(--primary-yellow);
+}
+
+.reseller-card-header p {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.login-type-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-glass);
+}
+
+.login-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: 1.5px solid transparent;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.login-tab-btn.active {
+  background: #ffffff;
+  color: #0f172a !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.login-tab-btn.focused,
+.login-tab-btn:hover {
+  border-color: var(--primary-yellow);
+  color: #ffffff;
+  background: rgba(250, 204, 21, 0.15);
+}
+
+.reseller-form-group {
+  margin-bottom: 10px;
+}
+
+.reseller-form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary-yellow);
+  margin-bottom: 3px;
+  letter-spacing: 0.8px;
+}
+
+.reseller-form-group input {
+  width: 100%;
+  height: 40px;
+  background: rgba(8, 12, 20, 0.9);
+  border: 1.5px solid var(--border-glass);
+  color: var(--text-white);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.reseller-form-group input:focus,
+.reseller-form-group input.focused {
+  border-color: var(--primary-yellow);
+  box-shadow: 0 0 15px var(--yellow-glow);
+  background: #141c2c;
+}
+
+.btn-reseller-login {
+  width: 100%;
+  height: 42px;
+  background: var(--grad-gold);
+  color: #000;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: all 0.2s;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-reseller-login:hover,
+.btn-reseller-login.focused {
+  transform: scale(1.02);
+  box-shadow: 0 0 25px var(--yellow-glow);
+}
+
+.btn-skip-login {
+  width: 100%;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-glass);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  outline: none;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.5px;
+}
+
+.btn-skip-login:hover,
+.btn-skip-login.focused {
+  background: rgba(250, 204, 21, 0.15);
+  color: var(--primary-yellow);
+  border-color: var(--primary-yellow);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(250, 204, 21, 0.2);
+}
+
+.corner-device-info {
+  position: absolute;
+  bottom: 18px;
+  right: 28px;
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.corner-device-info .val {
+  color: var(--primary-yellow);
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.corner-left-help {
+  position: absolute;
+  bottom: 18px;
+  left: 28px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* ===================================================================
+   TELA 2: DASHBOARD SUPER PLAY (5 CARDS)
+   =================================================================== */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+}
+
+.top-left-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.top-logo-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 15px rgba(250, 204, 21, 0.35);
+  border: 1px solid rgba(250, 204, 21, 0.4);
+}
+
+.top-brand-name {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.top-brand-name span {
+  color: var(--primary-yellow);
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pill-btn {
+  background: rgba(26, 36, 54, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  color: var(--text-white);
+  padding: 9px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.pill-btn:hover,
+.pill-btn.focused {
+  border-color: var(--primary-yellow) !important;
+  color: var(--primary-yellow) !important;
+  box-shadow: 0 0 20px var(--yellow-glow) !important;
+  transform: scale(1.05);
+}
+
+/* ===================================================================
+   TELA 2: DASHBOARD PRINCIPAL (TEMA DREAM TV / GLASS CIRCLES)
+   =================================================================== */
+#screen-home {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+#screen-home.active {
+  display: flex;
+}
+
+.dream-home-center {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 20px 30px 20px;
+  gap: 28px;
+}
+
+/* Brand Header no topo central - VION PLAYER */
+.dream-brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.dream-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dream-logo-img {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+
+.dream-logo-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dream-brand-title {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.dream-brand-title span,
+.dream-brand-title .brand-accent {
+  color: var(--primary-yellow);
+}
+
+/* 5 Ícones Circulares Glassmorphism em Linha */
+.dream-circles-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.dream-circle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dream-circle-btn {
+  width: 94px;
+  height: 94px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.14) 0%, rgba(20, 26, 45, 0.7) 70%, rgba(10, 14, 26, 0.9) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2e8f0;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dream-circle-btn svg {
+  width: 44px;
+  height: 44px;
+  transition: transform 0.25s ease;
+}
+
+.dream-circle-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-top: 12px;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+/* Focus State Cósmico / Brilho Neon dos Círculos (Apenas 1 item selecionado por vez) */
+.dream-circle-item.focused {
+  transform: translateY(-8px) scale(1.14);
+}
+
+.dream-circle-item.focused .dream-circle-btn {
+  background: radial-gradient(circle at 35% 25%, rgba(192, 132, 252, 0.6) 0%, rgba(99, 102, 241, 0.5) 60%, rgba(30, 27, 75, 0.9) 100%);
+  border-color: #ffffff;
+  color: #ffffff;
+  box-shadow: 0 0 35px rgba(168, 85, 247, 0.75), 0 0 15px rgba(255, 255, 255, 0.9), inset 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+.dream-circle-item.focused .dream-circle-btn svg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 8px #ffffff);
+}
+
+.dream-circle-item.focused .dream-circle-label {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+}
+
+/* Botões de Ação Cápsula Centralizados (Reload / Sair) */
+.dream-capsule-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 6px;
+}
+
+.dream-capsule-btn {
+  padding: 10px 32px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  color: #e2e8f0;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.dream-capsule-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dream-capsule-btn.focused {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  transform: scale(1.08);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.7) !important;
+  font-weight: 800;
+}
+
+.dream-capsule-btn.focused svg {
+  stroke: #000000;
+}
+
+/* Rodapé Dream TV */
+.dream-footer {
+  width: 100%;
+  padding: 14px 44px 18px 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 12px;
+  color: #64748b;
+  box-sizing: border-box;
+}
+
+.dream-footer-left p,
+.dream-footer-right p {
+  margin: 3px 0;
+}
+
+.dream-footer strong {
+  color: #cbd5e1;
+}
+
+.dream-footer .val {
+  color: #cbd5e1;
+  font-family: monospace;
+}
+
+.dream-footer a {
+  color: #94a3b8;
+  text-decoration: none;
+}
+
+/* Modal de Detalhes do Filme (Estilo Dream TV / Netflix) */
+.movie-details-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  background: #070a13;
+  overflow: hidden;
+}
+
+.movie-details-overlay.active {
+  display: flex;
+}
+
+.movie-details-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+  filter: blur(2px);
+  transform: scale(1.05);
+  transition: opacity 0.5s ease;
+}
+
+.movie-details-vignette {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(to right, rgba(7, 10, 19, 0.95) 0%, rgba(7, 10, 19, 0.8) 45%, rgba(7, 10, 19, 0.5) 100%),
+    linear-gradient(to top, rgba(7, 10, 19, 0.98) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.movie-details-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  padding: 50px 70px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.movie-details-content {
+  max-width: 650px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeInDetails 0.3s ease-out;
+}
+
+@keyframes fadeInDetails {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.movie-details-title {
+  font-size: 38px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.15;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.9);
+}
+
+.movie-details-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13.5px;
+}
+
+.movie-star-rating {
+  color: #facc15;
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+
+.movie-year-badge,
+.movie-duration-badge,
+.movie-category-tag {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.movie-details-synopsis {
+  font-size: 15px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  max-height: 140px;
+  overflow-y: auto;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.movie-details-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.movie-btn-play {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 28px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  outline: none;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.movie-btn-play.focused,
+.movie-btn-play:hover {
+  transform: scale(1.1);
+  background: var(--primary-yellow);
+  color: #000000;
+  box-shadow: 0 0 35px var(--yellow-glow);
+}
+
+.movie-btn-action {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 24px;
+  border-radius: 28px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.movie-btn-action.focused,
+.movie-btn-action:hover {
+  transform: scale(1.08);
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+}
+
+/* ===================================================================
+   TELA 4: CANAIS AO VIVO (3 COLUNAS - IDÊNTICO À IMAGEM 4)
+   =================================================================== */
+.superplay-live-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px;
+  margin-bottom: 14px;
+}
+
+.live-top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-tag-icon {
+  font-size: 18px;
+}
+
+.live-cat-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.live-top-color-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.color-pill {
+  font-size: 13px;
+  font-weight: 700;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot-red { color: #ef4444; font-size: 13px; }
+.dot-green { color: #22c55e; font-size: 13px; }
+.dot-yellow { color: #eab308; font-size: 13px; }
+.dot-blue { color: #3b82f6; font-size: 13px; }
+
+.live-top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.digital-clock {
+  font-family: monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.superplay-live-layout {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+  padding: 0 20px;
+}
+
+/* Coluna 1: Categorias (Imagem 4) */
+.live-categories-col {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.live-cat-static-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.live-cat-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid transparent;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.live-cat-btn.focused,
+.live-cat-btn:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff;
+}
+
+.live-search-box {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+}
+
+.live-search-input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  width: 100%;
+  outline: none;
+}
+
+.live-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.live-search-input::-webkit-input-placeholder {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.live-categories-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.live-categories-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.live-cat-pill {
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.15s;
+}
+
+.live-cat-pill.active-cat {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 800;
+}
+
+.live-cat-pill.focused,
+.live-cat-pill:hover {
+  border-color: var(--primary-yellow);
+  color: #ffffff;
+  background: rgba(250, 204, 21, 0.15);
+}
+
+/* Coluna 2: Canais (Imagem 4) */
+.live-channels-col {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: rgba(14, 20, 32, 0.75);
+  backdrop-filter: blur(16px);
+  border-radius: 14px;
+  border: 1px solid var(--border-glass);
+  padding: 10px 8px;
+}
+
+.live-channels-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.live-channels-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.live-ch-row {
+  flex-shrink: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.live-ch-num {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #94a3b8;
+  min-width: 22px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.live-ch-row.active-playing {
+  border-color: rgba(250, 204, 21, 0.6);
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.live-ch-row.focused,
+.live-ch-row:hover {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.4);
+}
+
+.live-ch-row.focused .live-ch-num,
+.live-ch-row:hover .live-ch-num {
+  color: #000000 !important;
+  font-weight: 900;
+}
+
+.live-ch-row.focused .live-ch-name,
+.live-ch-row:hover .live-ch-name {
+  color: #000000 !important;
+  font-weight: 800;
+}
+
+.live-ch-row.focused .live-ch-sub,
+.live-ch-row:hover .live-ch-sub {
+  color: #475569 !important;
+  font-weight: 600;
+}
+
+.live-ch-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #090c12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border-glass);
+}
+
+.live-ch-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.live-ch-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.live-ch-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.live-ch-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Coluna 3: Mini Player e EPG (Imagem 4) */
+.live-preview-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mini-player-box {
+  width: 100%;
+  max-width: 680px;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: 382px;
+  background: #000;
+  border-radius: 16px;
+  border: 2px solid var(--border-glass);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  margin: 0 auto;
+}
+
+#mini-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+#mini-video-element::-webkit-media-controls,
+#mini-video-element::-webkit-media-controls-enclosure,
+#mini-video-element::-webkit-media-controls-panel,
+#mini-video-element::-webkit-media-controls-start-playback-button,
+#mini-video-element::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.mini-player-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 23, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 5;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+}
+
+.spinner-small {
+  width: 26px;
+  height: 26px;
+  border: 3px solid rgba(250, 204, 21, 0.3);
+  border-top-color: var(--primary-yellow);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#btn-expand-fullscreen,
+.mini-player-overlay {
+  position: absolute !important;
+  bottom: 12px !important;
+  right: 12px !important;
+  left: auto !important;
+  top: auto !important;
+  width: auto !important;
+  height: auto !important;
+  display: inline-flex !important;
+  cursor: pointer !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  z-index: 10 !important;
+}
+
+#btn-expand-fullscreen.focused,
+#btn-expand-fullscreen.focusable.focused,
+#btn-expand-fullscreen:focus,
+.mini-player-overlay.focused,
+.mini-player-overlay.focusable.focused {
+  position: absolute !important;
+  bottom: 12px !important;
+  right: 12px !important;
+  left: auto !important;
+  top: auto !important;
+  width: auto !important;
+  height: auto !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+.fullscreen-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: rgba(15, 23, 42, 0.92) !important;
+  color: var(--primary-yellow) !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  padding: 7px 16px !important;
+  border-radius: 20px !important;
+  border: 1.5px solid var(--primary-yellow) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7) !important;
+  transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+#btn-expand-fullscreen.focused .fullscreen-badge,
+#btn-expand-fullscreen:hover .fullscreen-badge,
+.mini-player-overlay.focused .fullscreen-badge,
+.mini-player-overlay:hover .fullscreen-badge {
+  background: var(--primary-yellow) !important;
+  color: #0b0f19 !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.65), 0 8px 20px rgba(0, 0, 0, 0.85) !important;
+  border-color: #facc15 !important;
+}
+
+/* Modo Tela Cheia Instantâneo (Expansão do Mini Player sem reconectar!) */
+.mini-player-box.fullscreen-mode {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100vh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  z-index: 9999 !important;
+  background: #000 !important;
+}
+
+.mini-player-box.fullscreen-mode .mini-player-overlay {
+  display: none !important;
+}
+
+.mini-fs-osd {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 30px 50px;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 38%);
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mini-fs-osd.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Barra superior da Tela Cheia de Canais Ao Vivo:
+   Exibida com botão Voltar e metadados ao expandir ou tocar na tela.
+   Some suavemente ao toque na tela ou após 4.5s sem interação, mantendo a transmissão ininterrupta. */
+.mini-fs-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 36px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.35) 60%, transparent 100%);
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.mini-player-box.fullscreen-mode .mini-fs-topbar {
+  display: flex;
+}
+
+.mini-fs-topbar.active {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+}
+
+.mini-fs-back-btn {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #ffffff;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.mini-fs-back-btn.focused,
+.mini-fs-back-btn:hover {
+  background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%) !important;
+  color: #0b0f19 !important;
+  border-color: #facc15 !important;
+  transform: scale(1.06);
+  box-shadow: 0 6px 24px rgba(250, 204, 21, 0.45) !important;
+}
+
+.mini-fs-topbar-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mini-fs-topbar-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  max-width: 450px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-fs-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 14px;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.5);
+}
+
+.mini-fs-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.mini-fs-channel-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mini-fs-num {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary-yellow);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.mini-fs-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.9);
+}
+
+.mini-fs-cat {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.mini-fs-hints {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.live-epg-container {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 14px;
+  background: rgba(14, 20, 32, 0.85);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid var(--border-glass);
+  padding: 16px 20px;
+  overflow: hidden;
+}
+
+.live-epg-schedule {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.live-epg-schedule::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+/* Linha EPG - NO AR */
+.epg-row-active {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.12) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1.5px solid rgba(250, 204, 21, 0.4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.epg-header-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.epg-badge-live {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  display: inline-flex;
+  align-items: center;
+}
+
+.epg-time-active {
+  color: var(--primary-yellow);
+  font-family: monospace;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.epg-name-active {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.epg-progress-bar-wrap {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.epg-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #facc15 0%, #f59e0b 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.epg-desc {
+  font-size: 12.5px;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+/* Linhas EPG - Próximos programas */
+.epg-row-upcoming {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
+}
+
+.epg-upcoming-time {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 13px;
+  color: #94a3b8;
+  width: 105px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.epg-upcoming-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.epg-upcoming-content .epg-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.epg-desc-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.live-epg-calendar {
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 1px solid var(--border-glass);
+  padding-left: 8px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.calendar-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 2px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.calendar-pill.active-cal {
+  background: rgba(250, 204, 21, 0.2);
+  border: 1px solid var(--primary-yellow);
+  color: var(--primary-yellow);
+}
+
+.cal-day {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.cal-wday {
+  font-size: 8.5px;
+  text-transform: uppercase;
+}
+
+/* ===================================================================
+   TELA 5: FILMES E SÉRIES VOD (DESIGN CINEMATOGRÁFICO ULTRA PREMIUM)
+   =================================================================== */
+.superplay-vod-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.vod-top-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vod-top-left h2 {
+  font-size: 26px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.4px;
+}
+
+.vod-count-pill {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(245, 158, 11, 0.12));
+  color: #facc15;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.12);
+}
+
+.superplay-vod-layout {
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  height: calc(100vh - 128px);
+  overflow: hidden;
+  padding: 0 20px;
+}
+
+/* Sidebar VOD Moderna Glassmorphic */
+.vod-sidebar {
+  width: 270px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+  background: rgba(13, 19, 32, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px 14px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+}
+
+.vod-search-wrap {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.vod-search-wrap:focus-within {
+  border-color: #facc15;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
+  background: rgba(22, 30, 48, 0.95);
+}
+
+.vod-search-input {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  width: 100%;
+  outline: none;
+}
+
+.vod-search-input::placeholder {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.vod-categories-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.vod-categories-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+.vod-pill {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.vod-pill-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.vod-pill-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.vod-pill-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vod-pill-indicator {
+  font-size: 11px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.2s ease;
+  color: #facc15;
+}
+
+.vod-pill.active-pill {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.16) 0%, rgba(245, 158, 11, 0.08) 100%) !important;
+  border: 1px solid rgba(250, 204, 21, 0.4) !important;
+  border-left: 4px solid var(--primary-yellow) !important;
+  color: #ffffff !important;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(250, 204, 21, 0.12);
+  transform: translateX(4px);
+}
+
+.vod-pill.active-pill .vod-pill-indicator {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.vod-pill.focused,
+.vod-pill:hover {
+  background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%) !important;
+  color: #0b0f19 !important;
+  font-weight: 900 !important;
+  border-color: #facc15 !important;
+  transform: translateX(6px) scale(1.02);
+  box-shadow: 0 6px 22px rgba(250, 204, 21, 0.45) !important;
+  outline: none !important;
+}
+
+.vod-pill.focused .vod-pill-text,
+.vod-pill:hover .vod-pill-text {
+  color: #0b0f19 !important;
+}
+
+.vod-pill.focused .vod-pill-indicator,
+.vod-pill:hover .vod-pill-indicator {
+  opacity: 1;
+  color: #0b0f19 !important;
+  transform: translateX(0);
+}
+
+/* Grade de Posters Verticais com Efeito Zoom e Sombra Profunda */
+.vod-grid-container {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 215px));
+  justify-content: start;
+  gap: 24px 18px;
+  align-content: start;
+  padding: 12px 18px 100px 12px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.vod-grid-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+.vod-poster-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
+  width: 100%;
+  scroll-margin: 50px;
+}
+
+.vod-poster-thumb {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  min-height: 260px;
+  background: linear-gradient(145deg, #182236, #0e1422);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+  position: relative;
+  transition: all 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.vod-poster-card.focused .vod-poster-thumb,
+.vod-poster-card:hover .vod-poster-thumb {
+  transform: scale(1.06) translateY(-4px);
+  border-color: var(--primary-yellow) !important;
+  box-shadow: 0 0 0 2px var(--primary-yellow), 0 20px 40px rgba(250, 204, 21, 0.35) !important;
+}
+
+.vod-poster-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.25s ease-in;
+}
+
+/* Capa cinematográfica gerada quando a lista não fornece poster ou enquanto carrega */
+.poster-fallback-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0c111d 100%);
+  gap: 8px;
+  z-index: 1;
+}
+
+.fallback-icon {
+  font-size: 34px;
+}
+
+.fallback-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.vod-poster-badge {
+  display: none !important;
+}
+
+.vod-poster-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #cbd5e1;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+  text-align: center;
+  height: 36px;
+  transition: color 0.15s ease;
+}
+
+.vod-poster-card.focused .vod-poster-title,
+.vod-poster-card:hover .vod-poster-title {
+  color: var(--primary-yellow);
+  font-weight: 800;
+}
+
+/* ===================================================================
+   TELA CINEMATOGRÁFICA DE SÉRIES (ESTILO NETFLIX / APPLE TV+ / HBO MAX)
+   =================================================================== */
+.series-cinematic-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #060911 !important;
+  z-index: 9999 !important;
+  display: none;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
+  animation: seriesFadeIn 0.22s ease-out;
+}
+
+.series-cinematic-screen.active {
+  display: block !important;
+}
+
+@keyframes seriesFadeIn {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.series-cinematic-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background-size: cover !important;
+  background-position: center 25% !important;
+  background-repeat: no-repeat !important;
+  filter: blur(8px) brightness(0.28) !important;
+  transform: scale(1.08) !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  transition: background-image 0.4s ease-in-out !important;
+}
+
+.series-cinematic-vignette {
+  position: fixed !important;
+  inset: 0 !important;
+  background:
+    radial-gradient(ellipse at 80% 20%, rgba(6, 9, 17, 0.2) 0%, rgba(6, 9, 17, 0.95) 75%),
+    linear-gradient(to right, rgba(6, 9, 17, 0.98) 0%, rgba(6, 9, 17, 0.92) 42%, rgba(6, 9, 17, 0.65) 100%),
+    linear-gradient(to bottom, rgba(6, 9, 17, 0.4) 0%, rgba(6, 9, 17, 0.98) 95%) !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
+.series-cinematic-container {
+  position: relative !important;
+  z-index: 10 !important;
+  max-width: 1720px !important;
+  width: 94% !important;
+  margin: 0 auto !important;
+  padding: 24px 36px 60px 36px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+/* Topbar */
+.series-topbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.series-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
+  color: #e2e8f0 !important;
+  padding: 9px 20px !important;
+  border-radius: 22px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.series-back-btn.focused,
+.series-back-btn:hover {
+  background: #facc15 !important;
+  color: #0b0f19 !important;
+  border-color: #facc15 !important;
+  transform: scale(1.06) !important;
+  box-shadow: 0 0 20px rgba(250, 204, 21, 0.5) !important;
+}
+
+.series-topbar-cat {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  color: #94a3b8 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  padding: 6px 16px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Hero Row (Poster + Info) */
+.series-hero-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 32px !important;
+  width: 100% !important;
+  margin-top: 2px !important;
+}
+
+.series-hero-poster-wrap {
+  width: 180px !important;
+  min-width: 180px !important;
+  aspect-ratio: 2 / 3 !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  background: #0f172a !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9) !important;
+  border: 2px solid rgba(255, 255, 255, 0.12) !important;
+  position: relative !important;
+}
+
+.series-hero-poster {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.series-hero-info {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.series-title {
+  font-size: 32px !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.5px !important;
+  margin: 0 !important;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.8) !important;
+}
+
+.series-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.series-meta-pill {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  padding: 5px 14px !important;
+  border-radius: 16px !important;
+}
+
+.series-meta-pill.rating {
+  background: rgba(250, 204, 21, 0.18) !important;
+  color: #facc15 !important;
+  border-color: rgba(250, 204, 21, 0.45) !important;
+  font-weight: 800 !important;
+}
+
+.series-meta-pill.quality {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+
+.series-meta-pill.audio {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #c084fc !important;
+  border-color: rgba(168, 85, 247, 0.35) !important;
+}
+
+.series-synopsis {
+  font-size: 14.5px !important;
+  line-height: 1.55 !important;
+  color: #cbd5e1 !important;
+  max-width: 950px !important;
+  margin: 0 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.series-hero-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin-top: 4px !important;
+}
+
+.series-cta-play {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%) !important;
+  color: #0b0f19 !important;
+  border: 2px solid #facc15 !important;
+  padding: 11px 26px !important;
+  border-radius: 26px !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  outline: none !important;
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.45) !important;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.series-cta-play.focused,
+.series-cta-play:hover {
+  transform: scale(1.07) translateY(-2px) !important;
+  box-shadow: 0 0 32px rgba(250, 204, 21, 0.7), 0 12px 28px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Seletor de Temporadas */
+.series-seasons-section {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding-top: 16px !important;
+}
+
+.series-seasons-nav-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.season-nav-arrow {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  outline: none !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.season-nav-arrow:hover,
+.season-nav-arrow.focused {
+  background: #facc15 !important;
+  color: #000000 !important;
+  border-color: #facc15 !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.4) !important;
+}
+
+.series-seasons-tabs {
+  display: flex !important;
+  gap: 10px !important;
+  overflow-x: auto !important;
+  scroll-behavior: smooth !important;
+  flex: 1 !important;
+  padding: 6px 2px !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.series-seasons-tabs::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.season-tab-btn {
+  flex-shrink: 0 !important;
+  padding: 10px 24px !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  color: #cbd5e1 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  outline: none !important;
+  white-space: nowrap !important;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.season-tab-btn.active-season {
+  background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%) !important;
+  color: #0b0f19 !important;
+  font-weight: 900 !important;
+  border-color: #facc15 !important;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.5) !important;
+  transform: scale(1.03) !important;
+}
+
+.season-tab-btn.focused,
+.season-tab-btn:hover {
+  background: rgba(250, 204, 21, 0.2) !important;
+  border-color: #facc15 !important;
+  color: #ffffff !important;
+  transform: scale(1.07) !important;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.45) !important;
+}
+
+/* Lista / Grade de Episódios */
+.series-episodes-section {
+  width: 100% !important;
+}
+
+.series-episodes-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-height: calc(100vh - 440px) !important;
+  overflow-y: auto !important;
+  padding: 4px 6px 40px 2px !important;
+  scrollbar-width: thin !important;
+}
+
+.episode-item {
+  background: rgba(18, 26, 44, 0.78) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 14px !important;
+  padding: 13px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+.ep-info-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.ep-num-pill {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 9px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #facc15 !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.ep-text-block {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.episode-title {
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #f1f5f9 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  transition: color 0.15s ease !important;
+}
+
+.ep-subtitle {
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+}
+
+.episode-play-icon {
+  font-size: 15px !important;
+  color: #64748b !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Foco D-Pad no Episódio (Efeito Cinema Fluido) */
+.episode-item.focused,
+.episode-item:hover {
+  border-color: #facc15 !important;
+  background: rgba(250, 204, 21, 0.16) !important;
+  transform: scale(1.04) translateY(-2px) !important;
+  box-shadow: 0 0 0 2px #facc15, 0 14px 30px rgba(0, 0, 0, 0.9) !important;
+}
+
+.episode-item.focused .ep-num-pill,
+.episode-item:hover .ep-num-pill {
+  background: #facc15 !important;
+  color: #0b0f19 !important;
+  border-color: #facc15 !important;
+}
+
+.episode-item.focused .episode-title,
+.episode-item:hover .episode-title {
+  color: #facc15 !important;
+  font-weight: 800 !important;
+}
+
+.episode-item.focused .episode-play-icon,
+.episode-item:hover .episode-play-icon {
+  background: #facc15 !important;
+  color: #0b0f19 !important;
+  transform: scale(1.1) !important;
+}
+
+.empty-season-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  width: 100%;
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+
+.empty-season-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.empty-season-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.empty-season-sub {
+  font-size: 13px;
+  color: #94a3b8;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+.series-loading-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 50px 20px;
+  grid-column: 1 / -1;
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ===================================================================
+   TELA: PLAYER FULLSCREEN
+   =================================================================== */
+#screen-player {
+  padding: 0;
+  background: transparent !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.player-tap-zone {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+#video-element {
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+  background: transparent;
+  z-index: 5;
+}
+
+video:not([src]) {
+  display: none !important;
+}
+
+.player-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--text-white);
+  font-size: 15px;
+  font-weight: 700;
+  z-index: 80;
+  pointer-events: none !important;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(250, 204, 21, 0.3);
+  border-top-color: var(--primary-yellow);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.player-osd {
+  position: absolute;
+  bottom: 40px;
+  left: 60px;
+  right: 60px;
+  background: rgba(15, 20, 31, 0.94);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: 18px;
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.player-osd.hidden {
+  opacity: 0;
+}
+
+.osd-channel-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.osd-number {
+  font-family: monospace;
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--primary-yellow);
+}
+
+.osd-name {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.osd-category {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.osd-quality {
+  background: var(--primary-yellow);
+  color: #000;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ===================================================================
+   OVERLAY DE CONTROLES DO PLAYER (TOUCH / SMARTPHONE / TV)
+   =================================================================== */
+.player-controls-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 36px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.15) 30%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0.92) 100%);
+  z-index: 100;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: auto;
+}
+
+.player-controls-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* 1. Barra Superior */
+.player-ctrl-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.player-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid var(--border-glass);
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.player-back-btn:hover,
+.player-back-btn.focused {
+  background: var(--primary-yellow);
+  color: #000000;
+  border-color: var(--primary-yellow);
+  transform: scale(1.05);
+}
+
+.player-back-arrow {
+  font-size: 16px;
+}
+
+.player-title-info {
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  padding: 0 10px;
+}
+
+.player-ctrl-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.player-ctrl-category {
+  font-size: 13px;
+  color: var(--primary-yellow);
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+
+.player-ctrl-top-right {
+  display: flex;
+  align-items: center;
+}
+
+.player-badge {
+  background: var(--primary-yellow);
+  color: #000;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+/* 2. Centro da Tela */
+.player-ctrl-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  width: 100%;
+}
+
+.player-ctrl-circle-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(18, 24, 38, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.player-ctrl-circle-btn:hover,
+.player-ctrl-circle-btn.focused {
+  background: rgba(250, 204, 21, 0.2);
+  border-color: var(--primary-yellow);
+  color: var(--primary-yellow);
+  transform: scale(1.15);
+  box-shadow: 0 8px 24px var(--yellow-glow);
+}
+
+.player-play-main {
+  width: 76px;
+  height: 76px;
+  background: var(--primary-yellow);
+  color: #000000;
+  border-color: var(--primary-yellow);
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.player-play-main:hover,
+.player-play-main.focused {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  transform: scale(1.18);
+}
+
+/* 3. Barra Inferior */
+.player-ctrl-bottombar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* VOD Controls (Filmes e Séries) */
+.player-vod-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.player-time-display {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  min-width: 60px;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+
+.player-timeline-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.player-seek-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.player-seek-slider:hover,
+.player-seek-slider.focused {
+  height: 12px;
+}
+
+.player-seek-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-yellow);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--yellow-glow);
+  border: 2px solid #ffffff;
+  transition: transform 0.15s;
+}
+
+.player-seek-slider::-webkit-slider-thumb:hover,
+.player-seek-slider.focused::-webkit-slider-thumb {
+  transform: scale(1.3);
+}
+
+/* Live Controls (Canais Ao Vivo) */
+.player-live-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 10px;
+}
+
+.player-ch-nav-btn {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid var(--border-glass);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.player-ch-nav-btn:hover,
+.player-ch-nav-btn.focused {
+  background: var(--primary-yellow);
+  color: #000000;
+  border-color: var(--primary-yellow);
+  transform: scale(1.05);
+}
+
+.player-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+}
+
+.live-dot-red {
+  color: #ef4444;
+  font-size: 18px;
+  animation: pulse 1.2s infinite;
+}
+
+/* ===================================================================
+   MODAIS E DIÁLOGOS
+   =================================================================== */
+.tv-dialog-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(16px);
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.tv-dialog-overlay.active {
+  display: flex;
+}
+
+.tv-dialog-box {
+  background: #141c2c;
+  border: 2px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 35px 45px;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+}
+
+.tv-dialog-box h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.tv-dialog-box p {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin-bottom: 25px;
+}
+
+.tv-dialog-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* Toast */
+.toast-notice {
+  position: fixed;
+  top: 30px;
+  right: 50px;
+  background: rgba(18, 25, 38, 0.96);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--primary-yellow);
+  color: var(--text-white);
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+  transform: translateY(-80px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+}
+
+.toast-notice.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Playlists na TV */
+.playlists-modal-card {
+  background: rgba(18, 25, 42, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 35px 45px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.playlists-tv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 380px;
+  overflow-y: auto;
+  margin: 25px 0;
+}
+
+.playlist-tv-item {
+  background: #141c2c;
+  border: 2px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.playlist-tv-item.focused,
+.playlist-tv-item:hover {
+  border-color: var(--primary-yellow) !important;
+  box-shadow: 0 0 25px var(--yellow-glow) !important;
+  background: #1e293b !important;
+  transform: scale(1.02);
+}
+
+.playlist-tv-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.playlist-tv-badge {
+  background: var(--primary-yellow);
+  color: #000;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 8px;
+}
+
+.playlist-tv-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.playlist-tv-status {
+  font-size: 12px;
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* ===================================================================
+   RESPONSIVIDADE COMPLETA PARA SMARTPHONES ANDROID (MODO CELULAR)
+   Ajusta perfeitamente para não cortar cards nem espremer os canais
+   =================================================================== */
+@media screen and (max-width: 1024px), screen and (max-height: 550px) {
+  /* 1. Tela de Login no Celular */
+  .reseller-login-card {
+    max-height: 94vh !important;
+    overflow-y: auto !important;
+    padding: 12px 24px !important;
+    border-radius: 16px !important;
+    width: 90% !important;
+    max-width: 440px !important;
+    margin: auto !important;
+  }
+  .reseller-card-logo {
+    height: 38px !important;
+    margin-bottom: 4px !important;
+  }
+  .reseller-card-header h2 {
+    font-size: 19px !important;
+    margin-bottom: 2px !important;
+  }
+  .reseller-card-header p {
+    font-size: 11px !important;
+    margin-top: 1px !important;
+    margin-bottom: 6px !important;
+  }
+  .reseller-form-group {
+    margin-bottom: 7px !important;
+  }
+  .reseller-form-group label {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+  .reseller-form-group input {
+    padding: 7px 12px !important;
+    font-size: 12.5px !important;
+    border-radius: 8px !important;
+  }
+  .btn-reseller-login {
+    padding: 9px !important;
+    font-size: 14px !important;
+    margin-top: 4px !important;
+    border-radius: 8px !important;
+  }
+  .btn-skip-login {
+    padding: 7px !important;
+    font-size: 11.5px !important;
+    margin-top: 6px !important;
+    border-radius: 8px !important;
+  }
+  .reseller-login-footer-meta {
+    font-size: 10px !important;
+    padding: 4px 14px !important;
+    position: static !important;
+    margin-top: 6px !important;
+  }
+
+  /* 2. Tela de Canais ao Vivo no Celular (Fim da tela espremida) */
+  .superplay-live-topbar {
+    padding: 6px 14px !important;
+    height: auto !important;
+  }
+  .live-cat-title {
+    font-size: 16px !important;
+  }
+  .live-top-color-actions {
+    display: none !important; /* Oculta botões do controle remoto de TV */
+  }
+  .digital-clock {
+    font-size: 16px !important;
+  }
+  .superplay-live-layout {
+    gap: 10px !important;
+    height: calc(100vh - 65px) !important;
+    padding: 0 10px 8px !important;
+  }
+  .live-categories-col {
+    width: 170px !important; /* Reduz de 300px para 170px */
+    gap: 6px !important;
+  }
+  .live-cat-btn {
+    padding: 7px 10px !important;
+    font-size: 11.5px !important;
+    border-radius: 8px !important;
+  }
+  .live-search-box {
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+  }
+  .live-search-input {
+    font-size: 11.5px !important;
+  }
+  .live-cat-pill {
+    min-height: 38px !important;
+    padding: 0 10px !important;
+    font-size: 11.5px !important;
+    border-radius: 8px !important;
+  }
+  .live-channels-col {
+    width: 235px !important; /* Reduz de 350px para 235px */
+    padding: 6px 4px !important;
+    border-radius: 10px !important;
+  }
+  .live-ch-row {
+    min-height: 42px !important;
+    padding: 5px 8px !important;
+    gap: 8px !important;
+    border-radius: 8px !important;
+  }
+  .live-ch-logo {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .live-ch-name {
+    font-size: 12px !important;
+  }
+  .live-ch-sub {
+    font-size: 9.5px !important;
+  }
+  .live-preview-col {
+    flex: 1 !important;
+    min-width: 0 !important;
+    gap: 6px !important;
+  }
+  .mini-player-box {
+    max-height: 180px !important;
+    border-radius: 10px !important;
+  }
+  .live-epg-container {
+    padding: 6px 10px !important;
+    border-radius: 10px !important;
+  }
+  .epg-row {
+    font-size: 10.5px !important;
+    padding: 2px 0 !important;
+  }
+  .calendar-pill {
+    padding: 3px 6px !important;
+    font-size: 9.5px !important;
+  }
+  .superplay-footer {
+    display: none !important; /* Oculta rodapé de teclas de TV no smartphone */
+  }
+
+  /* 3. Filmes e Séries no Celular */
+  .vod-sidebar {
+    width: 170px !important;
+  }
+  .vod-pill {
+    min-height: 38px !important;
+    font-size: 11.5px !important;
+    padding: 0 10px !important;
+  }
+  .vod-grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)) !important;
+    gap: 10px !important;
+    padding: 8px !important;
+  }
+
+  /* 4. Menu Principal no Celular */
+  .superplay-cards-row {
+    gap: 12px !important;
+    padding: 10px !important;
+  }
+  .superplay-card {
+    height: 140px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+  .card-svg-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .card-label {
+    font-size: 15px !important;
+  }
+  .card-count {
+    font-size: 11px !important;
+  }
+
+  /* 5. Controles do Player de Vídeo no Celular */
+  .player-controls-overlay {
+    padding: 12px 18px !important;
+  }
+  .player-back-btn {
+    padding: 8px 18px !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+    min-height: 44px !important;
+    min-width: 80px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 120 !important;
+  }
+  .player-ctrl-title {
+    font-size: 15px !important;
+  }
+  .player-ctrl-category {
+    font-size: 11px !important;
+  }
+  .player-badge {
+    font-size: 10px !important;
+    padding: 2px 8px !important;
+  }
+  .player-ctrl-center {
+    gap: 22px !important;
+  }
+  .player-ctrl-circle-btn {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .player-play-main {
+    width: 58px !important;
+    height: 58px !important;
+    font-size: 20px !important;
+  }
+  .player-time-display {
+    font-size: 11.5px !important;
+    min-width: 45px !important;
+  }
+  .player-ch-nav-btn {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+  .player-live-indicator {
+    font-size: 11.5px !important;
+  }
+
+  /* 6. Modal de Séries no Celular */
+  .series-modal-card {
+    padding: 14px 18px !important;
+    max-height: 94vh !important;
+    gap: 10px !important;
+    border-radius: 14px !important;
+  }
+  .series-modal-header {
+    padding-bottom: 8px !important;
+  }
+  .series-header-info h2 {
+    font-size: 17px !important;
+  }
+  .series-badge {
+    font-size: 10.5px !important;
+    padding: 2px 6px !important;
+  }
+  .season-tab-btn {
+    padding: 5px 12px !important;
+    font-size: 11px !important;
+  }
+  .episode-item {
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+  }
+  .episode-title {
+    font-size: 12px !important;
+  }
+}
+
+/* ===================================================================
+   CELULAR (<= 640px): nada cortado, nada estourado.
+   Sobrescreve a media query de 1024px — colunas proporcionais em vez
+   de larguras fixas (170px + 235px estouravam em telas de 360-412px).
+   =================================================================== */
+/* Layout mobile/tablet: vale para retrato (max-width) E para celular em
+   paisagem (max-height), já que o APK força sensorLandscape e a largura
+   fica entre 740-930px — maior que 640px. O max-height: 550px nunca casa
+   com TV (720p+), então o IPK e o Android TV não são afetados. */
+@media screen and (max-width: 640px), screen and (max-height: 550px) {
+  html,
+  body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .screen {
+    width: 100%;
+    padding: 12px 12px 16px 12px !important;
+    gap: 14px !important;
+  }
+
+  #screen-channels,
+  #screen-vod {
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* --- Home: círculos que quebram linha em vez de estourar --- */
+  .dream-home-center {
+    max-width: 100%;
+    padding: 14px 12px 18px 12px !important;
+    gap: 16px !important;
+    box-sizing: border-box;
+  }
+  .dream-brand-title {
+    font-size: 22px !important;
+    letter-spacing: 1px !important;
+  }
+  .dream-logo-img {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+  }
+  .dream-circles-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px 16px !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .dream-circle-btn {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  .dream-circle-btn svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .dream-circle-label {
+    font-size: 11px !important;
+    margin-top: 7px !important;
+    max-width: 74px;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .dream-circle-item.focused {
+    transform: translateY(-5px) scale(1.06) !important;
+  }
+  .dream-capsule-actions {
+    flex-wrap: wrap;
+    gap: 10px 14px !important;
+  }
+  .dream-capsule-btn {
+    padding: 9px 20px !important;
+    font-size: 13px !important;
+  }
+  /* Rodapé: em paisagem mantém a linha (altura é o recurso escasso);
+     em retrato ele empilha (ver sub-bloco retrato no fim deste bloco). */
+  .dream-footer {
+    gap: 4px;
+    padding: 8px 14px 10px 14px !important;
+    font-size: 11px !important;
+    box-sizing: border-box;
+  }
+  .dream-footer-left,
+  .dream-footer-right {
+    text-align: center;
+  }
+
+  /* --- Tela de canais: colunas proporcionais (antes: 170px + 235px) --- */
+  .superplay-live-topbar {
+    height: auto !important;
+    min-height: 44px;
+    padding: 6px 10px !important;
+    gap: 8px !important;
+    flex-wrap: wrap;
+    margin-bottom: 10px !important;
+  }
+  .superplay-live-layout {
+    gap: 8px !important;
+    height: auto !important;
+    flex: 1;
+    min-height: 0;
+    padding: 0 8px 8px 8px !important;
+    box-sizing: border-box;
+  }
+  .live-categories-col {
+    width: 27% !important;
+    min-width: 0 !important;
+    gap: 5px !important;
+  }
+  .live-channels-col {
+    width: 37% !important;
+    min-width: 0 !important;
+    padding: 6px 4px !important;
+  }
+  .live-preview-col {
+    flex: 1 1 30% !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+  .live-cat-btn {
+    padding: 8px 7px !important;
+    font-size: 10.5px !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+    text-align: left;
+  }
+  .live-cat-btn span,
+  .live-cat-btn .live-cat-count {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .live-search-box {
+    padding: 6px 8px !important;
+  }
+  .live-search-input {
+    font-size: 11px !important;
+  }
+  .live-ch-row {
+    min-height: 40px !important;
+    padding: 5px 6px !important;
+    gap: 6px !important;
+  }
+  .live-ch-logo {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .live-ch-name {
+    font-size: 11px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .live-ch-sub {
+    font-size: 9px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mini-player-box {
+    max-height: 150px !important;
+  }
+  .mini-fs-topbar {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+  .mini-fs-back-btn {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+  .mini-fs-osd {
+    padding: 18px 16px !important;
+  }
+  .mini-fs-title {
+    font-size: 20px !important;
+  }
+  .mini-fs-num,
+  .mini-fs-cat {
+    font-size: 12px !important;
+  }
+  .mini-fs-hints {
+    display: none !important;
+  }
+
+  /* --- VOD: ocupa só o espaço restante (senão a tela inteira rola) --- */
+  .superplay-vod-layout {
+    height: auto !important;
+    flex: 1;
+    min-height: 0;
+    gap: 10px !important;
+  }
+
+  /* --- Topbars / rodapés de VOD --- */
+  .superplay-vod-topbar {
+    height: auto !important;
+    min-height: 44px;
+    padding: 6px 10px !important;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* --- VOD: sidebar proporcional (estreita no retrato, larga na paisagem) --- */
+  .vod-sidebar {
+    width: 26% !important;
+    min-width: 104px !important;
+    max-width: 160px !important;
+    padding: 6px !important;
+  }
+  /* O .vod-pill é display:flex, então nowrap+overflow cortava o nome na
+     marra (sem "..."). Em telas de toque ele quebra linha e mostra tudo. */
+  .vod-pill {
+    min-height: 34px !important;
+    font-size: 10.5px !important;
+    padding: 5px 7px !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    line-height: 1.25 !important;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .vod-grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+    min-width: 0;
+  }
+  /* Título do filme em 2 linhas em vez de 1 cortado com reticências */
+  .vod-poster-title {
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.25 !important;
+    font-size: 11.5px !important;
+  }
+
+  /* --- Somente retrato: nestas larguras há altura sobrando --- */
+  @media screen and (max-width: 640px) {
+    .dream-footer {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  }
+}
+
+/* ===================================================================
+   LOGIN COMPACTO EM TELAS BAIXAS (paisagem de celular / janela baixa)
+   Em sensorLandscape a altura CSS do celular cai para 319~411px e o
+   card de login (logo + abas + 3 campos + 2 botões) media ~443px,
+   estourando ~150px para dentro do scroll interno e escondendo o
+   botão ENTRAR. Aqui o card encolhe para caber 100% sem rolagem.
+   Não afeta TV/IPK: essas telas têm 551px+ de altura.
+   =================================================================== */
+@media screen and (max-height: 550px) {
+  #screen-reseller-login {
+    padding: 6px 16px !important;
+    gap: 6px !important;
+  }
+  .reseller-login-card {
+    max-height: calc(100vh - 12px) !important;
+    padding: 8px 16px 10px !important;
+    overflow-y: auto !important;
+  }
+  .reseller-card-logo {
+    height: 26px !important;
+    margin-bottom: 2px !important;
+  }
+  .reseller-card-header {
+    margin-bottom: 8px !important;
+  }
+  .reseller-card-header h2 {
+    font-size: 15px !important;
+    margin-bottom: 1px !important;
+  }
+  .reseller-card-header p {
+    font-size: 10px !important;
+    margin-top: 1px !important;
+  }
+  .login-type-tabs {
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+  .login-tab-btn {
+    padding: 6px 12px !important;
+    font-size: 12.5px !important;
+  }
+  .reseller-form-group {
+    margin-bottom: 4px !important;
+  }
+  .reseller-form-group label {
+    margin-bottom: 1px !important;
+  }
+  .reseller-form-group input {
+    padding: 5px 10px !important;
+    font-size: 12.5px !important;
+  }
+  .btn-reseller-login {
+    padding: 7px !important;
+    font-size: 13px !important;
+    margin-top: 2px !important;
+  }
+  .btn-skip-login {
+    padding: 6px !important;
+    font-size: 11.5px !important;
+    margin-top: 4px !important;
+  }
+}
+
+/* Apelido final: aparelhos muito baixos (<=430px) largam o subtítulo. */
+@media screen and (max-height: 430px) {
+  .reseller-card-header p {
+    display: none !important;
+  }
+  .reseller-card-logo {
+    height: 22px !important;
+  }
+  .reseller-card-header {
+    margin-bottom: 5px !important;
+  }
+  .reseller-login-card {
+    padding: 6px 14px !important;
+  }
+  .login-type-tabs {
+    margin-bottom: 6px !important;
+  }
+  .login-tab-btn {
+    padding: 5px 10px !important;
+  }
+  .reseller-form-group {
+    margin-bottom: 3px !important;
+  }
+  .reseller-form-group input {
+    padding: 4px 10px !important;
+  }
+  .btn-reseller-login {
+    padding: 6px !important;
+  }
+  .btn-skip-login {
+    padding: 5px !important;
+    margin-top: 3px !important;
+  }
+}
+
+/* ===================================================================
+   TELA DE INICIALIZAÇÃO / SPLASH (ESTILO SUPER PLAY / LAZER PLAY)
+   =================================================================== */
+.superplay-splash-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  z-index: 10;
+  gap: 14px;
+}
+
+.superplay-splash-logo-box {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.superplay-splash-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 18px;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 0 25px rgba(250, 204, 21, 0.45));
+}
+
+.superplay-splash-pulse {
+  position: absolute;
+  inset: 0;
+  border: 3.5px solid rgba(250, 204, 21, 0.18);
+  border-top-color: var(--primary-yellow);
+  border-right-color: var(--primary-yellow);
+  border-radius: 50%;
+  animation: spinSyncRing 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.superplay-splash-title {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  margin-top: 4px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.superplay-progress-container {
+  width: 380px;
+  max-width: 85vw;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.superplay-progress-bar {
+  height: 100%;
+  width: 10%;
+  background: linear-gradient(90deg, #FACC15, #F59E0B, #EAB308);
+  border-radius: 6px;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+}
+
+.superplay-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 380px;
+  max-width: 85vw;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.superplay-status-text {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.superplay-percent-text {
+  color: var(--primary-yellow);
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.superplay-device-footer {
+  position: absolute;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.superplay-device-footer b {
+  color: #cbd5e1;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+/* ===================================================================
+   MODAL DE SINCRONIZAÇÃO PERSISTENTE (Fica ativo até 100% finalizar)
+   =================================================================== */
+.sync-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 14, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sync-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sync-modal-card {
+  background: linear-gradient(160deg, #131b2e 0%, #0a0e18 100%);
+  border: 1.5px solid rgba(250, 204, 21, 0.45);
+  border-radius: 22px;
+  padding: 34px 38px;
+  width: 90%;
+  max-width: 440px;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(250, 204, 21, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.sync-logo-spinner-wrap {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.sync-modal-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.sync-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid rgba(250, 204, 21, 0.15);
+  border-top-color: var(--primary-yellow);
+  border-right-color: var(--primary-yellow);
+  border-radius: 50%;
+  animation: spinSyncRing 1.1s linear infinite;
+}
+
+@keyframes spinSyncRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.sync-modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+
+.sync-modal-status {
+  font-size: 13.5px;
+  color: #cbd5e1;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.sync-progress-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin: 4px 0 2px 0;
+}
+
+.sync-progress-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #FACC15, #F59E0B);
+  border-radius: 4px;
+  animation: indeterminateBar 1.7s ease-in-out infinite;
+}
+
+@keyframes indeterminateBar {
+  0% { left: -35%; width: 35%; }
+  50% { left: 30%; width: 60%; }
+  100% { left: 100%; width: 35%; }
+}
+
+.sync-modal-subtitle {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* ===================================================================
+   MODERNIZACAO VISUAL - CAMADA DE SOBRESCRITA (FIM DO ARQUIVO)
+   Identidade dourada Vion + acabamento de apps de streaming famosos.
+   Aplicada SOMENTE em TV/desktop, para nao alterar o layout mobile ja
+   responsivel. Nenhuma regra original foi removida.
+   Onde a regra original usa !important, esta camada tambem usa
+   !important e vem DEPOIS no arquivo, garantindo a precedencia.
+   =================================================================== */
+@media screen and (min-width: 1025px) and (min-height: 551px) {
+
+  /* ---------------------------------------------------------------
+     1. TOKENS DE FOCO E SELECAO
+        Foco (D-pad)  = preenchimento creme-dourado + anel + brilho.
+        Ativo/Escolha = dourado saturado + tinta escura.
+        Assim foco e selecao continuam claramente distintos.
+     --------------------------------------------------------------- */
+  :root {
+    --focus-fill: linear-gradient(180deg, #fffdf3 0%, #fde9a8 46%, #fcd34d 100%);
+    --focus-ring: #facc15;
+    --focus-glow: 0 0 0 3px rgba(250, 204, 21, 0.32),
+                  0 0 30px rgba(250, 204, 21, 0.5),
+                  0 10px 24px rgba(0, 0, 0, 0.6);
+    --active-fill: linear-gradient(180deg, #fde047 0%, #facc15 55%, #f59e0b 100%);
+    --active-ink: #1b1200;
+  }
+
+  /* ---------------------------------------------------------------
+     2. CENARIO DE FUNDO (mais profundidade, mesma estrutura)
+     --------------------------------------------------------------- */
+  .cinema-backdrop-layer.active {
+    opacity: 0.5;
+  }
+
+  .ambient-cinema-glow {
+    background:
+      radial-gradient(circle at 14% 18%, rgba(250, 204, 21, 0.13) 0%, transparent 48%),
+      radial-gradient(circle at 86% 78%, rgba(251, 146, 60, 0.1) 0%, transparent 48%),
+      radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 60%);
+  }
+
+  /* ---------------------------------------------------------------
+     3. BARRAS SUPERIORES (vidro fosco + hairline dourada)
+        box-sizing global e border-box: o padding lateral nao altera
+        a altura fixa (60px/50px) nem causa overflow horizontal.
+     --------------------------------------------------------------- */
+  .top-bar,
+  .superplay-live-topbar,
+  .superplay-vod-topbar {
+    padding-left: 14px;
+    padding-right: 14px;
+    background: rgba(9, 12, 20, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: inset 0 -1px 0 rgba(250, 204, 21, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  .top-bar {
+    border-radius: 16px;
+  }
+
+  .superplay-live-topbar,
+  .superplay-vod-topbar {
+    border-radius: 0 0 18px 18px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* ---------------------------------------------------------------
+     4. PAINEIS DE VIDRO DAS COLUNAS (mesmo acabamento do painel de
+        canais, que ja possui vidro). Nao usar backdrop-filter onde
+        existe descendente position: fixed (tela cheia do mini player).
+     --------------------------------------------------------------- */
+  .live-categories-col {
+    background: rgba(14, 20, 32, 0.75);
+    border: 1px solid var(--border-glass);
+    border-radius: 14px;
+    padding: 10px 8px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .live-preview-col {
+    background: rgba(14, 20, 32, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 18px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .vod-sidebar {
+    background: rgba(14, 20, 32, 0.75);
+    border: 1px solid var(--border-glass);
+    border-radius: 14px;
+    padding: 10px 8px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .vod-grid-container {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 14px 14px 30px 14px;
+  }
+
+  /* ---------------------------------------------------------------
+     5. TITULOS COM DEGRADADO DOURADO (so onde o navegador suporta
+        background-clip: text; caso contrario mantem a cor original)
+     --------------------------------------------------------------- */
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .live-cat-title,
+    .vod-top-left h2,
+    .dream-brand-title {
+      background: linear-gradient(95deg, #ffffff 0%, #fde68a 55%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      text-shadow: none;
+    }
+
+    .top-brand-name {
+      background: linear-gradient(95deg, #ffffff 0%, #fde68a 58%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    .top-brand-name span,
+    .dream-brand-title span,
+    .dream-brand-title .brand-accent {
+      background: linear-gradient(95deg, #fde68a 0%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     6. FOCO D-PAD - LOGIN / MENU PRINCIPAL
+     --------------------------------------------------------------- */
+  .dream-circle-item.focused .dream-circle-btn {
+    background: radial-gradient(circle at 35% 25%, #fffdf3 0%, #fde68a 44%, #f59e0b 100%);
+    border-color: var(--focus-ring);
+    color: var(--active-ink);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.4),
+                0 0 34px rgba(250, 204, 21, 0.6),
+                0 14px 30px rgba(0, 0, 0, 0.6),
+                inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  }
+
+  .dream-circle-item.focused .dream-circle-btn svg {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 6px rgba(27, 18, 0, 0.4));
+  }
+
+  .dream-circle-item.focused .dream-circle-label {
+    color: var(--focus-ring);
+    font-weight: 800;
+    text-shadow: 0 0 14px rgba(250, 204, 21, 0.75);
+  }
+
+  .dream-capsule-btn.focused {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+    font-weight: 800;
+  }
+
+  .pill-btn:hover,
+  .pill-btn.focused {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  /* ---------------------------------------------------------------
+     7. FOCO D-PAD - LOGIN (abas e acoes)
+     --------------------------------------------------------------- */
+  .login-tab-btn.active {
+    background: var(--active-fill) !important;
+    color: var(--active-ink) !important;
+  }
+
+  .login-tab-btn.focused,
+  .login-tab-btn:hover {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .btn-reseller-login {
+    background: var(--active-fill) !important;
+    color: var(--active-ink) !important;
+    box-shadow: 0 10px 26px rgba(245, 158, 11, 0.35);
+  }
+
+  .btn-reseller-login:hover,
+  .btn-reseller-login.focused {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .btn-skip-login:hover,
+  .btn-skip-login.focused {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  /* ---------------------------------------------------------------
+     8. FOCO D-PAD - TELA DE CANAIS AO VIVO
+     --------------------------------------------------------------- */
+  .live-cat-btn.focused,
+  .live-cat-btn:hover {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .live-cat-pill.active-cat {
+    background: var(--active-fill) !important;
+    color: var(--active-ink) !important;
+  }
+
+  .live-cat-pill.focused,
+  .live-cat-pill:hover {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .live-ch-row {
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1.5px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .live-ch-row.focused,
+  .live-ch-row:hover {
+    background: var(--focus-fill) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.32),
+                0 0 26px rgba(250, 204, 21, 0.45),
+                0 8px 20px rgba(0, 0, 0, 0.55) !important;
+  }
+
+  .live-ch-row.focused .live-ch-num,
+  .live-ch-row:hover .live-ch-num,
+  .live-ch-row.focused .live-ch-name,
+  .live-ch-row:hover .live-ch-name {
+    color: var(--active-ink) !important;
+    font-weight: 900;
+  }
+
+  .live-ch-row.focused .live-ch-sub,
+  .live-ch-row:hover .live-ch-sub {
+    color: #8a5300 !important;
+    font-weight: 700;
+  }
+
+  .live-search-box:focus-within,
+  .live-search-box:has(.live-search-input.focused),
+  .vod-search-wrap:focus-within,
+  .vod-search-wrap:has(.vod-search-input.focused) {
+    background: rgba(250, 204, 21, 0.08);
+    border-color: var(--focus-ring) !important;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3),
+                0 0 22px rgba(250, 204, 21, 0.4);
+  }
+
+  /* ---------------------------------------------------------------
+     9. FOCO D-PAD - TELA VOD (FILMES E SERIES)
+     --------------------------------------------------------------- */
+  .vod-pill.active-pill {
+    background: linear-gradient(90deg, rgba(250, 204, 21, 0.16) 0%, rgba(250, 204, 21, 0.04) 100%) !important;
+    border: 1px solid rgba(250, 204, 21, 0.4) !important;
+    border-left: 4px solid var(--primary-yellow) !important;
+    color: #ffffff !important;
+  }
+
+  .vod-pill.focused,
+  .vod-pill:hover {
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.28) 0%, rgba(245, 158, 11, 0.18) 100%) !important;
+    color: #ffffff !important;
+    border-color: var(--primary-yellow) !important;
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.4) !important;
+    outline: none !important;
+  }
+
+  .vod-poster-thumb {
+    border-radius: 14px;
+  }
+
+  .vod-poster-card.focused .vod-poster-thumb,
+  .vod-poster-card:hover .vod-poster-thumb {
+    border-color: var(--focus-ring) !important;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.32),
+                0 0 30px rgba(250, 204, 21, 0.5),
+                0 16px 34px rgba(0, 0, 0, 0.65) !important;
+    transform: scale(1.05);
+  }
+
+  .vod-poster-card.focused .vod-poster-title,
+  .vod-poster-card:hover .vod-poster-title {
+    color: var(--focus-ring);
+    text-shadow: 0 0 12px rgba(250, 204, 21, 0.55);
+  }
+
+  .movie-btn-action.focused,
+  .movie-btn-action:hover {
+    background: var(--focus-fill);
+    color: var(--active-ink);
+    border-color: var(--focus-ring);
+    box-shadow: var(--focus-glow);
+  }
+
+  /* ---------------------------------------------------------------
+     10. FOCO D-PAD - MODAL DE SERIES (temporadas e episodios)
+     --------------------------------------------------------------- */
+  .season-tab-btn.active-season {
+    background: var(--active-fill) !important;
+    color: var(--active-ink) !important;
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
+  }
+
+  .season-tab-btn.focused,
+  .season-tab-btn:hover {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .episode-item {
+    border-radius: 14px;
+  }
+
+  .episode-item.focused,
+  .episode-item:hover {
+    background: var(--focus-fill) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .episode-item.focused .episode-title,
+  .episode-item:hover .episode-title {
+    color: var(--active-ink) !important;
+    font-weight: 800;
+  }
+
+  .episode-item.focused .ep-num-pill,
+  .episode-item:hover .ep-num-pill {
+    background: rgba(27, 18, 0, 0.16) !important;
+    color: var(--active-ink) !important;
+  }
+
+  .episode-item.focused .episode-play-icon,
+  .episode-item:hover .episode-play-icon {
+    color: var(--active-ink) !important;
+  }
+
+  /* ---------------------------------------------------------------
+     11. FOCO D-PAD - CONTROLES DO PLAYER
+     --------------------------------------------------------------- */
+  .player-ctrl-circle-btn:hover,
+  .player-ctrl-circle-btn.focused {
+    background: var(--focus-fill) !important;
+    border-color: var(--focus-ring) !important;
+    color: var(--active-ink) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .player-play-main:hover,
+  .player-play-main.focused {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .player-ch-nav-btn:hover,
+  .player-ch-nav-btn.focused {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  /* ---------------------------------------------------------------
+     12. TELA CHEIA DO CANAL AO VIVO (botao Voltar + selo AO VIVO)
+     --------------------------------------------------------------- */
+  .mini-fs-back-btn.focused,
+  .mini-fs-back-btn:hover {
+    background: var(--focus-fill) !important;
+    color: var(--active-ink) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: var(--focus-glow) !important;
+  }
+
+  .mini-fs-badge {
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    letter-spacing: 1.5px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    animation: vionLiveBadgePulse 1.7s ease-in-out infinite;
+  }
+
+  @keyframes vionLiveBadgePulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+    50%      { box-shadow: 0 0 24px rgba(239, 68, 68, 0.95); }
+  }
+
+  /* ---------------------------------------------------------------
+     13. ANIMACAO DE ENTRADA DAS TELAS
+        Apenas opacity: nao cria bloco de contencao para elementos
+        position: fixed (tela cheia do mini player continua no
+        viewport) e nao conflita com transform existentes.
+     --------------------------------------------------------------- */
+  .screen.active {
+    animation: vionScreenEnter 0.26s ease-out;
+  }
+
+  @keyframes vionScreenEnter {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .dream-circle-item {
+    animation: vionItemEnter 0.34s ease-out backwards;
+  }
+
+  .dream-circle-item:nth-child(1) { animation-delay: 0.04s; }
+  .dream-circle-item:nth-child(2) { animation-delay: 0.09s; }
+  .dream-circle-item:nth-child(3) { animation-delay: 0.14s; }
+  .dream-circle-item:nth-child(4) { animation-delay: 0.19s; }
+  .dream-circle-item:nth-child(5) { animation-delay: 0.24s; }
+
+  @keyframes vionItemEnter {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ---------------------------------------------------------------
+     14. ACESSIBILIDADE - respeita quem desliga animacoes no sistema
+     --------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .screen.active,
+    .dream-circle-item,
+    .mini-fs-badge {
+      animation: none !important;
+    }
+  }
+}
+
+/* ===================================================================
+   MODALIDADE DE ENTRADA — toque x ponteiro fino x D-pad de TV
+   ------------------------------------------------------------------
+   As classes html.is-touch / html.is-pointer / html.is-tv sao criadas
+   por um script inline no <head> do index.html (antes do primeiro paint).
+
+   Este bloco e propositalmente o ULTIMO do arquivo: ele precisa vencer
+   as regras de :hover / .focused acima (mesma especificidade + !important
+   + posicao final) quando o app roda em celular/tablet.
+   =================================================================== */
+
+/* 1. Dicas de remoto ([▲ ▼] [OK] [Voltar]) so fazem sentido com D-pad.
+      O guard por viewport do bloco mobile (640px / 550px) nao alcanca
+      tablets em paisagem — aqui o gate e por MODALIDADE, nao por tamanho. */
+html.is-touch .superplay-footer,
+html.is-touch .mini-fs-hints {
+  display: none !important;
+}
+
+/* 2. O atalho "[OK]" do selo "Tela Cheia" tambem e de remoto. */
+html.is-touch .kbd-hint {
+  display: none !important;
+}
+
+/* 3. No WebView de celular/tablet o :hover "gruda" no ultimo item tocado
+      (a classe .focused alem de ser suprimida pelo remote.js em toque).
+      Zera aqui o anel (box-shadow / outline) e o zoom preso nos itens
+      focaveis. O preenchimento de fundo fica como feedback de toque. */
+html.is-touch .focusable:hover,
+html.is-touch .focusable.focused {
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+/* 3b. Pôster do VOD (item mais tocado): devolve o estado base — escala,
+      borda, sombra de projeção e cor do titulo. */
+html.is-touch .vod-poster-card:hover .vod-poster-thumb,
+html.is-touch .vod-poster-card.focused .vod-poster-thumb {
+  transform: none;
+  border-color: transparent !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.is-touch .vod-poster-card:hover .vod-poster-title,
+html.is-touch .vod-poster-card.focused .vod-poster-title {
+  color: #cbd5e1;
+  text-shadow: none;
+}
+
+/* 3c. Selo "Tela Cheia" do mini player: volta ao estado base em toque. */
+html.is-touch .mini-player-overlay:hover .fullscreen-badge,
+html.is-touch .mini-player-overlay.focused .fullscreen-badge {
+  transform: none;
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--primary-yellow);
+}
+
+/* ===================================================================
+   AJUSTE DE ALTURA — CELULAR EM PAISAGEM (altura CSS <= 550px)
+   ------------------------------------------------------------------
+   O APK força sensorLandscape: a altura CSS do celular fica em
+   ~319-411px. Sem este bloco o conteudo de Home (415px) e Settings
+   (448px) estourava a viewport e cortava o rodape / o 2o botao.
+   TV e desktop (720p+) NAO entram neste guard (height > 550px), e o
+   bloco vem por ULTIMO no arquivo para vencer as regras mobile
+   anteriores (mesma especificidade + !important).
+   =================================================================== */
+@media screen and (max-height: 550px) {
+
+  /* ---------- 1) HOME: layout moderno estilo Lazer Play / Assist Plus --
+     Estrutura nova (so CSS, mesmo HTML):
+       [logo+nome]                      [Reload] [Sair]   <- top bar
+                    MENU em largura total (5 itens)        <- centro
+     Version / Device key / Mac                    fixos   <- rodape
+     Antes tudo ficava centralizado com um vazio enorme
+     embaixo do rodape (rodape "no meio da tela").
+     =================================================================== */
+  #screen-home {
+    padding: 0 !important;
+    gap: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .dream-home-center {
+    position: relative;
+    flex: 1 1 auto !important;
+    width: 100%;
+    max-width: none !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 46px 14px 8px 14px !important;
+    gap: 10px !important;
+    box-sizing: border-box;
+  }
+
+  /* Top bar ESQUERDA: logo + nome na mesma linha */
+  .dream-brand-header {
+    position: absolute !important;
+    top: 8px !important;
+    left: 12px !important;
+    right: auto !important;
+    margin: 0 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    z-index: 3;
+  }
+  .dream-logo-wrap {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 9px !important;
+  }
+  .dream-logo-img {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 9px !important;
+    border-width: 1px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+  }
+  .dream-brand-title {
+    font-size: 17px !important;
+    letter-spacing: 1.4px !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9) !important;
+  }
+
+  /* Top bar DIREITA: Reload / Sair */
+  .dream-capsule-actions {
+    position: absolute !important;
+    top: 8px !important;
+    right: 12px !important;
+    margin: 0 !important;
+    gap: 8px !important;
+    z-index: 3;
+  }
+  .dream-capsule-btn {
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+    gap: 6px !important;
+    border-radius: 20px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  .dream-capsule-btn svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  /* Menu: painel glass moderno que ocupa a largura toda */
+  .dream-circles-row {
+    width: calc(100% - 8px) !important;
+    justify-content: space-evenly !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    padding: 26px 14px !important;
+    border-radius: 30px !important;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.025) 55%, rgba(255, 255, 255, 0.05) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+    box-sizing: border-box;
+  }
+  .dream-circle-btn {
+    width: 86px !important;
+    height: 86px !important;
+    border-width: 1.5px !important;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
+  }
+  .dream-circle-btn svg {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .dream-circle-label {
+    font-size: 13px !important;
+    margin-top: 9px !important;
+    letter-spacing: 0.7px !important;
+    color: #cbd5e1 !important;
+  }
+
+  /* Acento de cor por categoria (visual moderno, tipo Lazer Play) */
+  .dream-btn-live {
+    background: radial-gradient(circle at 35% 28%, rgba(239, 68, 68, 0.45) 0%, rgba(120, 20, 30, 0.55) 55%, rgba(28, 10, 18, 0.9) 100%) !important;
+    border-color: rgba(248, 113, 113, 0.5) !important;
+    color: #fecaca !important;
+  }
+  .dream-btn-movies {
+    background: radial-gradient(circle at 35% 28%, rgba(59, 130, 246, 0.45) 0%, rgba(23, 55, 130, 0.55) 55%, rgba(12, 20, 44, 0.9) 100%) !important;
+    border-color: rgba(96, 165, 250, 0.5) !important;
+    color: #bfdbfe !important;
+  }
+  .dream-btn-series {
+    background: radial-gradient(circle at 35% 28%, rgba(168, 85, 247, 0.45) 0%, rgba(88, 40, 150, 0.55) 55%, rgba(26, 14, 44, 0.9) 100%) !important;
+    border-color: rgba(192, 132, 252, 0.5) !important;
+    color: #e9d5ff !important;
+  }
+  .dream-btn-playlists {
+    background: radial-gradient(circle at 35% 28%, rgba(20, 184, 166, 0.45) 0%, rgba(15, 96, 92, 0.55) 55%, rgba(10, 32, 34, 0.9) 100%) !important;
+    border-color: rgba(45, 212, 191, 0.5) !important;
+    color: #99f6e4 !important;
+  }
+  .dream-btn-settings {
+    background: radial-gradient(circle at 35% 28%, rgba(148, 163, 184, 0.4) 0%, rgba(60, 74, 96, 0.55) 55%, rgba(20, 26, 40, 0.92) 100%) !important;
+    border-color: rgba(203, 213, 225, 0.45) !important;
+    color: #e2e8f0 !important;
+  }
+  .dream-circle-item.focused .dream-circle-btn {
+    background: radial-gradient(circle at 35% 25%, rgba(255, 214, 88, 0.75) 0%, rgba(216, 168, 40, 0.6) 55%, rgba(70, 52, 12, 0.95) 100%) !important;
+    border-color: #ffe680 !important;
+    color: #1a1405 !important;
+    box-shadow: 0 0 34px rgba(255, 214, 88, 0.7), 0 0 14px rgba(255, 255, 255, 0.75), inset 0 0 14px rgba(255, 255, 255, 0.35) !important;
+  }
+  .dream-circle-item.focused .dream-circle-label {
+    color: #ffe680 !important;
+    text-shadow: 0 0 12px rgba(255, 214, 88, 0.85) !important;
+  }
+
+  /* Brilho ambiente de fundo (moderniza o fundo chato) */
+  #screen-home {
+    background:
+      radial-gradient(1000px 420px at 12% -10%, rgba(255, 214, 88, 0.1), transparent 60%),
+      radial-gradient(900px 500px at 95% 110%, rgba(59, 130, 246, 0.1), transparent 62%) !important;
+  }
+
+  /* Rodapé: UMA linha colada no rodapé da tela, info nas 2 pontas */
+  .dream-footer {
+    position: relative;
+    width: 100%;
+    flex: 0 0 auto !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 6px 14px 8px 14px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
+  }
+  .dream-footer-left,
+  .dream-footer-right {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+    min-width: 0;
+    text-align: left !important;
+  }
+  .dream-footer-left p,
+  .dream-footer-right p {
+    margin: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Telas estreitas: esconde a URL pra informacao caber nas 2 pontas. */
+  @media screen and (max-width: 700px) {
+    .dream-footer-right p:last-child {
+      display: none !important;
+    }
+    .dream-footer-left,
+    .dream-footer-right {
+      gap: 9px !important;
+    }
+  }
+
+  /* ---------- 2) SETTINGS: card inteiro visível sem rolar ---------- */
+  #screen-settings {
+    padding: 10px 12px 10px 12px !important;
+    gap: 8px !important;
+  }
+  #screen-settings .top-bar {
+    height: 44px !important;
+    min-height: 44px;
+    flex: 0 0 auto;
+  }
+  #screen-settings .activation-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #screen-settings .playlists-modal-card {
+    padding: 12px 16px !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    box-sizing: border-box;
+  }
+  #screen-settings .playlists-modal-card h2 {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 8px !important;
+  }
+  /* Box de informações e caixa de botões usam style inline no HTML;
+     !important autoral vence o estilo inline normal. */
+  #screen-settings .playlists-modal-card > div:first-of-type {
+    padding: 10px 12px !important;
+    margin-bottom: 10px !important;
+    font-size: 12.5px !important;
+    line-height: 1.5 !important;
+  }
+  #screen-settings .playlists-modal-card > div:first-of-type p {
+    margin-bottom: 3px !important;
+  }
+  #screen-settings .playlists-modal-card > div:last-of-type {
+    gap: 8px !important;
+  }
+  #screen-settings .activation-container .pill-btn {
+    padding: 8px 16px !important;
+    font-size: 13.5px !important;
+  }
+
+  /* ---------- 3) LOGIN: cantos de baixo não cobrem o card ---------- */
+  #screen-reseller-login {
+    padding: 6px 16px 34px 16px !important;
+    gap: 4px !important;
+  }
+  .reseller-login-card {
+    max-height: calc(100vh - 46px) !important;
+  }
+  .corner-left-help,
+  .corner-device-info {
+    bottom: 6px !important;
+    font-size: 10px !important;
+    max-width: calc(50% - 18px);
+    overflow: hidden;
+  }
+  .corner-left-help {
+    left: 14px !important;
+  }
+  .corner-device-info {
+    right: 14px !important;
+  }
+  .corner-left-help p,
+  .corner-device-info p {
+    display: inline;
+    margin: 0 8px 0 0 !important;
+    white-space: nowrap;
+  }
+  /* Em telas estreitas corta as linhas decorativas (mantém MAC/key). */
+  @media screen and (max-width: 740px) {
+    .corner-left-help p:nth-child(2),
+    .corner-device-info p:nth-child(3) {
+      display: none;
+    }
+  }
+
+  /* ---------- 4) Abas de login nunca quebram o rótulo -------------- */
+  .login-tab-btn {
+    white-space: nowrap !important;
+  }
+}
+
+
+/* ===================================================================
+   HOME MODERNA EM RETRATO (celular em pé)
+   Guard: largura <= 767px E altura > 550px (retrato de celular).
+   O bloco max-height:550px de cima NAO casa aqui, entao replicamos o
+   mesmo visual moderno (top bar + painel glass + rodape colado embaixo).
+   Paisagem (sensorLandscape, o caso do APK) continua no bloco anterior.
+   TV/desktop nao entram: altura > 550px E largura > 767px.
+   =================================================================== */
+@media screen and (max-width: 767px) and (min-height: 551px) {
+  #screen-home {
+    padding: 0 !important;
+    gap: 0 !important;
+    justify-content: flex-start !important;
+    background:
+      radial-gradient(900px 500px at 12% -8%, rgba(255, 214, 88, 0.11), transparent 60%),
+      radial-gradient(850px 620px at 95% 108%, rgba(59, 130, 246, 0.11), transparent 62%) !important;
+  }
+  .dream-home-center {
+    position: relative;
+    flex: 1 1 auto !important;
+    width: 100%;
+    max-width: none !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 14px 12px 14px !important;
+    gap: 14px !important;
+    box-sizing: border-box;
+  }
+
+  /* Top bar ESQUERDA: logo + nome na mesma linha */
+  .dream-brand-header {
+    position: absolute !important;
+    top: 12px !important;
+    left: 14px !important;
+    right: auto !important;
+    margin: 0 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    z-index: 3;
+  }
+  .dream-logo-wrap {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .dream-logo-img {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 9px !important;
+    border-width: 1px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+  }
+  .dream-brand-title {
+    font-size: 17px !important;
+    letter-spacing: 1px !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9) !important;
+  }
+
+  /* Top bar DIREITA: Reload / Sair */
+  .dream-capsule-actions {
+    position: absolute !important;
+    top: 16px !important;
+    right: 12px !important;
+    margin: 0 !important;
+    gap: 6px !important;
+    z-index: 3;
+  }
+  .dream-capsule-btn {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    gap: 5px !important;
+    border-radius: 20px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  .dream-capsule-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Menu: painel glass alto (gaveta de apps), 3 itens por linha */
+  .dream-circles-row {
+    width: 100% !important;
+    flex-wrap: wrap;
+    justify-content: center !important;
+    align-content: center !important;
+    gap: 22px 18px !important;
+    margin: 0 !important;
+    padding: 30px 16px !important;
+    min-height: min(450px, 58vh);
+    border-radius: 34px !important;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.025) 55%, rgba(255, 255, 255, 0.05) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+    box-sizing: border-box;
+  }
+  .dream-circle-btn {
+    width: 86px !important;
+    height: 86px !important;
+    border-width: 1.5px !important;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
+  }
+  .dream-circle-btn svg {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .dream-circle-label {
+    font-size: 13.5px !important;
+    margin-top: 10px !important;
+    letter-spacing: 0.7px !important;
+    max-width: 96px !important;
+    color: #cbd5e1 !important;
+  }
+  .dream-circle-item.focused {
+    transform: translateY(-6px) scale(1.05) !important;
+  }
+
+  /* Acento de cor por categoria (mesmo visual da paisagem) */
+  .dream-btn-live {
+    background: radial-gradient(circle at 35% 28%, rgba(239, 68, 68, 0.45) 0%, rgba(120, 20, 30, 0.55) 55%, rgba(28, 10, 18, 0.9) 100%) !important;
+    border-color: rgba(248, 113, 113, 0.5) !important;
+    color: #fecaca !important;
+  }
+  .dream-btn-movies {
+    background: radial-gradient(circle at 35% 28%, rgba(59, 130, 246, 0.45) 0%, rgba(23, 55, 130, 0.55) 55%, rgba(12, 20, 44, 0.9) 100%) !important;
+    border-color: rgba(96, 165, 250, 0.5) !important;
+    color: #bfdbfe !important;
+  }
+  .dream-btn-series {
+    background: radial-gradient(circle at 35% 28%, rgba(168, 85, 247, 0.45) 0%, rgba(88, 40, 150, 0.55) 55%, rgba(26, 14, 44, 0.9) 100%) !important;
+    border-color: rgba(192, 132, 252, 0.5) !important;
+    color: #e9d5ff !important;
+  }
+  .dream-btn-playlists {
+    background: radial-gradient(circle at 35% 28%, rgba(20, 184, 166, 0.45) 0%, rgba(15, 96, 92, 0.55) 55%, rgba(10, 32, 34, 0.9) 100%) !important;
+    border-color: rgba(45, 212, 191, 0.5) !important;
+    color: #99f6e4 !important;
+  }
+  .dream-btn-settings {
+    background: radial-gradient(circle at 35% 28%, rgba(148, 163, 184, 0.4) 0%, rgba(60, 74, 96, 0.55) 55%, rgba(20, 26, 40, 0.92) 100%) !important;
+    border-color: rgba(203, 213, 225, 0.45) !important;
+    color: #e2e8f0 !important;
+  }
+  .dream-circle-item.focused .dream-circle-btn {
+    background: radial-gradient(circle at 35% 25%, rgba(255, 214, 88, 0.75) 0%, rgba(216, 168, 40, 0.6) 55%, rgba(70, 52, 12, 0.95) 100%) !important;
+    border-color: #ffe680 !important;
+    color: #1a1405 !important;
+    box-shadow: 0 0 34px rgba(255, 214, 88, 0.7), 0 0 14px rgba(255, 255, 255, 0.75), inset 0 0 14px rgba(255, 255, 255, 0.35) !important;
+  }
+  .dream-circle-item.focused .dream-circle-label {
+    color: #ffe680 !important;
+    text-shadow: 0 0 12px rgba(255, 214, 88, 0.85) !important;
+  }
+
+  /* Rodape colado no fundo, informacao em coluna centralizada */
+  .dream-footer {
+    position: relative;
+    width: 100%;
+    flex: 0 0 auto !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 2px !important;
+    padding: 8px 14px 10px 14px !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
+  }
+  .dream-footer-left,
+  .dream-footer-right {
+    flex-direction: row !important;
+    justify-content: center !important;
+    flex-wrap: wrap;
+    gap: 4px 14px !important;
+    text-align: center !important;
+  }
+  .dream-footer p {
+    margin: 0 !important;
+    white-space: nowrap;
+  }
+  /* Larga demais numa linha de 360px: some com a URL. */
+  .dream-footer-right p:last-child {
+    display: none !important;
+  }
+
+  /* Telas bem estreitas (320-360px): o nome + 2 botoes nao cabem na mesma
+     linha. Some o icone do logo e aperta os botoes para nao colidir. */
+  @media screen and (max-width: 360px) {
+    .dream-logo-img {
+      display: none !important;
+    }
+    .dream-brand-title {
+      font-size: 15px !important;
+      letter-spacing: 0.8px !important;
+    }
+    .dream-capsule-actions {
+      right: 10px !important;
+      gap: 5px !important;
+    }
+    .dream-capsule-btn {
+      padding: 8px 10px !important;
+      font-size: 11px !important;
+      gap: 4px !important;
+    }
+    .dream-circle-btn {
+      width: 78px !important;
+      height: 78px !important;
+    }
+    .dream-circle-label {
+      font-size: 12.5px !important;
+      max-width: 86px !important;
+    }
+  }
+}
+
+
+/* ===================================================================
+   VION PLAYER PRO - NOVO DASHBOARD MODERNO E ELEGANTE (ESTILO XCIPTV / SUPER PLAY)
+   =================================================================== */
+
+/* Topbar Glassmorphic do Dashboard */
+.home-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 18px 48px;
+  background: rgba(10, 15, 26, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.home-top-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.home-logo-glow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-logo-glow::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 16px;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.35) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.home-brand-logo {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.home-brand-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.home-brand-vion {
+  font-size: 24px;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+}
+
+.home-brand-player {
+  font-size: 24px;
+  background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.home-pro-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  color: #ffffff;
+  letter-spacing: 1px;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+}
+
+.home-top-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.home-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-dot-green {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.home-clock-pill {
+  display: flex;
+  align-items: center;
+  padding: 7px 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  color: #facc15;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* Hub Central com 3 Grand Showcase Cards */
+.home-hub-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 48px;
+  gap: 28px;
+  box-sizing: border-box;
+}
+
+.home-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  width: 100%;
+  max-width: 1340px;
+}
+
+.home-hero-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: auto;
+  min-height: 335px;
+  padding: 28px 28px 24px 28px;
+  border-radius: 24px;
+  background: linear-gradient(155deg, rgba(20, 28, 48, 0.82) 0%, rgba(10, 15, 28, 0.94) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  overflow: visible;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.28s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Reflexo especular superior de vidro */
+.home-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.home-hero-card .card-glow-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 1. Canais Ao Vivo Theming */
+.card-live {
+  background: linear-gradient(155deg, rgba(14, 34, 68, 0.85) 0%, rgba(8, 16, 36, 0.95) 100%);
+  border-color: rgba(96, 165, 250, 0.22);
+}
+
+.card-live .card-glow-bg {
+  background: radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.35) 0%, transparent 65%);
+}
+
+.card-live .card-top-tag {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+/* 2. Filmes Theming */
+.card-movies {
+  background: linear-gradient(155deg, rgba(50, 36, 12, 0.88) 0%, rgba(20, 15, 6, 0.96) 100%);
+  border-color: rgba(250, 204, 21, 0.28);
+}
+
+.card-movies .card-glow-bg {
+  background: radial-gradient(circle at 85% 15%, rgba(250, 204, 21, 0.35) 0%, transparent 65%);
+}
+
+.card-movies .card-top-tag {
+  background: rgba(250, 204, 21, 0.15);
+  color: #fde047;
+  border: 1px solid rgba(250, 204, 21, 0.4);
+}
+
+/* 3. Séries Theming */
+.card-series {
+  background: linear-gradient(155deg, rgba(44, 18, 66, 0.88) 0%, rgba(18, 9, 32, 0.96) 100%);
+  border-color: rgba(168, 85, 247, 0.28);
+}
+
+.card-series .card-glow-bg {
+  background: radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.35) 0%, transparent 65%);
+}
+
+.card-series .card-top-tag {
+  background: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.home-hero-card .card-ambient-icon {
+  position: absolute;
+  right: -15px;
+  bottom: -15px;
+  width: 150px;
+  height: 150px;
+  opacity: 0.04;
+  color: #ffffff;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover e Foco dos cards */
+.home-hero-card:hover,
+.home-hero-card.focused {
+  transform: scale(1.055) translateY(-8px) !important;
+  outline: none !important;
+}
+
+.card-live:hover,
+.card-live.focused {
+  border-color: #60a5fa !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(59, 130, 246, 0.5) !important;
+}
+
+.card-movies:hover,
+.card-movies.focused {
+  border-color: #facc15 !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 55px rgba(250, 204, 21, 0.55) !important;
+}
+
+.card-series:hover,
+.card-series.focused {
+  border-color: #c084fc !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(168, 85, 247, 0.5) !important;
+}
+
+.home-hero-card:hover .card-glow-bg,
+.home-hero-card.focused .card-glow-bg {
+  opacity: 1;
+}
+
+.home-hero-card:hover .card-ambient-icon,
+.home-hero-card.focused .card-ambient-icon {
+  opacity: 0.08;
+  transform: scale(1.1);
+}
+
+.card-top-tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.pulse-dot-red {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.tag-gold-star {
+  color: #facc15;
+  font-size: 13px;
+}
+
+.tag-cyan-dot {
+  color: #a855f7;
+  font-size: 13px;
+}
+
+.card-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  margin: 14px 0 10px 0;
+  z-index: 2;
+  transition: transform 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.home-hero-card:hover .card-icon-wrap,
+.home-hero-card.focused .card-icon-wrap {
+  transform: scale(1.1);
+}
+
+.icon-live-glow {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: 1.5px solid #60a5fa;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.45);
+}
+
+.icon-movies-glow {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border: 1.5px solid #fde047;
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.45);
+}
+
+.icon-series-glow {
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+  color: #ffffff;
+  border: 1.5px solid #c084fc;
+  box-shadow: 0 10px 25px rgba(147, 51, 234, 0.45);
+}
+
+.card-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+.card-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.card-meta-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: rgba(10, 14, 26, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.card-arrow-icon {
+  background: rgba(255, 255, 255, 0.08);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--primary-yellow);
+  transition: all 0.22s ease;
+}
+
+.home-hero-card:hover .card-arrow-icon,
+.home-hero-card.focused .card-arrow-icon {
+  transform: translateX(4px);
+  background: var(--primary-yellow);
+  color: #0b0f19;
+}
+
+/* Barra de Ações Rápidas Inferior */
+.home-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 1240px;
+}
+
+.quick-action-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 26px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  color: #e2e8f0;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.22s ease;
+}
+
+.quick-action-pill:hover,
+.quick-action-pill.focused {
+  background: rgba(250, 204, 21, 0.15);
+  border-color: #facc15;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 18px rgba(250, 204, 21, 0.25);
+}
+
+.quick-action-pill.pill-danger:hover,
+.quick-action-pill.pill-danger.focused {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #ef4444;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 18px rgba(239, 68, 68, 0.3);
+}
+
+.quick-icon {
+  font-size: 17px;
+}
+
+.quick-badge {
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.25);
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Rodapé Moderno */
+.home-modern-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 48px;
+  background: rgba(10, 15, 26, 0.65);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  z-index: 10;
+}
+
+.home-footer-left,
+.home-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-tag {
+  color: #facc15;
+  font-weight: 800;
+}
+
+.footer-sep {
+  opacity: 0.4;
+}
+
+/* Botão Moderno Voltar no Cabeçalho */
+.modern-header-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.modern-header-back-btn:hover,
+.modern-header-back-btn.focused {
+  background: #facc15;
+  color: #0b0f19;
+  border-color: #facc15;
+  transform: scale(1.05);
+  box-shadow: 0 4px 18px rgba(250, 204, 21, 0.4);
+}
+
+/* Botão Limpar Busca (✕) */
+.search-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  margin-left: 6px;
+}
+
+.search-clear-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+/* ===================================================================
+   OTIMIZAÇÕES MODERNAS PARA TELEVISÃO (10-FOOT UI)
+   Smart TV: Android TV, Amazon Fire TV, Samsung Tizen, LG webOS
+   Layout Refinado, Proporcional, Limpo e Elegante
+   =================================================================== */
+
+/* Cursor invisível em TV */
+html[data-platform="tv"],
+html.is-tv {
+  cursor: none !important;
+}
+html[data-platform="tv"] *,
+html.is-tv * {
+  cursor: none !important;
+}
+
+/* ===================================================================
+   1. TELA INICIAL (HOME) — CARDS COMPACTOS E PROPORCIONAIS
+   =================================================================== */
+.home-topbar {
+  height: 52px !important;
+  padding: 0 28px !important;
+}
+
+.home-brand-vion   { font-size: 22px !important; }
+.home-brand-player { font-size: 16px !important; }
+.home-top-status { gap: 10px !important; }
+.home-status-pill { padding: 5px 12px !important; font-size: 11.5px !important; }
+.home-clock-pill  { padding: 5px 14px !important; }
+.digital-clock    { font-size: 16px !important; }
+
+.home-hub-container {
+  padding: 10px 30px !important;
+  gap: 16px !important;
+}
+
+.home-cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 28px !important;
+  max-width: 1400px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.home-hero-card {
+  height: auto !important;
+  min-height: 275px !important;
+  max-height: 315px !important;
+  padding: 24px 26px 22px 26px !important;
+  border-radius: 22px !important;
+  overflow: visible !important;
+}
+
+.home-hero-card .card-ambient-icon {
+  width: 130px !important;
+  height: 130px !important;
+  right: -10px !important;
+  bottom: -10px !important;
+  opacity: 0.05 !important;
+}
+
+.card-top-tag {
+  font-size: 11px !important;
+  padding: 5px 12px !important;
+  border-radius: 20px !important;
+  margin-bottom: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.8px !important;
+}
+
+.card-icon-wrap {
+  width: 60px !important;
+  height: 60px !important;
+  margin-bottom: 12px !important;
+  border-radius: 16px !important;
+}
+
+.card-icon-wrap svg {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.card-title {
+  font-size: 25px !important;
+  font-weight: 900 !important;
+  margin-bottom: 6px !important;
+  letter-spacing: -0.2px !important;
+}
+
+.card-meta-pill {
+  font-size: 14px !important;
+  padding: 8px 18px !important;
+  border-radius: 14px !important;
+  font-weight: 800 !important;
+}
+
+.home-quick-actions {
+  gap: 18px !important;
+  margin-top: 24px !important;
+  max-width: 1400px !important;
+}
+
+.quick-action-pill {
+  padding: 12px 26px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  height: 46px !important;
+}
+
+.home-modern-footer {
+  height: 36px !important;
+  padding: 0 36px !important;
+  font-size: 12px !important;
+}
+
+/* ===================================================================
+   2. FOCO E SELEÇÃO PARA CONTROLE REMOTO TV (A 3 METROS)
+   =================================================================== */
+.focusable:focus {
+  outline: none;
+}
+
+.focusable.focused {
+  outline: 3px solid var(--primary-yellow) !important;
+  outline-offset: 2px !important;
+  box-shadow:
+    0 0 0 3px rgba(250, 204, 21, 0.45),
+    0 0 18px rgba(250, 204, 21, 0.3) !important;
+  position: relative;
+  z-index: 5;
+}
+
+/* Foco elegante nos cards da home */
+.home-hero-card.focused {
+  outline: none !important;
+  transform: scale(1.055) translateY(-6px) !important;
+  z-index: 10 !important;
+}
+
+.card-live.focused {
+  border-color: #38bdf8 !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.9), 0 0 45px rgba(56, 189, 248, 0.5) !important;
+}
+
+.card-movies.focused {
+  border-color: #facc15 !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.9), 0 0 50px rgba(250, 204, 21, 0.55) !important;
+}
+
+.card-series.focused {
+  border-color: #c084fc !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.9), 0 0 45px rgba(192, 132, 252, 0.5) !important;
+}
+
+.quick-action-pill.focused {
+  outline: none !important;
+  background: rgba(250, 204, 21, 0.2) !important;
+  border-color: var(--primary-yellow) !important;
+  color: #ffffff !important;
+  transform: scale(1.06) translateY(-2px) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 25px rgba(250, 204, 21, 0.35) !important;
+}
+
+/* ===================================================================
+   3. CANAIS AO VIVO — SIDEBAR ENXUTA E PRÉVIA EXPANDIDA
+   =================================================================== */
+.superplay-live-topbar {
+  height: 50px !important;
+  padding: 0 20px !important;
+  margin-bottom: 8px !important;
+}
+
+.superplay-live-layout {
+  gap: 14px !important;
+  padding: 0 20px 10px 20px !important;
+  height: calc(100vh - 100px) !important;
+}
+
+/* Coluna 1: Categorias mais estreita */
+.live-categories-col {
+  width: 195px !important;
+  min-width: 195px !important;
+  max-width: 205px !important;
+  flex-shrink: 0 !important;
+  gap: 8px !important;
+}
+
+.live-cat-btn {
+  padding: 9px 12px !important;
+  font-size: 12px !important;
+  gap: 8px !important;
+  border-radius: 8px !important;
+}
+
+.live-search-box {
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+}
+
+.live-search-input {
+  font-size: 12px !important;
+}
+
+.live-cat-pill {
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  border-radius: 8px !important;
+}
+
+/* Coluna 2: Canais */
+.live-channels-col {
+  width: 320px !important;
+  min-width: 300px !important;
+  max-width: 340px !important;
+  flex-shrink: 0 !important;
+  padding: 8px 6px !important;
+}
+
+.live-ch-row {
+  min-height: 46px !important;
+  padding: 5px 8px !important;
+  gap: 8px !important;
+  border-radius: 8px !important;
+}
+
+.live-ch-logo {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+.live-ch-name {
+  font-size: 13px !important;
+}
+
+.live-ch-sub {
+  font-size: 10.5px !important;
+}
+
+.live-ch-row.focused {
+  background: rgba(250, 204, 21, 0.18) !important;
+  border-left: 4px solid var(--primary-yellow) !important;
+  outline: none !important;
+}
+
+/* Coluna 3: Prévia Gigante de Vídeo + EPG */
+.live-preview-col {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.mini-player-box {
+  width: 100% !important;
+  max-width: none !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  max-height: 440px !important;
+  min-height: 210px !important;
+  border-radius: 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75) !important;
+}
+
+/* ===================================================================
+   4. FILMES E SÉRIES (VOD) — POSTERS COMPACTOS E FUNDO DINÂMICO
+   =================================================================== */
+#screen-vod {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Fundo Dinâmico Cinematográfico (troca ao focar filme/série) */
+.vod-dynamic-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 25%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  filter: none !important;
+  -webkit-filter: none !important;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.vod-dynamic-backdrop.visible {
+  opacity: 0.25;
+}
+
+.vod-dynamic-backdrop-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 65% 35%, rgba(10, 14, 23, 0.4) 0%, rgba(10, 14, 23, 0.88) 70%, #0a0e17 100%),
+              linear-gradient(to bottom, rgba(10, 14, 23, 0.6) 0%, rgba(10, 14, 23, 0.3) 40%, rgba(10, 14, 23, 0.92) 85%, #0a0e17 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#screen-vod > *:not(.vod-dynamic-backdrop):not(.vod-dynamic-backdrop-vignette) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Sidebar VOD elegante com largura ideal (não corta títulos de categoria) */
+.vod-sidebar {
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 230px !important;
+  flex-shrink: 0 !important;
+  padding: 12px 10px !important;
+  gap: 10px !important;
+}
+
+.vod-search-wrap {
+  padding: 8px 12px !important;
+}
+
+.vod-search-input {
+  font-size: 12.5px !important;
+}
+
+.vod-pill {
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  font-size: 12.5px !important;
+  border-radius: 9px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Grade de Posters Proporcionais (mais filmes por linha, visual cinema) */
+.vod-grid-container {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 155px)) !important;
+  gap: 16px 14px !important;
+  padding: 8px 18px 40px 10px !important;
+}
+
+.vod-poster-card {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  scroll-margin: 30px !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.vod-poster-card.focused,
+.vod-poster-card.focusable.focused,
+.vod-poster-card:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.vod-poster-thumb {
+  width: 100% !important;
+  aspect-ratio: 2 / 3 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: 2.5px solid transparent !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65) !important;
+  background: #0f172a !important;
+  position: relative !important;
+  transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.vod-poster-thumb img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 10px !important;
+  display: block !important;
+}
+
+.vod-poster-badge {
+  display: none !important;
+}
+
+.vod-poster-title {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  max-height: 32px !important;
+  font-weight: 600 !important;
+  color: #cbd5e1 !important;
+  text-align: center !important;
+  margin-top: 4px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  transition: color 0.15s ease !important;
+}
+
+/* Foco nos posters VOD (100% idêntico à Imagem 2 - borda dourada somente no poster) */
+.vod-poster-card.focused .vod-poster-thumb,
+.vod-poster-card:hover .vod-poster-thumb {
+  transform: scale(1.06) translateY(-4px) !important;
+  border-color: #facc15 !important;
+  box-shadow: 0 0 0 2px #facc15, 0 16px 36px rgba(0, 0, 0, 0.85) !important;
+}
+
+.vod-poster-card.focused .vod-poster-title,
+.vod-poster-card:hover .vod-poster-title {
+  color: #facc15 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 12px rgba(250, 204, 21, 0.5) !important;
+}
+
+/* ===================================================================
+   5. MODAL DE SÉRIES E DETALHES
+   =================================================================== */
+.series-modal-card {
+  max-height: 88vh !important;
+}
+
+.series-episodes-list {
+  max-height: 50vh !important;
+  overflow-y: auto !important;
+}
+
+.toast-notice {
+  font-size: 15px !important;
+  padding: 12px 24px !important;
+  top: 30px !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 40px !important;
+  width: auto !important;
+  max-width: 520px !important;
+  height: auto !important;
+  border-radius: 12px !important;
+  pointer-events: none !important;
+}
+
+/* ===================================================================
+   OTIMIZAÇÃO CRÍTICA DE DESEMPENHO PARA SMART TV (GPU & RENDER ENGINE)
+   Remove cálculos pesados de backdrop-filter e ativa Direct Compositing
+   =================================================================== */
+html.is-tv *,
+html[data-platform="tv"] *,
+.is-tv * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+#mini-video-element,
+.mini-player-box {
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  will-change: transform !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+
+/* ===================================================================
+   TEMA MONOCROMÁTICO PRETO E BRANCO (BLACK & WHITE CINEMA TV)
+   Baseado nas imagens de referência do usuário:
+   - Imagem 1: Linha de 5 tiles na Home (Live Tv, Movies, Series, Playlist, Settings)
+   - Imagem 2: VOD Sidebar com contadores e item ativo branco (#ffffff / texto #000)
+   - Imagem 3: Temporadas e Episódios 16:9 com "..." e legenda "S1 E1"
+   - Imagem 4: Botões PLAY, PLAY TRAILER, + FAVORITES com foco branco (#ffffff / texto #000)
+   =================================================================== */
+
+/* -------------------------------------------------------------
+   1. HOME SCREEN - LINHA DE 5 TILES (IMAGEM 1)
+   ------------------------------------------------------------- */
+.home-hub-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: calc(100vh - 160px) !important;
+  padding: 0 40px !important;
+}
+
+.home-nav-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 22px !important;
+  width: 100% !important;
+  max-width: 1100px !important;
+}
+
+.home-nav-tile {
+  flex: 1 !important;
+  min-width: 170px !important;
+  max-width: 200px !important;
+  height: 135px !important;
+  background: #141720 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  cursor: pointer !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  position: relative !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+}
+
+.home-nav-tile .tile-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+.home-nav-tile .tile-title {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.5px !important;
+  text-align: center !important;
+  transition: color 0.2s ease !important;
+}
+
+/* Foco no Tile da Home (Borda branca brilhante e elevação estilo Imagem 1) */
+.home-nav-tile.focused,
+.home-nav-tile:hover {
+  border: 2.5px solid #ffffff !important;
+  background: #1c202d !important;
+  transform: scale(1.08) translateY(-4px) !important;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 16px 36px rgba(0, 0, 0, 0.9) !important;
+  z-index: 10 !important;
+}
+
+.home-nav-tile.focused .tile-icon {
+  transform: scale(1.1) !important;
+  color: #ffffff !important;
+}
+
+/* Sub-barra de botões inferiores discretos na Home */
+.home-bottom-subbar {
+  display: flex !important;
+  gap: 16px !important;
+  margin-top: 36px !important;
+  justify-content: center !important;
+}
+
+.home-sub-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #94a3b8 !important;
+  border-radius: 20px !important;
+  padding: 8px 20px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.home-sub-btn.focused,
+.home-sub-btn:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  transform: scale(1.05) !important;
+}
+
+.home-sub-btn.btn-danger-sub.focused,
+.home-sub-btn.btn-danger-sub:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+}
+
+
+/* -------------------------------------------------------------
+   2. TELA DE FILMES E SÉRIES VOD (IMAGEM 2)
+   ------------------------------------------------------------- */
+#screen-vod .superplay-vod-layout {
+  display: flex !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Sidebar VOD (Imagem 2) */
+.vod-sidebar {
+  width: 320px !important;
+  min-width: 320px !important;
+  max-width: 320px !important;
+  height: 100vh !important;
+  background: #090b11 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 24px 16px !important;
+  z-index: 5 !important;
+  box-sizing: border-box !important;
+}
+
+/* Campo de Busca (Imagem 2) */
+.vod-search-wrap {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 12px !important;
+  width: 100% !important;
+}
+
+.vod-search-ico {
+  position: absolute !important;
+  left: 14px !important;
+  font-size: 15px !important;
+  color: #94a3b8 !important;
+  pointer-events: none !important;
+}
+
+.vod-search-input {
+  width: 100% !important;
+  background: #12141c !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  padding: 10px 14px 10px 38px !important;
+  font-size: 15px !important;
+  color: #ffffff !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.vod-search-input:focus,
+.vod-search-input.focused {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+  background: #181b26 !important;
+}
+
+/* Categorias Rápidas (Continue Watching, Favorites, Recently Added) */
+.vod-quick-cats {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  margin-bottom: 8px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Item de Categoria da Sidebar (Imagem 2) */
+.vod-sidebar-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 14px !important;
+  border-radius: 6px !important;
+  background: #11131b !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #e2e8f0 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+  margin-bottom: 5px !important;
+}
+
+.vod-cat-name {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex: 1 !important;
+  padding-right: 10px !important;
+}
+
+.vod-cat-count {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  flex-shrink: 0 !important;
+}
+
+/* ESTADO ATIVO / FOCADO (IDÊNTICO À IMAGEM 2: BRANCO SÓLIDO COM TEXTO PRETO!) */
+.vod-sidebar-item.active-cat,
+.vod-sidebar-item.focused,
+.vod-sidebar-item:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+  font-weight: 800 !important;
+  transform: none !important;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.25) !important;
+}
+
+.vod-sidebar-item.active-cat .vod-cat-name,
+.vod-sidebar-item.focused .vod-cat-name,
+.vod-sidebar-item.active-cat .vod-cat-count,
+.vod-sidebar-item.focused .vod-cat-count {
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+.vod-categories-scroll {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  padding-right: 4px !important;
+}
+
+/* Área de Conteúdo da Direita (Imagem 2) */
+.vod-content-area {
+  flex: 1 !important;
+  height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 24px 36px 36px 36px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.vod-content-header {
+  margin-bottom: 20px !important;
+}
+
+.vod-active-heading {
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Grade de Posters VOD (Imagem 2) */
+.vod-grid-container {
+  flex: 1 !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)) !important;
+  gap: 24px 18px !important;
+  overflow-y: auto !important;
+  padding-bottom: 60px !important;
+  align-content: start !important;
+}
+
+/* Card de Pôster Individual (Aspecto 2:3 vertical) */
+.vod-poster-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease !important;
+}
+
+.vod-poster-thumb {
+  width: 100% !important;
+  aspect-ratio: 2 / 3 !important;
+  border-radius: 10px !important;
+  background: #13151d !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Três pontos "..." centralizados quando a imagem ainda não carregou (Imagem 2) */
+.poster-fallback-cover {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #13151d !important;
+  color: #71788e !important;
+  font-size: 28px !important;
+  letter-spacing: 3px !important;
+  z-index: 1 !important;
+}
+
+.poster-fallback-cover .fallback-icon,
+.poster-fallback-cover .fallback-title {
+  display: none !important;
+}
+
+.poster-fallback-cover::after {
+  content: '•••' !important;
+  font-size: 26px !important;
+  color: #64748b !important;
+  letter-spacing: 4px !important;
+}
+
+.vod-poster-thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  opacity: 1 !important;
+  display: block !important;
+  border-radius: 10px !important;
+  transition: opacity 0.25s ease !important;
+}
+
+.vod-poster-thumb img.img-hidden,
+.vod-poster-thumb img[style*="display: none"] {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+.vod-poster-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #e2e8f0 !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Foco no Poster VOD (Borda branca nítida e elevação sem borda amarela) */
+.vod-poster-card.focused,
+.vod-poster-card:hover {
+  transform: scale(1.06) !important;
+}
+
+.vod-poster-card.focused .vod-poster-thumb,
+.vod-poster-card:hover .vod-poster-thumb {
+  border: 2.5px solid #ffffff !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 16px 36px rgba(0, 0, 0, 0.9) !important;
+  transform: translateY(-4px) !important;
+}
+
+.vod-poster-card.focused .vod-poster-title,
+.vod-poster-card:hover .vod-poster-title {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+
+/* -------------------------------------------------------------
+   3. SÉRIES - TEMPORADAS E EPISÓDIOS 16:9 (IMAGEM 3)
+   ------------------------------------------------------------- */
+.series-seasons-section {
+  margin-top: 24px !important;
+}
+
+.series-section-title {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  margin-bottom: 14px !important;
+}
+
+.series-seasons-tabs {
+  display: flex !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  padding-bottom: 12px !important;
+}
+
+/* Season Tab Pill (Imagem 3) */
+.season-tab-btn {
+  background: #141722 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  padding: 10px 24px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  white-space: nowrap !important;
+}
+
+/* Season Ativa / Focada: Branco sólido com texto preto (Imagem 3) */
+.season-tab-btn.active-season,
+.season-tab-btn.focused,
+.season-tab-btn:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 14px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Grade de Episódios em Linha Horizontal 16:9 (Imagem 3) */
+.series-episodes-list {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 20px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 12px 0 24px 0 !important;
+}
+
+/* Card Widescreen 16:9 de Episódio (Imagem 3) */
+.episode-item {
+  flex-shrink: 0 !important;
+  width: 230px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease !important;
+}
+
+.episode-widescreen-thumb {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  background: #13151d !important;
+  border-radius: 10px !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Três pontos centralizados no card 16:9 (Imagem 3) */
+.episode-widescreen-thumb::after {
+  content: '•••' !important;
+  font-size: 24px !important;
+  color: #64748b !important;
+  letter-spacing: 4px !important;
+}
+
+.episode-widescreen-thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+}
+
+.episode-label-s-e {
+  margin-top: 10px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  text-align: center !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Foco no Episódio 16:9 */
+.episode-item.focused,
+.episode-item:hover {
+  transform: scale(1.06) !important;
+}
+
+.episode-item.focused .episode-widescreen-thumb,
+.episode-item:hover .episode-widescreen-thumb {
+  border: 2.5px solid #ffffff !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.4) !important;
+}
+
+.episode-item.focused .episode-label-s-e,
+.episode-item:hover .episode-label-s-e {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+
+/* -------------------------------------------------------------
+   4. BOTÕES DE AÇÃO: PLAY, PLAY TRAILER, + FAVORITES (IMAGEM 4)
+   ------------------------------------------------------------- */
+.series-hero-actions,
+.movie-details-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  max-width: 250px !important;
+  margin-top: 20px !important;
+}
+
+.action-btn-cinema {
+  width: 100% !important;
+  background: #141720 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  padding: 14px 22px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  box-sizing: border-box !important;
+}
+
+.action-btn-cinema .btn-triangle {
+  font-size: 14px !important;
+}
+
+.action-btn-cinema .btn-plus {
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+/* Foco no Botão de Ação: BRANCO SÓLIDO COM TEXTO PRETO (IDÊNTICO À IMAGEM 4) */
+.action-btn-cinema.focused,
+.action-btn-cinema:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+  font-weight: 900 !important;
+  transform: scale(1.04) !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 8px 20px rgba(0, 0, 0, 0.8) !important;
+}
+
+.action-btn-cinema.focused span,
+.action-btn-cinema:hover span {
+  color: #000000 !important;
+  font-weight: 900 !important;
+}
+
+.action-btn-cinema.btn-cinema-close {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+
+/* -------------------------------------------------------------
+   5. MODAL DE TRAILER EM TELA CHEIA (YOUTUBE EMBED)
+   ------------------------------------------------------------- */
+.trailer-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: #000000 !important;
+  z-index: 99999 !important;
+  display: none;
+  flex-direction: column !important;
+}
+
+.trailer-modal-overlay.active {
+  display: flex !important;
+}
+
+.trailer-topbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 20px !important;
+  padding: 16px 36px !important;
+  background: rgba(10, 13, 20, 0.95) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.trailer-back-btn {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.trailer-back-btn.focused,
+.trailer-back-btn:hover {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5) !important;
+  transform: scale(1.05) !important;
+}
+
+.trailer-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.trailer-video-wrapper {
+  flex: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+  background: #000000 !important;
+}
+
+.trailer-video-wrapper iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+}
+
+/* ===================================================================
+   ACELERAÇÃO DE DESEMPENHO E FLUIDEZ MÁXIMA PARA SMART TV (10-FOOT UI)
+   =================================================================== */
+/* 1. Desativa totalmente filtros de blur e composições pesadas */
+* {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 2. Listas e grades com contenção de renderização isolada na GPU */
+.live-ch-row {
+  contain: content !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  transition: background 0.06s ease, border-color 0.06s ease !important;
+}
+
+.vod-poster-card {
+  contain: layout style !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  transition: transform 0.08s ease !important;
+}
+
+.episode-item {
+  contain: content !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  transition: transform 0.08s ease !important;
+}
+
+/* 3. Foco instantâneo com alto contraste e zero latência */
+.focusable {
+  transition: transform 0.08s ease, outline-color 0.08s ease !important;
+}
+
+.focusable.focused {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.45) !important;
+  z-index: 10 !important;
+}
+
+.vod-poster-card.focused {
+  transform: scale(1.04) !important;
+}
+
+.vod-poster-card.focused .vod-poster-thumb {
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.5) !important;
+  transform: none !important;
+}
+
+.live-ch-row.focused {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3) !important;
+}
+
+.live-ch-row.focused .live-ch-num,
+.live-ch-row.focused .live-ch-name {
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+.live-ch-row.focused .live-ch-sub {
+  color: #334155 !important;
+}
+
+

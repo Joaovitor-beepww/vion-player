@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vion Player - Smart Media Player</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- ===================================================================
+       MODALIDADE DE ENTRADA (touch x ponteiro fino x D-pad de TV)
+       =================================================================== -->
+  <script>
+    (function () {
+      try {
+        var ua = navigator.userAgent || '';
+        var docEl = document.documentElement;
+
+        var tvToken = /Web0S|webOS|SMART-TV|SmartTV|NetCast|HbbTV|Tizen|GoogleTV|Android TV|AFT[A-Z0-9]{2,4}|BRAVIA|AppleTV|Roku|Vidaa/i.test(ua);
+
+        function mq(q) {
+          try { return window.matchMedia ? matchMedia(q).matches : false; }
+          catch (e) { return false; }
+        }
+
+        function detectTouch() {
+          if (tvToken) return false;
+          if ((navigator.maxTouchPoints || 0) <= 0) return false;
+          return mq('(pointer: coarse)') || !mq('(pointer: fine)');
+        }
+
+        function apply() {
+          var isTouch = detectTouch();
+          var isTv = tvToken || (/Android/i.test(ua) && !/Mobile/i.test(ua));
+          docEl.classList.toggle('is-touch', isTouch);
+          docEl.classList.toggle('is-tv', isTv);
+          docEl.classList.toggle('is-pointer', !isTouch && !isTv);
+          if (isTv) {
+            docEl.setAttribute('data-platform', 'tv');
+            docEl.style.cursor = 'none';
+          } else {
+            docEl.removeAttribute('data-platform');
+            docEl.style.cursor = 'default';
+          }
+        }
+
+        apply();
+      } catch (e) { /* fail-safe */ }
+    })();
+  </script>
+  <script src="js/hls.min.js"></script>
+  <script src="js/mpegts.js"></script>
+</head>
+<body>
+
+  <!-- Fundo com Cenas Cinematográficas em Transição Suave (Estilo Netflix / Super Play) -->
+  <div class="cinema-backdrop-container">
+    <div id="cinema-backdrop-1" class="cinema-backdrop-layer active"></div>
+    <div id="cinema-backdrop-2" class="cinema-backdrop-layer"></div>
+    <div class="cinema-backdrop-vignette"></div>
+    <div class="ambient-cinema-glow"></div>
+  </div>
+
+  <!-- Notificação Flutuante no Topo (Toast) -->
+  <div id="toast-notice" class="toast-notice">
+    <span>⚡</span>
+    <span id="toast-message">Notificação</span>
+  </div>
+
+  <!-- ===================================================================
+       TELA 0: CARREGAMENTO / SPLASH INICIAL (ESTILO SUPER PLAY / LAZER PLAY)
+       Exibe: LOGO VION, PROGRESSO DE SINCRONIZAÇÃO E METADADOS DO APARELHO
+       =================================================================== -->
+  <div id="screen-loading" class="screen active">
+    <div class="superplay-splash-wrap">
+      <div class="superplay-splash-logo-box">
+        <img src="logo.png" alt="Vion Player" class="superplay-splash-logo">
+        <div class="superplay-splash-pulse"></div>
+      </div>
+      <h1 class="superplay-splash-title">VION <span class="brand-accent">PLAYER</span></h1>
+      <div class="superplay-progress-container">
+        <div id="splash-progress-bar" class="superplay-progress-bar"></div>
+      </div>
+      <div class="superplay-status-row">
+        <span id="splash-status-text" class="superplay-status-text">Iniciando Vion Player...</span>
+        <span id="splash-percent-text" class="superplay-percent-text">15%</span>
+      </div>
+      <div class="superplay-device-footer">
+        <span>MAC: <b class="val-mac-address">00:00:00:00:00:00</b></span>
+        <span>•</span>
+        <span>KEY: <b class="val-device-key">3530</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       TELA 1: LOGIN POR CÓDIGO DO PROVEDOR (STORE-COMPLIANT)
+       Exibe: CODIGO DO PROVEDOR, USUARIO, SENHA e no canto inferior o MAC e KEY
+       =================================================================== -->
+  <div id="screen-reseller-login" class="screen">
+    
+    <div class="reseller-login-card">
+      <div class="reseller-card-header">
+        <img src="logo.png" alt="Vion Logo" class="reseller-card-logo">
+        <h2>VION <span>PLAYER</span></h2>
+        <p>Acesse com as credenciais do seu provedor de mídia</p>
+      </div>
+
+      <!-- Seletor de Tipo de Conexão: Xtream Codes ou M3U Direto -->
+      <div class="login-type-tabs">
+        <button type="button" id="tab-login-xtream" class="login-tab-btn active focusable" tabindex="0">
+          <span>⚡</span> Xtream Codes
+        </button>
+        <button type="button" id="tab-login-m3u" class="login-tab-btn focusable" tabindex="0">
+          <span>📋</span> Lista M3U
+        </button>
+      </div>
+
+      <!-- Formulário 1: Xtream Codes (Servidor, Usuário, Senha) -->
+      <form id="reseller-login-form" class="login-subform">
+        <div class="reseller-form-group">
+          <label>CÓDIGO DE PARCERIA :</label>
+          <input type="text" id="input-reseller-code" class="focusable" placeholder="Ex: TOURO" required autocomplete="off" tabindex="0">
+        </div>
+
+        <div class="reseller-form-group">
+          <label>USUÁRIO :</label>
+          <input type="text" id="input-reseller-user" class="focusable" placeholder="Digite seu usuário" required autocomplete="off" tabindex="0">
+        </div>
+
+        <div class="reseller-form-group">
+          <label>SENHA :</label>
+          <input type="password" id="input-reseller-pass" class="focusable" placeholder="Digite sua senha" required autocomplete="off" tabindex="0">
+        </div>
+
+        <button type="submit" id="btn-do-reseller-login" class="btn-reseller-login focusable" tabindex="0">
+          ENTRAR
+        </button>
+      </form>
+
+      <!-- Formulário 2: Link M3U Direto -->
+      <form id="m3u-login-form" class="login-subform" style="display: none;">
+        <div class="reseller-form-group">
+          <label>NOME DA LISTA (OPCIONAL) :</label>
+          <input type="text" id="input-m3u-name" class="focusable" placeholder="Ex: Minha Lista" autocomplete="off" tabindex="0">
+        </div>
+
+        <div class="reseller-form-group">
+          <label>LINK / URL DA PLAYLIST M3U :</label>
+          <input type="text" id="input-m3u-url" class="focusable" placeholder="http://servidor.com/get.php?username=...&password=..." required autocomplete="off" tabindex="0">
+        </div>
+
+        <button type="submit" id="btn-do-m3u-login" class="btn-reseller-login focusable" tabindex="0">
+          ENTRAR COM LINK M3U
+        </button>
+      </form>
+
+      <!-- Botão Pular / Ir para o Início -->
+      <button type="button" id="btn-skip-login" class="btn-skip-login focusable" tabindex="0">
+        <span>➔</span> Pular e Ir para o Início
+      </button>
+    </div>
+
+    <!-- Metadados no Canto Inferior Esquerdo -->
+    <div class="corner-left-help">
+      <p>App Version: <strong>1.1.8</strong></p>
+      <p>Reprodutor multimídia para listas de reprodução pessoais</p>
+    </div>
+
+    <!-- Metadados no Canto Inferior Direito (MAC e DEVICE KEY solicitados) -->
+    <div class="corner-device-info">
+      <p>MAC: <span class="val val-mac-address">00:00:00:00:00:00</span></p>
+      <p>DEVICE KEY: <span class="val val-device-key">----</span></p>
+      <p style="font-size: 11px; margin-top: 2px; color: var(--text-muted);">Web: vionplayer.app</p>
+    </div>
+
+  </div>
+
+    <!-- ===================================================================
+       TELA 2: DASHBOARD PRINCIPAL MODERNO (EXECUTIVE GLASS IPTV)
+       =================================================================== -->
+  <div id="screen-home" class="screen">
+    
+    <!-- Topo Superior Glassmorphic -->
+    <header class="home-topbar">
+      <div class="home-top-brand">
+        <div class="home-logo-glow">
+          <img src="logo.png" alt="Vion Player" class="home-brand-logo">
+        </div>
+        <div class="home-brand-text">
+          <span class="home-brand-vion">VION</span>
+          <span class="home-brand-player">PLAYER</span>
+          <span class="home-pro-badge">PRO</span>
+        </div>
+      </div>
+
+      <div class="home-top-status">
+        <div class="home-status-pill">
+          <span class="status-dot-green"></span>
+          <span>Online</span>
+        </div>
+        <div class="home-status-pill">
+          <span class="status-calendar-icon">📅</span>
+          <span>Teste: <strong id="val-trial-expire">Carregando...</strong></span>
+        </div>
+        <div class="home-clock-pill">
+          <span id="digital-clock" class="digital-clock">--:--</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Centro: Linha de 5 Tiles Principais (Estilo Imagem 1) -->
+    <main class="home-hub-container">
+      <div class="home-nav-row" id="home-nav-row">
+
+        <!-- 1. LIVE TV -->
+        <div class="home-nav-tile focusable" data-action="channels" tabindex="0">
+          <div class="tile-icon">
+            <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="15" rx="3" ry="3"></rect>
+              <polyline points="17 2 12 7 7 2"></polyline>
+            </svg>
+          </div>
+          <span class="tile-title">Live Tv</span>
+        </div>
+
+        <!-- 2. MOVIES -->
+        <div class="home-nav-tile focusable" data-action="movies" tabindex="0">
+          <div class="tile-icon">
+            <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+              <circle cx="8" cy="8" r="1.5" fill="currentColor"></circle>
+              <circle cx="16" cy="8" r="1.5" fill="currentColor"></circle>
+              <circle cx="8" cy="16" r="1.5" fill="currentColor"></circle>
+              <circle cx="16" cy="16" r="1.5" fill="currentColor"></circle>
+            </svg>
+          </div>
+          <span class="tile-title">Movies</span>
+        </div>
+
+        <!-- 3. SERIES -->
+        <div class="home-nav-tile focusable" data-action="series" tabindex="0">
+          <div class="tile-icon">
+            <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="14" rx="2"></rect>
+              <polygon points="10 8 16 11 10 14" fill="currentColor"></polygon>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="18" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <span class="tile-title">Series</span>
+        </div>
+
+        <!-- 4. PLAYLIST -->
+        <div class="home-nav-tile focusable" data-action="playlists" tabindex="0">
+          <div class="tile-icon">
+            <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 6h16"></path>
+              <path d="M4 10h16"></path>
+              <rect x="3" y="10" width="18" height="12" rx="2"></rect>
+              <polygon points="10 13 15 16 10 19" fill="currentColor"></polygon>
+            </svg>
+          </div>
+          <span class="tile-title">Playlist</span>
+        </div>
+
+        <!-- 5. SETTINGS -->
+        <div class="home-nav-tile focusable" data-action="settings" tabindex="0">
+          <div class="tile-icon">
+            <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </div>
+          <span class="tile-title">Settings</span>
+        </div>
+
+      </div>
+
+      <!-- Barra Inferior Discreta para Sincronizar e Sair -->
+      <div class="home-bottom-subbar">
+        <button id="btn-top-reload" class="home-sub-btn focusable" tabindex="0">
+          <span>🔄</span> <span>Sincronizar</span>
+        </button>
+        <button id="btn-top-exit" class="home-sub-btn focusable btn-danger-sub" tabindex="0">
+          <span>🚪</span> <span>Sair</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- Rodapé Moderno Discreto -->
+    <footer class="home-modern-footer">
+      <div class="home-footer-left">
+        <span class="footer-tag">VION PLAYER v1.1.8</span>
+        <span class="footer-sep">•</span>
+        <span>Reprodutor Multimídia Ultra HD</span>
+      </div>
+      <div class="home-footer-right">
+        <span>MAC: <strong class="val val-mac-address">00:00:00:00:00:00</strong></span>
+        <span class="footer-sep">•</span>
+        <span>KEY: <strong class="val val-device-key">3530</strong></span>
+        <span class="footer-sep">•</span>
+        <span>vionplayer.app</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ===================================================================
+  TELA 3: GERENCIADOR DE PLAYLISTS NA TV
+       =================================================================== -->
+  <div id="screen-playlists" class="screen">
+    <header class="top-bar">
+      <div class="top-left-brand">
+        <img src="logo.png" alt="Vion Logo" class="top-logo-img">
+        <div class="top-brand-name">VION <span>PLAYLISTS</span></div>
+      </div>
+      <button id="btn-back-from-playlists" class="pill-btn focusable" tabindex="0">
+        <span>← Voltar ao Início</span>
+      </button>
+    </header>
+
+    <main class="activation-container">
+      <div class="playlists-modal-card">
+        <h2 style="font-size: 26px; margin-bottom: 8px;">Listas de Reprodução Conectadas</h2>
+        <p style="color: var(--text-muted); font-size: 14px;">
+          Selecione uma playlist para carregar seus canais:
+        </p>
+
+        <div id="tv-playlists-list" class="playlists-tv-list"></div>
+
+        <div style="display: flex; gap: 15px; justify-content: flex-end;">
+          <button id="btn-reload-playlists-tv" class="pill-btn focusable" tabindex="0" style="background: #ffffff; color: #000; font-weight: 700;">
+            🔄 Sincronizar do Portal
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="superplay-footer">
+      <div>[▲ ▼] Navegar entre listas • [OK] Selecionar e Ativar</div>
+    </footer>
+  </div>
+
+  <!-- ===================================================================
+       TELA 4: CANAIS AO VIVO (SUPER PLAY LIVE TV COM MINI PLAYER E EPG)
+       Idêntico à Imagem 4 oficial do Super Play
+       =================================================================== -->
+  <div id="screen-channels" class="screen">
+    <!-- Topo Super Play -->
+    <header class="superplay-live-topbar">
+      <div class="live-top-left">
+        <span class="live-tag-icon">🏷️</span>
+        <span id="live-active-cat-title" class="live-cat-title">Tudo</span>
+      </div>
+
+      <div class="live-top-color-actions">
+        <span class="color-pill"><span class="dot-red">■</span> Ordenar</span>
+        <span class="color-pill"><span class="dot-green">■</span> Categoria</span>
+        <span class="color-pill"><span class="dot-yellow">■</span> Favorito</span>
+        <span class="color-pill"><span class="dot-blue">■</span> Cardápio</span>
+      </div>
+
+      <div class="live-top-right">
+        <button id="btn-back-from-live" class="modern-header-back-btn" tabindex="-1" style="display: none !important;">
+          <span>◀</span> <span>Voltar ao Início</span>
+        </button>
+        <span id="live-digital-clock" class="digital-clock">20:00</span>
+      </div>
+    </header>
+
+    <!-- Layout 3 Colunas Super Play -->
+    <main class="superplay-live-layout">
+      <!-- Coluna 1: Categorias -->
+      <aside class="live-categories-col">
+        <div class="live-cat-static-btns">
+          <div class="live-cat-btn focusable" id="btn-live-favorites" tabindex="0">
+            <span>⭐</span> <span>Favorito</span>
+          </div>
+          <div class="live-search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="input-live-search" placeholder="Buscar canal..." class="live-search-input focusable" tabindex="0">
+            <button type="button" id="btn-clear-live-search" class="search-clear-btn" title="Limpar busca" style="display: none;">✕</button>
+          </div>
+        </div>
+        <div class="live-categories-scroll" id="live-categories-list">
+          <!-- Categorias geradas dinamicamente: pills elegantes -->
+        </div>
+      </aside>
+
+      <!-- Coluna 2: Lista de Canais -->
+      <section class="live-channels-col">
+        <div class="live-channels-scroll" id="live-channels-list">
+          <!-- Canais em lista vertical com logo e título -->
+        </div>
+      </section>
+
+      <!-- Coluna 3: Mini Player e EPG (Guia de Programação) -->
+      <aside class="live-preview-col">
+        <!-- Mini Player Box -->
+        <div class="mini-player-box" id="mini-player-container">
+          <video id="mini-video-element" autoplay playsinline preload="auto" poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23000000'/%3E%3C/svg%3E"></video>
+          <div id="mini-player-loading" class="mini-player-loading" style="display: none;">
+            <div class="spinner-small"></div>
+            <span>Conectando transmissão...</span>
+          </div>
+          <div class="mini-player-overlay focusable" id="btn-expand-fullscreen" tabindex="0" title="Clique ou pressione Enter para Tela Cheia">
+            <span class="fullscreen-badge">⛶ Tela Cheia<span class="kbd-hint"> [OK]</span></span>
+          </div>
+
+          <!-- Barra superior da Tela Cheia de Canal Ao Vivo (Visível com botão Voltar e some ao toque) -->
+          <div id="mini-fs-topbar" class="mini-fs-topbar">
+            <button type="button" id="btn-mini-fs-back" class="mini-fs-back-btn focusable" tabindex="0">
+              ◀ Voltar aos Canais
+            </button>
+            <div class="mini-fs-topbar-info">
+              <span id="mini-fs-topbar-title" class="mini-fs-topbar-title">Canal Ao Vivo</span>
+              <div class="mini-fs-badge"><span class="pulse-dot-red"></span> AO VIVO</div>
+            </div>
+          </div>
+
+          <!-- HUD / OSD de Tela Cheia Instantânea do Canal (Sem reconectar!) -->
+          <div id="mini-fs-osd" class="mini-fs-osd">
+            <div class="mini-fs-bottom">
+              <div class="mini-fs-channel-info">
+                <span id="mini-fs-num" class="mini-fs-num">Canal 1</span>
+                <h2 id="mini-fs-title" class="mini-fs-title">Nome do Canal</h2>
+                <p id="mini-fs-cat" class="mini-fs-cat">Categoria</p>
+              </div>
+              <div class="mini-fs-hints">
+                <span>[OK] Voltar aos Canais</span>
+                <span>[◀ ▶] Ocultar / Mostrar Info</span>
+                <span>[▲ ▼] Próximo / Anterior</span>
+                <span>[Voltar] Sair da Tela Cheia</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EPG / Guia de Programação -->
+        <div class="live-epg-container">
+          <div class="live-epg-schedule" id="live-epg-schedule">
+            <div class="epg-row"><span class="epg-dot">⚪</span> <span class="epg-time">--:-- • --:--</span> <span class="epg-name">Transmissão Ao Vivo</span></div>
+            <div class="epg-row"><span class="epg-dot">⚪</span> <span class="epg-time">--:-- • --:--</span> <span class="epg-name">Guia de Programação (EPG)</span></div>
+            <div class="epg-row"><span class="epg-dot">⚪</span> <span class="epg-time">--:-- • --:--</span> <span class="epg-name">Programação Local</span></div>
+            <div class="epg-row"><span class="epg-dot">⚪</span> <span class="epg-time">--:-- • --:--</span> <span class="epg-name">Próxima Atração</span></div>
+          </div>
+          <div class="live-epg-calendar" id="live-epg-calendar">
+            <div class="calendar-pill active-cal"><span class="cal-day">11</span><span class="cal-wday">Wed</span></div>
+            <div class="calendar-pill"><span class="cal-day">12</span><span class="cal-wday">Thu</span></div>
+            <div class="calendar-pill"><span class="cal-day">13</span><span class="cal-wday">Fri</span></div>
+            <div class="calendar-pill"><span class="cal-day">14</span><span class="cal-wday">Sat</span></div>
+            <div class="calendar-pill"><span class="cal-day">15</span><span class="cal-wday">Sun</span></div>
+            <div class="calendar-pill"><span class="cal-day">16</span><span class="cal-wday">Mon</span></div>
+            <div class="calendar-pill"><span class="cal-day">17</span><span class="cal-wday">Tue</span></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="superplay-footer" style="padding: 10px 40px;">
+      <div>[▲ ▼] Navegar Canais • [OK] Tela Cheia • [◄ ►] Alternar Colunas • [Voltar] Início</div>
+    </footer>
+  </div>
+
+  <!-- ===================================================================
+       TELA 5: FILMES E SÉRIES VOD (ESTILO IMAGEM 2 OFICIAL)
+       Sidebar escura, Quick categories, pills com badge de contagem à direita,
+       Título ativo no topo e Grade com capas verticais 2:3 e '...' placeholder
+       =================================================================== -->
+  <div id="screen-vod" class="screen">
+    <!-- Fundo dinâmico cinematográfico atualizado ao selecionar filmes/séries -->
+    <div id="vod-dynamic-backdrop" class="vod-dynamic-backdrop"></div>
+    <div class="vod-dynamic-backdrop-vignette"></div>
+
+    <main class="superplay-vod-layout">
+      <!-- Sidebar de Categorias (Estilo Imagem 2) -->
+      <aside class="vod-sidebar">
+        <div class="vod-search-wrap">
+          <span class="vod-search-ico">🔍</span>
+          <input type="text" id="input-vod-search" class="vod-search-input focusable" placeholder="Search" tabindex="0">
+          <button type="button" id="btn-clear-vod-search" class="search-clear-btn" title="Limpar busca" style="display: none;">✕</button>
+        </div>
+
+        <!-- Categorias Rápidas Fixas (Imagem 2) -->
+        <div class="vod-quick-cats" id="vod-quick-cats">
+          <div class="vod-sidebar-item focusable" id="cat-continue-watching" data-quick="continue" tabindex="0">
+            <span class="vod-cat-name">Continue Watching</span>
+            <span class="vod-cat-count" id="count-continue-watching">0</span>
+          </div>
+          <div class="vod-sidebar-item focusable" id="cat-favorites" data-quick="favorites" tabindex="0">
+            <span class="vod-cat-name">Favorites</span>
+            <span class="vod-cat-count" id="count-favorites">0</span>
+          </div>
+          <div class="vod-sidebar-item focusable" id="cat-recently-added" data-quick="recent" tabindex="0">
+            <span class="vod-cat-name">Recently Added</span>
+            <span class="vod-cat-count" id="count-recently-added">100</span>
+          </div>
+        </div>
+
+        <!-- Lista de Categorias Dinâmicas com Contadores -->
+        <div class="vod-categories-scroll" id="vod-categories-list">
+          <!-- Renderizado via JS no formato: <div class="vod-sidebar-item focusable"><span class="vod-cat-name">Nome</span><span class="vod-cat-count">123</span></div> -->
+        </div>
+      </aside>
+
+      <!-- Conteúdo da Direita: Cabeçalho com Título Ativo + Grade de Capas (Imagem 2) -->
+      <section class="vod-content-area">
+        <header class="vod-content-header">
+          <h1 id="vod-section-heading" class="vod-active-heading">Series | AMC Plus</h1>
+          <span class="vod-count-pill" id="vod-count-badge" style="display: none;">0 itens</span>
+        </header>
+
+        <div class="vod-grid-container" id="vod-grid">
+          <!-- Posters verticais com aspecto 2:3, "..." e títulos limpos -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Tela Cinematográfica de Detalhes da Série (Estilo Imagens 3 e 4) -->
+  <div id="modal-series-details" class="series-cinematic-screen tv-dialog-overlay">
+    <div class="series-cinematic-backdrop" id="series-modal-bg"></div>
+    <div class="series-cinematic-vignette"></div>
+
+    <div class="series-cinematic-container">
+      <!-- Topbar com botão voltar e indicação da categoria -->
+      <div class="series-topbar">
+        <button type="button" id="btn-close-series-modal" class="series-back-btn focusable" tabindex="0">
+          <span>◀</span> <span>Voltar</span>
+        </button>
+        <div class="series-topbar-cat" id="series-modal-category">Séries</div>
+      </div>
+
+      <!-- Hero Header: Pôster + Título + Metas + Sinopse + Botões de Ação (Imagem 4) -->
+      <div class="series-hero-row">
+        <div class="series-hero-poster-wrap">
+          <img id="series-hero-poster" class="series-hero-poster" src="" alt="Capa da Série" />
+        </div>
+        <div class="series-hero-info">
+          <h1 id="series-modal-title" class="series-title">Nome da Série</h1>
+          <div class="series-meta-row">
+            <span class="series-meta-pill rating" id="series-modal-rating">★ 8.5</span>
+            <span class="series-meta-pill" id="series-modal-badge">1 Temporada • 12 Episódios</span>
+            <span class="series-meta-pill quality">4K Ultra HD</span>
+            <span class="series-meta-pill audio">Dolby 5.1</span>
+          </div>
+          <p id="series-modal-plot" class="series-synopsis">
+            Acompanhe todos os episódios desta série com streaming em alta velocidade no Vion Player.
+          </p>
+
+          <!-- Botões de Ação Estilo Imagem 4: PLAY, PLAY TRAILER, + FAVORITES -->
+          <div class="series-hero-actions">
+            <button type="button" id="btn-series-play-first" class="action-btn-cinema focusable" tabindex="0">
+              <span class="btn-triangle">▶</span> <span>PLAY</span>
+            </button>
+            <button type="button" id="btn-series-trailer" class="action-btn-cinema focusable" tabindex="0">
+              <span class="btn-triangle">▶</span> <span>PLAY TRAILER</span>
+            </button>
+            <button type="button" id="btn-series-fav" class="action-btn-cinema focusable" tabindex="0">
+              <span class="btn-plus">+</span> <span id="series-fav-text">FAVORITES</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seletor de Temporadas (Estilo Imagem 3) -->
+      <div class="series-seasons-section">
+        <h3 class="series-section-title">Seasons</h3>
+        <div class="series-seasons-nav-wrapper">
+          <div class="series-seasons-tabs" id="series-seasons-tabs">
+            <!-- Season 1 (Pill branco), Season 2... -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade / Linha de Episódios Widescreen 16:9 (Estilo Imagem 3) -->
+      <div class="series-episodes-section">
+        <div class="series-episodes-list" id="series-episodes-list">
+          <!-- Cards 16:9 widescreen com "..." e legenda "S1 E1", "S1 E2"... -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes do Filme (Estilo Imagem 4) -->
+  <div id="modal-movie-details" class="movie-details-overlay">
+    <div class="movie-details-backdrop" id="movie-details-backdrop"></div>
+    <div class="movie-details-vignette"></div>
+    <div class="movie-details-container">
+      <div class="movie-details-content">
+        <h1 id="movie-details-title" class="movie-details-title">Nome do Filme</h1>
+        <div class="movie-details-meta-row">
+          <span class="movie-star-rating">★★★★★</span>
+          <span class="movie-year-badge" id="movie-details-year">2026</span>
+          <span class="movie-duration-badge" id="movie-details-duration">⏱ 01:45:00</span>
+          <span class="movie-category-tag" id="movie-details-category">Filme</span>
+        </div>
+        <p id="movie-details-synopsis" class="movie-details-synopsis">
+          Reproduza este título em alta definição com aceleração por hardware nativo.
+        </p>
+
+        <!-- Botões de Ação Estilo Imagem 4: PLAY, PLAY TRAILER, + FAVORITES -->
+        <div class="movie-details-actions">
+          <button type="button" id="btn-movie-play" class="action-btn-cinema focusable" tabindex="0">
+            <span class="btn-triangle">▶</span> <span>PLAY</span>
+          </button>
+          <button type="button" id="btn-movie-trailer" class="action-btn-cinema focusable" tabindex="0">
+            <span class="btn-triangle">▶</span> <span>PLAY TRAILER</span>
+          </button>
+          <button type="button" id="btn-movie-fav" class="action-btn-cinema focusable" tabindex="0">
+            <span class="btn-plus">+</span> <span id="movie-fav-text">FAVORITES</span>
+          </button>
+          <button type="button" id="btn-movie-close" class="action-btn-cinema focusable btn-cinema-close" tabindex="0">
+            <span>✕</span> <span>VOLTAR</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Trailer em Tela Cheia (YouTube Embed) -->
+  <div id="modal-trailer-player" class="trailer-modal-overlay">
+    <div class="trailer-topbar">
+      <button type="button" id="btn-close-trailer" class="trailer-back-btn focusable" tabindex="0">
+        <span>◀</span> <span>Fechar Trailer</span>
+      </button>
+      <span id="trailer-title" class="trailer-title">Trailer Oficial</span>
+    </div>
+    <div class="trailer-video-wrapper">
+      <iframe id="trailer-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       TELA 5: PLAYER DE VÍDEO (COM CONTROLES TOUCH E TV COMPLETOS)
+       =================================================================== -->
+  <div id="screen-player" class="screen">
+    <!-- Zona de toque de tela cheia para alternar controles (Tap to Show/Hide) -->
+    <div id="player-tap-zone" class="player-tap-zone"></div>
+    <video id="video-element" autoplay playsinline></video>
+
+    <!-- Overlay de Controles Interativos Touch / TV -->
+    <div id="player-controls-overlay" class="player-controls-overlay hidden">
+      <!-- Barra Superior: Botão Voltar + Metadados do Vídeo -->
+      <div class="player-ctrl-topbar">
+        <button type="button" id="btn-player-back" class="player-back-btn focusable" tabindex="0">
+          <span class="player-back-arrow">◀</span>
+          <span>Voltar</span>
+        </button>
+
+        <div class="player-title-info">
+          <h3 id="player-ctrl-title" class="player-ctrl-title">Título do Conteúdo</h3>
+          <span id="player-ctrl-category" class="player-ctrl-category">Categoria</span>
+        </div>
+
+        <div class="player-ctrl-top-right">
+          <span id="player-ctrl-badge" class="player-badge">LIVE</span>
+        </div>
+      </div>
+
+      <!-- Centro da Tela: Ações Principais (Retroceder 10s, Play/Pause, Avançar 10s) -->
+      <div class="player-ctrl-center">
+        <button type="button" id="btn-player-rewind" class="player-ctrl-circle-btn focusable" tabindex="0" title="Voltar 10 segundos">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 4v6h6"></path>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            <text x="12" y="15.5" font-size="7.5" font-weight="900" fill="currentColor" text-anchor="middle" stroke="none">10</text>
+          </svg>
+        </button>
+
+        <button type="button" id="btn-player-playpause" class="player-ctrl-circle-btn player-play-main focusable" tabindex="0" title="Play / Pausar">
+          <span id="player-icon-playpause">❚❚</span>
+        </button>
+
+        <button type="button" id="btn-player-forward" class="player-ctrl-circle-btn focusable" tabindex="0" title="Avançar 10 segundos">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            <text x="12" y="15.5" font-size="7.5" font-weight="900" fill="currentColor" text-anchor="middle" stroke="none">10</text>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Barra Inferior: Linha do Tempo (VOD) ou Alternar Canais (Live) -->
+      <div class="player-ctrl-bottombar">
+        <!-- Controles para Filmes e Séries (Timeline / Seekbar) -->
+        <div id="player-vod-controls" class="player-vod-controls">
+          <span id="player-current-time" class="player-time-display">00:00</span>
+          <div class="player-timeline-wrapper">
+            <input type="range" id="player-seek-slider" class="player-seek-slider focusable" min="0" max="100" value="0" step="0.1" tabindex="0">
+          </div>
+          <span id="player-duration-time" class="player-time-display">00:00</span>
+        </div>
+
+        <!-- Controles para Canais Ao Vivo (Navegação de Canal) -->
+        <div id="player-live-controls" class="player-live-controls" style="display: none;">
+          <button type="button" id="btn-player-prev-channel" class="player-ch-nav-btn focusable" tabindex="0">
+            ◀ Canal Anterior
+          </button>
+          <div class="player-live-indicator">
+            <span class="live-dot-red">●</span>
+            <span>TRANSMISSÃO AO VIVO</span>
+          </div>
+          <button type="button" id="btn-player-next-channel" class="player-ch-nav-btn focusable" tabindex="0">
+            Próximo Canal ▶
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="player-loading" class="player-loading" style="display: none;">
+      <div class="spinner"></div>
+      <span>Carregando transmissão...</span>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       TELA 6: CONFIGURAÇÕES
+       =================================================================== -->
+  <div id="screen-settings" class="screen">
+    <header class="top-bar">
+      <div class="top-left-brand">
+        <img src="logo.png" alt="Vion Logo" class="top-logo-img">
+        <div class="top-brand-name">VION <span>SETTINGS</span></div>
+      </div>
+      <button id="btn-back-from-settings" class="pill-btn focusable" tabindex="0">
+        <span>← Voltar</span>
+      </button>
+    </header>
+
+    <main class="activation-container">
+      <div class="playlists-modal-card" style="max-width: 650px;">
+        <h2 style="margin-bottom: 20px;">Configurações do Dispositivo</h2>
+
+        <div style="background: #141c2c; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-glass);">
+          <p style="margin-bottom: 8px;"><strong>MAC Address:</strong> <span class="val-mac-address" style="color: var(--primary-yellow); font-family: monospace;">00:00:00:00:00:00</span></p>
+          <p style="margin-bottom: 8px;"><strong>Device Key:</strong> <span class="val-device-key" style="color: var(--primary-yellow); font-family: monospace;">3530</span></p>
+          <p><strong>Licença:</strong> <span style="color: var(--success); font-weight: 700;">Teste Ativo (7 dias restantes)</span></p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <button id="btn-goto-login" class="pill-btn focusable" style="border-color: var(--primary-yellow); color: var(--primary-yellow); justify-content: center; width: 100%;" tabindex="0">
+            🔑 Fazer Login / Conectar Provedor
+          </button>
+          <button id="btn-clear-playlist" class="pill-btn focusable" style="border-color: var(--danger); color: var(--danger); justify-content: center; width: 100%;" tabindex="0">
+            🚪 Sair da Conta / Desconectar Provedor
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="superplay-footer">
+      <div>[Voltar] Retornar ao Menu Principal</div>
+    </footer>
+  </div>
+
+  <!-- ===================================================================
+       MODAL DE CONFIRMAÇÃO DE SAÍDA (CUSTOMIZADO PARA TV)
+       =================================================================== -->
+  <div id="modal-tv-dialog" class="tv-dialog-overlay">
+    <div class="tv-dialog-box">
+      <h3 id="dialog-title">Sair do Aplicativo?</h3>
+      <p id="dialog-desc">Deseja realmente fechar o Vion Player?</p>
+      <div class="tv-dialog-actions">
+        <button id="btn-dialog-cancel" class="pill-btn focusable" tabindex="0">Cancelar</button>
+        <button id="btn-dialog-confirm" class="pill-btn focusable" style="background: var(--danger); border-color: var(--danger);" tabindex="0">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Sincronização Persistente de Playlist (Permanece até finalizar 100%) -->
+  <div id="modal-sync-progress" class="sync-modal-overlay">
+    <div class="sync-modal-card">
+      <div class="sync-logo-spinner-wrap">
+        <img src="logo.png" alt="Vion" class="sync-modal-logo">
+        <div class="sync-spinner-ring"></div>
+      </div>
+      <h3 id="sync-modal-title" class="sync-modal-title">Sincronizando Lista</h3>
+      <p id="sync-modal-status" class="sync-modal-status">Conectando ao provedor e baixando canais...</p>
+      <div class="sync-progress-bar-wrap">
+        <div id="sync-progress-bar-fill" class="sync-progress-bar-fill"></div>
+      </div>
+      <span id="sync-modal-subtitle" class="sync-modal-subtitle">Por favor, aguarde até a lista finalizar...</span>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script src="js/m3uParser.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/remote.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "68:C6:F2:FA:8F:DE": {
+    "mac": "68:C6:F2:FA:8F:DE",
+    "key": "9929",
+    "playlists": [
+      {
+        "id": "1790818127731",
+        "name": "teste1",
+        "url": "http://onev2.shop/get.php?username=7518267&password=9204649&type=m3u_plus&output=mpegts"
+      }
+    ]
+  },
+  "85:00:C3:E9:43:33": {
+    "mac": "85:00:C3:E9:43:33",
+    "key": "4049",
+    "playlists": []
+  },
+  "65:FA:A2:AA:77:2D": {
+    "mac": "65:FA:A2:AA:77:2D",
+    "key": "9257",
+    "playlists": [
+      {
+        "id": "1790821671061",
+        "name": "teste",
+        "url": "http://projetotourov2.pro/get.php?username=986876098201&password=156565804623&type=m3u_plus&output=mpegts"
+      }
+    ]
+  },
+  "BB:1F:3D:E5:21:B0": {
+    "mac": "BB:1F:3D:E5:21:B0",
+    "key": "4588",
+    "playlists": [
+      {
+        "id": "1790853136656",
+        "name": "teste",
+        "url": "http://projetotourov2.pro/get.php?username=986876098201&password=156565804623&type=m3u_plus&output=mpegts"
+      }
+    ]
+  },
+  "95:B5:86:BA:8D:43": {
+    "mac": "95:B5:86:BA:8D:43",
+    "key": "9598",
+    "playlists": []
+  }
+}

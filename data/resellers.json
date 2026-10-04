@@ -1,0 +1,100 @@
+{
+  "joaovitordc1010@gmail.com": {
+    "id": "reseller_master",
+    "email": "joaovitordc1010@gmail.com",
+    "password": "admin",
+    "company": "Vion Player Master",
+    "firstName": "João",
+    "lastName": "Vitor",
+    "country": "Brasil",
+    "address": "Administração Geral",
+    "phone": "+55 11 99999-9999",
+    "partnerTypes": [
+      "reseller",
+      "reference"
+    ],
+    "credits": 10049,
+    "activations": [],
+    "creditHistory": [
+      {
+        "id": "buy_1791122388607",
+        "type": "purchase",
+        "amount": 50,
+        "desc": "Compra de 50 créditos via PIX Instant�neo",
+        "date": 1791122388607
+      },
+      {
+        "id": "h1",
+        "type": "initial",
+        "amount": 9999,
+        "desc": "Créditos Iniciais de Administrador",
+        "date": 1791122305856
+      }
+    ],
+    "links": [
+      {
+        "id": "l1",
+        "name": "Link Oficial de Parceria",
+        "code": "VION-JV",
+        "clicks": 28,
+        "activations": 5,
+        "url": "http://192.168.1.197:3000/portal#reseller?ref=VION-JV"
+      }
+    ],
+    "subs": [
+      {
+        "id": "s1",
+        "name": "Sub-revenda São Paulo",
+        "email": "sp@vionplayer.app",
+        "credits": 50,
+        "active": true,
+        "date": 1791122305856
+      }
+    ],
+    "withdrawals": [],
+    "earnings": 850,
+    "role": "master_admin",
+    "createdAt": 1791122305856
+  },
+  "carlos@teste.com": {
+    "id": "reseller_1791122404978",
+    "email": "carlos@teste.com",
+    "password": "123",
+    "company": "Revenda Teste",
+    "firstName": "Carlos",
+    "lastName": "Eduardo",
+    "country": "Brasil",
+    "address": "Av Paulista 1000",
+    "phone": "+55 11 98888-7777",
+    "partnerTypes": [
+      "reseller",
+      "reference"
+    ],
+    "credits": 10,
+    "activations": [],
+    "creditHistory": [
+      {
+        "id": "h_1791122404978",
+        "type": "bonus",
+        "amount": 10,
+        "desc": "Bônus de Boas-Vindas de Cadastro",
+        "date": 1791122404978
+      }
+    ],
+    "links": [
+      {
+        "id": "l_1791122404978",
+        "name": "Link Principal de Divulgação",
+        "code": "CARLOS932",
+        "clicks": 0,
+        "activations": 0,
+        "url": "http://localhost:3000/portal#reseller?ref=CARLOS932"
+      }
+    ],
+    "subs": [],
+    "withdrawals": [],
+    "earnings": 0,
+    "role": "reseller",
+    "createdAt": 1791122404978
+  }
+}
