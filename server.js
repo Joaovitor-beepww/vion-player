@@ -154,6 +154,8 @@ function savePayments(data) {
   }
 }
 
+let inMemorySettings = null;
+
 function loadSettings() {
   try {
     if (fs.existsSync(DATA_SETTINGS)) {
