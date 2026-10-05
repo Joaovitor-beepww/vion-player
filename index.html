@@ -98,79 +98,183 @@
        =================================================================== -->
   <div id="screen-reseller-login" class="screen">
     
-    <div class="reseller-login-card">
-      <div class="reseller-card-header">
-        <img src="logo.png" alt="Vion Logo" class="reseller-card-logo">
-        <h2>VION <span>PLAYER</span></h2>
-        <p>Acesse com as credenciais do seu provedor de mídia</p>
-      </div>
+    <!-- Efeitos de iluminação de fundo (Identidade Visual Luxo) -->
+    <div class="login-bg-beam-1"></div>
+    <div class="login-bg-beam-2"></div>
+    <div class="login-glow-radial"></div>
 
-      <!-- Seletor de Tipo de Conexão: Xtream Codes ou M3U Direto -->
-      <div class="login-type-tabs">
-        <button type="button" id="tab-login-xtream" class="login-tab-btn active focusable" tabindex="0">
-          <span>⚡</span> Xtream Codes
-        </button>
-        <button type="button" id="tab-login-m3u" class="login-tab-btn focusable" tabindex="0">
-          <span>📋</span> Lista M3U
-        </button>
-      </div>
-
-      <!-- Formulário 1: Xtream Codes (Servidor, Usuário, Senha) -->
-      <form id="reseller-login-form" class="login-subform">
-        <div class="reseller-form-group">
-          <label>CÓDIGO DE PARCERIA :</label>
-          <input type="text" id="input-reseller-code" class="focusable" placeholder="Ex: TOURO" required autocomplete="off" tabindex="0">
-        </div>
-
-        <div class="reseller-form-group">
-          <label>USUÁRIO :</label>
-          <input type="text" id="input-reseller-user" class="focusable" placeholder="Digite seu usuário" required autocomplete="off" tabindex="0">
-        </div>
-
-        <div class="reseller-form-group">
-          <label>SENHA :</label>
-          <input type="password" id="input-reseller-pass" class="focusable" placeholder="Digite sua senha" required autocomplete="off" tabindex="0">
-        </div>
-
-        <button type="submit" id="btn-do-reseller-login" class="btn-reseller-login focusable" tabindex="0">
-          ENTRAR
-        </button>
-      </form>
-
-      <!-- Formulário 2: Link M3U Direto -->
-      <form id="m3u-login-form" class="login-subform" style="display: none;">
-        <div class="reseller-form-group">
-          <label>NOME DA LISTA (OPCIONAL) :</label>
-          <input type="text" id="input-m3u-name" class="focusable" placeholder="Ex: Minha Lista" autocomplete="off" tabindex="0">
-        </div>
-
-        <div class="reseller-form-group">
-          <label>LINK / URL DA PLAYLIST M3U :</label>
-          <input type="text" id="input-m3u-url" class="focusable" placeholder="http://servidor.com/get.php?username=...&password=..." required autocomplete="off" tabindex="0">
-        </div>
-
-        <button type="submit" id="btn-do-m3u-login" class="btn-reseller-login focusable" tabindex="0">
-          ENTRAR COM LINK M3U
-        </button>
-      </form>
-
-      <!-- Botão Pular / Ir para o Início -->
-      <button type="button" id="btn-skip-login" class="btn-skip-login focusable" tabindex="0">
-        <span>➔</span> Pular e Ir para o Início
-      </button>
+    <!-- Grade de posters cinematográfica no fundo -->
+    <div class="login-poster-grid-canvas">
+      <div class="poster-tile"></div><div class="poster-tile"></div><div class="poster-tile"></div><div class="poster-tile"></div>
+      <div class="poster-tile"></div><div class="poster-tile"></div><div class="poster-tile"></div><div class="poster-tile"></div>
+      <div class="poster-tile"></div><div class="poster-tile"></div><div class="poster-tile"></div><div class="poster-tile"></div>
     </div>
 
-    <!-- Metadados no Canto Inferior Esquerdo -->
-    <div class="corner-left-help">
-      <p>App Version: <strong>1.1.8</strong></p>
-      <p>Reprodutor multimídia para listas de reprodução pessoais</p>
+    <!-- Container Principal Responsivo Widescreen (16:9 TV) -->
+    <div class="login-lux-container">
+      
+      <!-- ============================================================== -->
+      <!-- COLUNA ESQUERDA: LOGO OFICIAL + BRANDING + ATIVAÇÃO/QR CODE    -->
+      <!-- ============================================================== -->
+      <div class="login-lux-left">
+        
+        <!-- Topo: Card com o LOGO OFICIAL DO VION PLAYER -->
+        <div class="login-logo-card">
+          <div class="login-logo-img-wrapper">
+            <img src="logo.png" alt="Vion Player" class="login-official-logo">
+          </div>
+          <div class="login-brand-meta">
+            <div class="login-brand-text">
+              <span class="brand-vion">VION</span>
+              <span class="brand-player">PLAYER</span>
+            </div>
+            <span class="login-tag-neutral">Reprodutor Multimídia Neutro</span>
+          </div>
+        </div>
+
+        <!-- Slogan Principal -->
+        <div class="login-hero-slogan">
+          <h2>Seu Mundo de Entretenimento</h2>
+          <p class="slogan-gold">EM UM SÓ LUGAR</p>
+        </div>
+
+        <!-- 4 Features / Pilares com Ícones Dourados -->
+        <div class="login-features-grid">
+          <div class="feature-item">
+            <span class="feat-ico">📺</span>
+            <span class="feat-title">Canais ao Vivo</span>
+            <small class="feat-sub">Nacionais & Int.</small>
+          </div>
+          <div class="feature-item">
+            <span class="feat-ico">🎬</span>
+            <span class="feat-title">Filmes & Séries</span>
+            <small class="feat-sub">Lançamentos</small>
+          </div>
+          <div class="feature-item">
+            <span class="feat-ico">⚽</span>
+            <span class="feat-title">Esportes</span>
+            <small class="feat-sub">Tempo Real</small>
+          </div>
+          <div class="feature-item">
+            <span class="feat-ico">🧸</span>
+            <span class="feat-title">Infantis</span>
+            <small class="feat-sub">Toda Família</small>
+          </div>
+        </div>
+
+        <!-- Bloco Oficial: QR Code e Adicionar Lista pelo Site -->
+        <div class="login-portal-box">
+          <div class="login-qr-frame">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https%3A%2F%2Fvion.gestorpro.app.br%2F%23activation" alt="QR Code" class="login-qr-code-img">
+          </div>
+          <div class="login-portal-info">
+            <div class="portal-badge-live">
+              <span class="pulse-dot"></span> ADICIONE SUA LISTA PELO SITE
+            </div>
+            <p class="portal-desc">Aponte a câmera do celular para o QR Code ou acesse pelo navegador:</p>
+            <div class="portal-url-tag">
+              <span>🌐</span> <strong>vion.gestorpro.app.br</strong>
+            </div>
+            <div class="portal-device-keys">
+              <span class="key-pill">MAC: <strong class="val val-mac-address font-mono">00:00:00:00:00:00</strong></span>
+              <span class="key-pill">KEY: <strong class="val val-device-key font-mono">----</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="login-device-compat">
+          <span>Compatível com Smart TV Samsung • LG webOS • Android TV</span>
+        </div>
+
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- COLUNA DIREITA: CARD DE LOGIN LIMPO E ELEGANTE (PROVEDOR)      -->
+      <!-- ============================================================== -->
+      <div class="login-lux-right">
+        
+        <div class="reseller-login-card">
+          <div class="reseller-card-header">
+            <h2>Bem-vindo<span>(a)!</span></h2>
+            <p>Entre com as credenciais do seu provedor de mídia</p>
+          </div>
+
+          <!-- Formulário Principal: Usuário, Senha e Código do Provedor -->
+          <form id="reseller-login-form" class="login-subform">
+            
+            <!-- Campo 1: Usuário -->
+            <div class="reseller-form-group">
+              <label>USUÁRIO :</label>
+              <div class="input-with-ico">
+                <span class="input-ico">👤</span>
+                <input type="text" id="input-reseller-user" class="focusable" placeholder="Digite seu usuário" required autocomplete="off" tabindex="0">
+              </div>
+            </div>
+
+            <!-- Campo 2: Senha com Olho -->
+            <div class="reseller-form-group">
+              <label>SENHA :</label>
+              <div class="input-with-ico input-with-eye">
+                <span class="input-ico">🔒</span>
+                <input type="password" id="input-reseller-pass" class="focusable" placeholder="Digite sua senha" required autocomplete="off" tabindex="0">
+                <button type="button" id="btn-toggle-login-pass" class="btn-toggle-eye focusable" tabindex="0" title="Ver senha">
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <!-- Campo 3: Código do Provedor (Vazio e Editável) -->
+            <div class="reseller-form-group">
+              <label>CÓDIGO DO PROVEDOR :</label>
+              <div class="input-with-ico">
+                <span class="input-ico">⚡</span>
+                <input type="text" id="input-reseller-code" class="focusable" placeholder="Digite o código (ex: TOURO, VION)" value="" required autocomplete="off" tabindex="0">
+              </div>
+            </div>
+
+            <!-- Botão Dourado Vibrante ENTRAR -->
+            <button type="submit" id="btn-do-reseller-login" class="btn-reseller-login focusable" tabindex="0">
+              <span>ENTRAR</span>
+              <span class="btn-arrow-circle">➔</span>
+            </button>
+
+            <!-- Botão Pular e ir para Início -->
+            <button type="button" id="btn-skip-login" class="btn-skip-login focusable" tabindex="0">
+              <span>➔</span> Pular e Ir para o Início
+            </button>
+
+            <!-- Rodapé do Card: Lembrar dados & Ajuda -->
+            <div class="reseller-form-footer">
+              <label class="remember-checkbox-label">
+                <input type="checkbox" id="chk-remember-login" checked>
+                <span>Lembrar dados</span>
+              </label>
+              <a href="#" id="link-login-help" class="help-link">❓ Ajuda</a>
+            </div>
+          </form>
+
+          <!-- Assinatura Elegante do Aplicativo -->
+          <div class="login-card-signature">
+            <span class="sig-name">Vion-Player</span>
+            <span class="sig-motto">Mais que um player, é liberdade!</span>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
 
-    <!-- Metadados no Canto Inferior Direito (MAC e DEVICE KEY solicitados) -->
-    <div class="corner-device-info">
-      <p>MAC: <span class="val val-mac-address">00:00:00:00:00:00</span></p>
-      <p>DEVICE KEY: <span class="val val-device-key">----</span></p>
-      <p style="font-size: 11px; margin-top: 2px; color: var(--text-muted);">Web: vion.gestorpro.app.br</p>
+    <!-- Elementos ocultos para retrocompatibilidade do código existente -->
+    <div style="display:none !important;" aria-hidden="true">
+      <form id="m3u-login-form"></form>
+      <button type="button" id="tab-login-xtream"></button>
+      <button type="button" id="tab-login-m3u"></button>
+      <input type="text" id="input-m3u-name">
+      <input type="text" id="input-m3u-url">
+      <button type="button" id="btn-do-m3u-login"></button>
+      <span class="corner-left-help"></span>
+      <span class="corner-device-info"></span>
     </div>
 
   </div>

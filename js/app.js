@@ -561,11 +561,11 @@ const App = {
     document.querySelectorAll('.val-mac-address').forEach(el => el.textContent = mac);
     document.querySelectorAll('.val-device-key').forEach(el => el.textContent = key);
     if (mac) {
-      const qrImg = document.querySelector('.expired-qr-code-img');
-      if (qrImg) {
-        const portalUrl = `https://vion.gestorpro.app.br/?mac=${encodeURIComponent(mac)}#activation`;
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(portalUrl)}`;
-      }
+      const portalUrl = `https://vion.gestorpro.app.br/?mac=${encodeURIComponent(mac)}#activation`;
+      const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(portalUrl)}`;
+      document.querySelectorAll('.login-qr-code-img, .expired-qr-code-img').forEach(img => {
+        img.src = qrSrc;
+      });
     }
     this.updateTrialDisplay();
   },
@@ -701,6 +701,39 @@ const App = {
     document.getElementById('btn-skip-login')?.addEventListener('click', () => {
       this.goToScreen('home');
     });
+
+    // Alternar visibilidade da senha na tela de login
+    document.getElementById('btn-toggle-login-pass')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const passInput = document.getElementById('input-reseller-pass');
+      const eyeBtn = document.getElementById('btn-toggle-login-pass');
+      if (!passInput) return;
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        if (eyeBtn) eyeBtn.textContent = '🙈';
+      } else {
+        passInput.type = 'password';
+        if (eyeBtn) eyeBtn.textContent = '👁️';
+      }
+    });
+
+    // Ajuda na tela de login
+    document.getElementById('link-login-help')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.showToast('Use as credenciais do seu provedor ou escaneie o QR Code para gerenciar pelo site.');
+    });
+
+    // Restaurar credenciais salvas se houver
+    try {
+      const savedCode = localStorage.getItem('vion_saved_provider_code');
+      const savedUser = localStorage.getItem('vion_saved_provider_user');
+      if (savedCode && document.getElementById('input-reseller-code')) {
+        document.getElementById('input-reseller-code').value = savedCode;
+      }
+      if (savedUser && document.getElementById('input-reseller-user')) {
+        document.getElementById('input-reseller-user').value = savedUser;
+      }
+    } catch (e) {}
 
     // Ir para Login a partir de Configurações
     document.getElementById('btn-goto-login')?.addEventListener('click', () => {
@@ -1053,6 +1086,19 @@ const App = {
     };
 
     localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify([newPlaylist]));
+
+    // Lembrar dados se o checkbox estiver ativo
+    try {
+      const chk = document.getElementById('chk-remember-login');
+      if (chk && chk.checked) {
+        localStorage.setItem('vion_saved_provider_code', rawInput);
+        localStorage.setItem('vion_saved_provider_user', user);
+      } else {
+        localStorage.removeItem('vion_saved_provider_code');
+        localStorage.removeItem('vion_saved_provider_user');
+      }
+    } catch (e) {}
+
     this.activatePlaylistByUrl(playlistUrl, newPlaylist.name, true);
 
     setTimeout(() => {
