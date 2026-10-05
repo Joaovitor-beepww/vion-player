@@ -15,10 +15,25 @@ if (!fs.existsSync(DATA_DIR)) {
 const DATA_FILE = path.join(DATA_DIR, 'devices.json');
 const DATA_PARTNERSHIPS = path.join(DATA_DIR, 'partnerships.json');
 const DATA_RESELLERS = path.join(DATA_DIR, 'resellers.json');
+const DATA_PAYMENTS = path.join(DATA_DIR, 'payments.json');
+const DATA_SETTINGS = path.join(DATA_DIR, 'settings.json');
 
 // Garante que o arquivo de dados de dispositivos exista
 if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, JSON.stringify({}, null, 2), 'utf8');
+}
+
+// Garante arquivo de pagamentos
+if (!fs.existsSync(DATA_PAYMENTS)) {
+  fs.writeFileSync(DATA_PAYMENTS, JSON.stringify({}, null, 2), 'utf8');
+}
+
+// Garante arquivo de configurações do sistema (Mercado Pago, etc.)
+if (!fs.existsSync(DATA_SETTINGS)) {
+  fs.writeFileSync(DATA_SETTINGS, JSON.stringify({
+    mpAccessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
+    mpPublicKey: process.env.MERCADO_PAGO_PUBLIC_KEY || ''
+  }, null, 2), 'utf8');
 }
 
 // Inicializa códigos de parceria com o código padrão TOURO
@@ -122,6 +137,161 @@ function saveResellers(data) {
   }
 }
 
+function loadPayments() {
+  try {
+    const raw = fs.readFileSync(DATA_PAYMENTS, 'utf8');
+    return JSON.parse(raw || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePayments(data) {
+  try {
+    fs.writeFileSync(DATA_PAYMENTS, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Erro ao salvar pagamentos:', e);
+  }
+}
+
+function loadSettings() {
+  try {
+    const raw = fs.readFileSync(DATA_SETTINGS, 'utf8');
+    const s = JSON.parse(raw || '{}');
+    if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
+      s.mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    }
+    return s;
+  } catch (e) {
+    return { mpAccessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '' };
+  }
+}
+
+function saveSettings(data) {
+  try {
+    fs.writeFileSync(DATA_SETTINGS, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Erro ao salvar configurações:', e);
+  }
+}
+
+function fulfillPayment(payment) {
+  if (!payment || payment.fulfilled) return;
+  payment.fulfilled = true;
+  payment.status = 'approved';
+  payment.approvedAt = Date.now();
+
+  if (payment.type === 'credits' && payment.email && payment.credits) {
+    const resellers = loadResellers();
+    const reseller = resellers[payment.email];
+    if (reseller) {
+      reseller.credits = (reseller.credits || 0) + Number(payment.credits);
+      if (!Array.isArray(reseller.creditHistory)) reseller.creditHistory = [];
+      reseller.creditHistory.unshift({
+        id: 'mp_' + Date.now(),
+        type: 'purchase',
+        amount: Number(payment.credits),
+        desc: `Recarga de ${payment.credits} créditos via PIX Mercado Pago (ID: ${payment.id})`,
+        date: Date.now()
+      });
+      saveResellers(resellers);
+      console.log(`[PIX Mercado Pago] +${payment.credits} créditos injetados com sucesso para ${payment.email}. Saldo atual: ${reseller.credits}`);
+    }
+  } else if (payment.type === 'activation' && payment.mac) {
+    const devices = loadDevices();
+    const normalizedMac = payment.mac.trim().toUpperCase();
+    if (devices[normalizedMac]) {
+      devices[normalizedMac].active = true;
+      devices[normalizedMac].expiryDate = Date.now() + 365 * 24 * 60 * 60 * 1000;
+      devices[normalizedMac].plan = payment.plan || 'vitalicio';
+      saveDevices(devices);
+      console.log(`[PIX Mercado Pago] Dispositivo ${normalizedMac} ativado com sucesso!`);
+    }
+  }
+}
+
+async function createMercadoPagoPix({ amount, description, email, paymentId, notificationUrl }) {
+  const settings = loadSettings();
+  const token = (settings.mpAccessToken || process.env.MERCADO_PAGO_ACCESS_TOKEN || '').trim();
+  if (!token) {
+    const err = new Error('TOKEN_NOT_CONFIGURED');
+    err.code = 'TOKEN_NOT_CONFIGURED';
+    throw err;
+  }
+
+  const payload = {
+    transaction_amount: Number(Number(amount).toFixed(2)),
+    description: description || 'Recarga de Créditos - Vion Player',
+    payment_method_id: 'pix',
+    payer: {
+      email: email || 'cliente@vionplayer.app',
+      first_name: 'Cliente',
+      last_name: 'Vion'
+    }
+  };
+
+  if (notificationUrl) {
+    payload.notification_url = notificationUrl;
+  }
+
+  const res = await fetch('https://api.mercadopago.com/v1/payments', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'X-Idempotency-Key': `vion_${paymentId || Date.now()}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.error('[MercadoPago] Falha ao criar PIX:', data);
+    const msg = data.message || data.error || (data.cause && data.cause[0] && data.cause[0].description) || 'Erro ao gerar PIX no Mercado Pago';
+    throw new Error(msg);
+  }
+
+  const poi = data.point_of_interaction || {};
+  const tData = poi.transaction_data || {};
+
+  return {
+    id: String(data.id),
+    status: data.status,
+    qrCode: tData.qr_code || '',
+    qrCodeBase64: tData.qr_code_base64 || '',
+    ticketUrl: tData.ticket_url || ''
+  };
+}
+
+async function checkMercadoPagoStatus(mpPaymentId) {
+  const settings = loadSettings();
+  const token = (settings.mpAccessToken || process.env.MERCADO_PAGO_ACCESS_TOKEN || '').trim();
+  if (!token) {
+    const err = new Error('TOKEN_NOT_CONFIGURED');
+    err.code = 'TOKEN_NOT_CONFIGURED';
+    throw err;
+  }
+
+  const res = await fetch(`https://api.mercadopago.com/v1/payments/${mpPaymentId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Erro ao consultar status no Mercado Pago');
+  }
+
+  return {
+    id: String(data.id),
+    status: data.status,
+    statusDetail: data.status_detail
+  };
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
   '.css': 'text/css; charset=UTF-8',
@@ -137,7 +307,7 @@ const MIME_TYPES = {
   '.apk': 'application/vnd.android.package-archive'
 };
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   // CORS universal
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -589,6 +759,280 @@ const server = http.createServer((req, res) => {
         }
       });
       return;
+    }
+  }
+
+  // ===================================================================
+  // 1b. ENDPOINTS DE PAGAMENTO PIX AUTOMÁTICO (MERCADO PAGO)
+  // ===================================================================
+  if (pathname.startsWith('/api/payment') || pathname.startsWith('/api/webhook/mercadopago') || pathname.startsWith('/api/admin/settings')) {
+
+    // 1. Webhook de Notificação Automática do Mercado Pago
+    if (pathname === '/api/webhook/mercadopago' || pathname.startsWith('/api/webhook/mercadopago')) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message: 'Webhook recebido' }));
+
+      let paymentId = urlObj.searchParams.get('id') || urlObj.searchParams.get('data.id');
+      const processId = async (id) => {
+        if (!id) return;
+        try {
+          const mpStatus = await checkMercadoPagoStatus(id);
+          if (mpStatus.status === 'approved') {
+            const payments = loadPayments();
+            let payment = payments[id];
+            if (payment && !payment.fulfilled) {
+              fulfillPayment(payment);
+              savePayments(payments);
+            }
+          }
+        } catch (e) {
+          console.error('[Webhook Mercado Pago] Erro ao processar:', e.message);
+        }
+      };
+
+      if (paymentId) {
+        processId(paymentId);
+      } else if (req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+          try {
+            const data = JSON.parse(body || '{}');
+            const id = (data.data && data.data.id) || data.id;
+            if (id) processId(id);
+          } catch(e) {}
+        });
+      }
+      return;
+    }
+
+    // 2. Consulta Status do Pagamento (Polling do frontend)
+    if (pathname === '/api/payment/status') {
+      const paymentId = (urlObj.searchParams.get('id') || '').trim();
+      if (!paymentId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'ID do pagamento é obrigatório.' }));
+        return;
+      }
+
+      const payments = loadPayments();
+      let payment = payments[paymentId];
+
+      if (payment && payment.fulfilled) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, status: 'approved', fulfilled: true, credits: payment.credits }));
+        return;
+      }
+
+      try {
+        const mpStatus = await checkMercadoPagoStatus(paymentId);
+        if (mpStatus.status === 'approved') {
+          if (!payment) {
+            payment = { id: paymentId, type: 'credits', status: 'approved', fulfilled: false };
+            payments[paymentId] = payment;
+          }
+          fulfillPayment(payment);
+          savePayments(payments);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, status: 'approved', fulfilled: true, credits: payment.credits }));
+          return;
+        }
+
+        if (payment) {
+          payment.status = mpStatus.status;
+          savePayments(payments);
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, status: mpStatus.status, credits: payment?.credits }));
+        return;
+      } catch (err) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, status: payment?.status || 'pending', error: err.message }));
+        return;
+      }
+    }
+
+    // 3. Simulação de Pagamento Aprovado (Para testes no painel de revenda)
+    if (pathname === '/api/payment/simulate-approval' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const paymentId = (payload.paymentId || '').trim();
+          const payments = loadPayments();
+          let payment = payments[paymentId];
+          if (payment) {
+            fulfillPayment(payment);
+            savePayments(payments);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, status: 'approved', credits: payment.credits }));
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Pagamento não encontrado.' }));
+          }
+        } catch(e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: e.message }));
+        }
+      });
+      return;
+    }
+
+    // 4. Criação de Cobrança PIX
+    if (pathname === '/api/payment/create-pix' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const email = (payload.email || '').trim().toLowerCase();
+          const amount = parseFloat(payload.amount);
+          const credits = parseInt(payload.credits, 10) || 0;
+          const type = payload.type || 'credits';
+          const mac = (payload.mac || '').trim();
+          const description = payload.description || `Recarga de ${credits || 1} Créditos - Vion Player`;
+
+          if (!amount || amount <= 0) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Valor inválido para pagamento.' }));
+            return;
+          }
+
+          const host = req.headers['x-forwarded-host'] || req.headers.host || 'vion.gestorpro.app.br';
+          const protocol = req.headers['x-forwarded-proto'] || (req.connection.encrypted ? 'https' : 'http');
+          const notificationUrl = `${protocol}://${host}/api/webhook/mercadopago`;
+
+          try {
+            const mpRes = await createMercadoPagoPix({
+              amount,
+              description,
+              email,
+              paymentId: 'vion_' + Date.now(),
+              notificationUrl
+            });
+
+            const payments = loadPayments();
+            payments[mpRes.id] = {
+              id: mpRes.id,
+              type,
+              email,
+              amount,
+              credits,
+              mac,
+              status: mpRes.status,
+              fulfilled: false,
+              createdAt: Date.now()
+            };
+            savePayments(payments);
+
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+            res.end(JSON.stringify({
+              success: true,
+              paymentId: mpRes.id,
+              status: mpRes.status,
+              qrCode: mpRes.qrCode,
+              qrCodeBase64: mpRes.qrCodeBase64,
+              ticketUrl: mpRes.ticketUrl,
+              amount,
+              credits
+            }));
+            return;
+          } catch (mpErr) {
+            if (mpErr.code === 'TOKEN_NOT_CONFIGURED' || mpErr.message === 'TOKEN_NOT_CONFIGURED') {
+              const demoId = 'demo_' + Date.now();
+              const payments = loadPayments();
+              payments[demoId] = {
+                id: demoId,
+                type,
+                email,
+                amount,
+                credits,
+                mac,
+                status: 'pending',
+                fulfilled: false,
+                isDemo: true,
+                createdAt: Date.now()
+              };
+              savePayments(payments);
+
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+              res.end(JSON.stringify({
+                success: true,
+                isDemo: true,
+                notConfigured: true,
+                paymentId: demoId,
+                status: 'pending',
+                qrCode: `00020126580014BR.GOV.BCB.PIX0136${email || 'contato@vionplayer.app'}520400005303986540${amount.toFixed(2)}5802BR5916VION PLAYER PRO6009SAO PAULO62070503***6304`,
+                qrCodeBase64: '',
+                amount,
+                credits,
+                message: 'Para gerar QR Code bancário oficial com baixa automática, configure seu Access Token do Mercado Pago.'
+              }));
+              return;
+            }
+
+            console.error('[API Pagamento] Erro no Mercado Pago:', mpErr);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: mpErr.message }));
+            return;
+          }
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
+
+    // 5. Configurações do Mercado Pago (Admin Master)
+    if (pathname === '/api/admin/settings') {
+      if (req.method === 'GET') {
+        const settings = loadSettings();
+        const token = (settings.mpAccessToken || '').trim();
+        const masked = token ? token.substring(0, 10) + '...' + token.slice(-4) : '';
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          configured: !!token,
+          maskedToken: masked
+        }));
+        return;
+      }
+
+      if (req.method === 'POST') {
+        let body = '';
+        req.on('data', c => body += c);
+        req.on('end', () => {
+          try {
+            const payload = JSON.parse(body || '{}');
+            const adminEmail = (req.headers['x-admin-email'] || payload.adminEmail || '').trim().toLowerCase();
+            if (adminEmail !== 'joaovitordc1010@gmail.com') {
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Apenas o Administrador Geral pode alterar credenciais.' }));
+              return;
+            }
+
+            const current = loadSettings();
+            if (payload.mpAccessToken !== undefined) {
+              current.mpAccessToken = String(payload.mpAccessToken || '').trim();
+            }
+            if (payload.mpPublicKey !== undefined) {
+              current.mpPublicKey = String(payload.mpPublicKey || '').trim();
+            }
+            saveSettings(current);
+
+            console.log('[Settings] Credenciais Mercado Pago atualizadas com sucesso pelo Admin.');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, message: 'Configurações do Mercado Pago salvas com sucesso!' }));
+          } catch(e) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: e.message }));
+          }
+        });
+        return;
+      }
     }
   }
 

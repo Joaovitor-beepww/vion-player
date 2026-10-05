@@ -847,6 +847,31 @@
                 </form>
               </div>
 
+              <!-- Card de Configuração do Mercado Pago (Admin Master) -->
+              <div class="hub-admin-card" style="margin-bottom: 24px; padding: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                  <div style="font-size: 15px; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 8px;">
+                    <span>💳</span> Integração Mercado Pago (PIX Automático)
+                  </div>
+                  <div id="mp-admin-status-badge" style="font-size: 12px; padding: 4px 12px; border-radius: 20px; font-weight: 700; background: #fee2e2; color: #dc2626;">
+                    🔴 Não Configurado
+                  </div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                  Insira o seu <strong>Access Token</strong> de Produção do Mercado Pago para que o PIX gere cobranças reais e libere os créditos automaticamente para você e seus revendedores.
+                  <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" style="color: #f59e0b; text-decoration: underline; margin-left: 4px;">Onde pegar o token?</a>
+                </p>
+                <form id="portal-form-mp-settings" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                  <div class="form-group" style="flex: 1; min-width: 280px; margin-bottom: 0;">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block;">ACCESS TOKEN (PRODUÇÃO)</label>
+                    <input type="password" id="portal-mp-access-token" placeholder="APP_USR-..." autocomplete="off">
+                  </div>
+                  <button type="submit" class="btn btn-gold" id="btn-save-mp-settings" style="white-space: nowrap; height: 42px; padding: 0 24px;">
+                    <span>💾</span> Salvar Credencial
+                  </button>
+                </form>
+              </div>
+
               <!-- Tabela de Códigos de Parceria -->
               <div class="hub-table-wrapper">
                 <table class="hub-table">

@@ -1061,92 +1061,218 @@ function openDirectBuyModal() {
   if (modal) modal.style.display = 'flex';
 }
 
-function openCheckoutView(amount, price) {
+let pixPollingTimer = null;
+
+function clearPixPolling() {
+  if (pixPollingTimer) {
+    clearInterval(pixPollingTimer);
+    pixPollingTimer = null;
+  }
+}
+
+function closePixBuyModal() {
+  clearPixPolling();
+  const modal = document.getElementById('modal-buy-credits');
+  if (modal) modal.style.display = 'none';
+  initDirectBuyCreditsModalRestore();
+}
+
+async function openCheckoutView(amount, price) {
   const modal = document.getElementById('modal-buy-credits');
   if (!modal) return;
+  clearPixPolling();
 
-  const pixKey = 'joaovitordc1010@gmail.com';
-  const pixCopyPaste = `00020126580014BR.GOV.BCB.PIX0136joaovitordc1010@gmail.com520400005303986540${price}.005802BR5916VION PLAYER PRO6009SAO PAULO62070503***6304`;
-
-  modal.querySelector('.modal-box').innerHTML = `
+  const modalBox = modal.querySelector('.modal-box');
+  modalBox.innerHTML = `
     <div class="modal-header">
       <h3>Pagamento Instantâneo via PIX</h3>
-      <button type="button" class="btn-close-modal" onclick="document.getElementById('modal-buy-credits').style.display='none'">&times;</button>
+      <button type="button" class="btn-close-modal" onclick="closePixBuyModal()">&times;</button>
+    </div>
+    <div style="padding: 40px 20px; text-align: center;">
+      <div class="pix-spinner"></div>
+      <p style="margin-top: 18px; color: #cbd5e1; font-weight: 600; font-size: 15px;">
+        Conectando ao Mercado Pago e gerando QR Code oficial...
+      </p>
+      <span style="font-size: 13px; color: var(--text-muted);">Aguarde alguns instantes</span>
+    </div>
+  `;
+
+  const session = getResellerSession();
+  let paymentData = null;
+
+  try {
+    const res = await fetch('/api/payment/create-pix', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'credits',
+        email: session?.email || 'contato@vionplayer.app',
+        amount: price,
+        credits: amount,
+        description: `Recarga de ${amount} Créditos - Vion Player`
+      })
+    });
+    paymentData = await res.json();
+  } catch(e) {
+    paymentData = { success: false, error: 'Falha de comunicação com o servidor de pagamentos.' };
+  }
+
+  if (!paymentData || !paymentData.success) {
+    modalBox.innerHTML = `
+      <div class="modal-header">
+        <h3>Erro ao Gerar Cobrança</h3>
+        <button type="button" class="btn-close-modal" onclick="closePixBuyModal()">&times;</button>
+      </div>
+      <div style="padding: 30px 20px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+        <p style="color: #ef4444; font-weight: 600; font-size: 15px; margin-bottom: 16px;">
+          ${paymentData?.error || 'Não foi possível gerar a chave PIX no momento.'}
+        </p>
+        <button type="button" class="btn btn-secondary" onclick="initDirectBuyCreditsModalRestore()">
+          ← Voltar para Escolha de Pacotes
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const qrCode = paymentData.qrCode || '';
+  const qrCodeBase64 = paymentData.qrCodeBase64 || '';
+  const paymentId = paymentData.paymentId;
+  const isDemo = !!paymentData.isDemo;
+
+  modalBox.innerHTML = `
+    <div class="modal-header">
+      <h3>Pagamento Instantâneo via PIX</h3>
+      <button type="button" class="btn-close-modal" onclick="closePixBuyModal()">&times;</button>
     </div>
 
     <div style="padding: 10px 0; text-align: center;">
-      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <span style="font-size: 13px; color: #94a3b8;">Pacote Selecionado:</span>
-        <div style="font-size: 22px; font-weight: 800; color: #f59e0b; margin: 4px 0;">
+      ${paymentData.notConfigured ? `
+        <div style="background: rgba(245, 158, 11, 0.12); border: 1px dashed rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 12px; margin-bottom: 16px; font-size: 12.5px; color: #fbbf24; text-align: left;">
+          ⚡ <strong>Modo Demonstração / Teste:</strong> Configure seu Access Token do Mercado Pago na aba Códigos de Parceria para receber pagamentos reais no seu banco.
+        </div>
+      ` : ''}
+
+      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+        <span style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Pacote Selecionado:</span>
+        <div style="font-size: 20px; font-weight: 800; color: #f59e0b; margin: 2px 0;">
           ${amount} Créditos de Revenda
         </div>
-        <div style="font-size: 20px; font-weight: 900; color: #ffffff;">
-          Total: R$ ${price},00
+        <div style="font-size: 18px; font-weight: 900; color: #ffffff;">
+          Total: R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
         </div>
       </div>
 
-      <p style="font-size: 13.5px; color: #cbd5e1; margin-bottom: 12px;">
-        Pague via PIX Copia e Cola para ativação imediata dos créditos:
-      </p>
+      ${qrCodeBase64 ? `
+        <div class="pix-qr-container">
+          <img src="data:image/png;base64,${qrCodeBase64}" alt="QR Code PIX Mercado Pago" class="pix-qr-image">
+        </div>
+        <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
+          Abra o app do seu banco e aponte a câmera para o QR Code acima.
+        </p>
+      ` : `
+        <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
+          Pague via <strong>PIX Copia e Cola</strong> no aplicativo do seu banco:
+        </p>
+      `}
 
-      <div class="pix-key-display" id="pix-copy-text">${pixCopyPaste}</div>
+      <div class="pix-key-display" id="pix-copy-text" style="font-size: 11px; max-height: 60px; overflow-y: auto; user-select: all;">${qrCode}</div>
 
-      <button type="button" class="btn btn-outline" id="btn-copy-pix-code" style="margin-bottom: 20px; width: 100%;">
-        📋 Copiar Código PIX Copia e Cola
+      <button type="button" class="btn btn-outline" id="btn-copy-pix-code" style="margin-top: 10px; margin-bottom: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <span>📋</span> Copiar Código PIX Copia e Cola
       </button>
 
-      <div style="border-top: 1px solid #334155; padding-top: 18px; display: flex; flex-direction: column; gap: 10px;">
-        <button type="button" class="btn btn-gold" id="btn-confirm-inject-credits" style="width: 100%; font-size: 16px; padding: 14px;">
-          ⚡ Confirmar Pagamento e Injetar ${amount} Créditos Agora
+      <!-- Status em Tempo Real (Verificação Automática) -->
+      <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <span class="pulse-indicator"></span>
+        <span style="font-size: 13px; color: #86efac; font-weight: 600;" id="pix-live-status-text">
+          Aguardando pagamento no banco... Liberação automática
+        </span>
+      </div>
+
+      ${(isDemo || paymentData.notConfigured) ? `
+        <button type="button" class="btn btn-gold" id="btn-simulate-pix-success" style="width: 100%; margin-top: 14px; font-size: 14px; padding: 12px;">
+          ⚡ Simular Pagamento Aprovado Imediato (Teste)
         </button>
-        <button type="button" class="btn btn-secondary" onclick="initDirectBuyCreditsModalRestore()">
-          ← Voltar para Escolha de Pacotes
+      ` : ''}
+
+      <div style="border-top: 1px solid #334155; padding-top: 14px; margin-top: 16px;">
+        <button type="button" class="btn btn-secondary" onclick="initDirectBuyCreditsModalRestore()" style="width: 100%;">
+          ← Escolher Outro Pacote
         </button>
       </div>
     </div>
   `;
 
-  // Copiar código PIX
+  // Botão Copiar
   document.getElementById('btn-copy-pix-code')?.addEventListener('click', () => {
-    navigator.clipboard.writeText(pixCopyPaste);
-    alert('Código PIX copiado para a área de transferência!');
+    navigator.clipboard.writeText(qrCode);
+    const btn = document.getElementById('btn-copy-pix-code');
+    if (btn) btn.innerHTML = '<span>✅</span> Código PIX Copiado com Sucesso!';
+    setTimeout(() => {
+      if (btn) btn.innerHTML = '<span>📋</span> Copiar Código PIX Copia e Cola';
+    }, 3000);
   });
 
-  // CONFIRMAÇÃO DIRETA: Injeta créditos na hora
-  document.getElementById('btn-confirm-inject-credits')?.addEventListener('click', async () => {
-    const session = getResellerSession();
-    const btn = document.getElementById('btn-confirm-inject-credits');
-    if (btn) btn.innerHTML = '⏳ Processando crédito imediato...';
+  // Função disparada quando aprovado
+  const handlePaymentApproved = () => {
+    clearPixPolling();
+    modalBox.innerHTML = `
+      <div style="padding: 36px 20px; text-align: center;">
+        <div style="font-size: 64px; margin-bottom: 12px;">🎉</div>
+        <h3 style="color: #22c55e; font-size: 24px; font-weight: 800; margin-bottom: 8px;">
+          Pagamento Aprovado com Sucesso!
+        </h3>
+        <p style="color: #cbd5e1; font-size: 15px; margin-bottom: 22px;">
+          <strong style="color: #f59e0b;">+${amount} créditos</strong> foram adicionados ao seu saldo de revenda.
+        </p>
+        <button type="button" class="btn btn-gold" onclick="closePixBuyModal()" style="padding: 12px 32px; font-size: 15px;">
+          Continuar no Painel
+        </button>
+      </div>
+    `;
 
+    // Atualiza a sessão e recarrega os dados do dashboard
+    if (session) {
+      session.credits = (session.credits || 0) + amount;
+      if (!Array.isArray(session.creditHistory)) session.creditHistory = [];
+      session.creditHistory.unshift({
+        id: 'mp_' + Date.now(),
+        type: 'purchase',
+        amount: amount,
+        desc: `Recarga de ${amount} créditos via PIX Mercado Pago`,
+        date: Date.now()
+      });
+      saveResellerSession(session);
+      refreshHubDashboard();
+    }
+  };
+
+  // Botão de Simulação (se disponível)
+  document.getElementById('btn-simulate-pix-success')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-simulate-pix-success');
+    if (btn) btn.innerHTML = '⏳ Confirmando liberação...';
     try {
-      await fetch('/api/reseller/buy-credits', {
+      await fetch('/api/payment/simulate-approval', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: session.email,
-          amount: amount,
-          method: 'PIX Instantâneo'
-        })
+        body: JSON.stringify({ paymentId })
       });
     } catch(e) {}
-
-    session.credits = (session.credits || 0) + amount;
-    if (!Array.isArray(session.creditHistory)) session.creditHistory = [];
-    session.creditHistory.unshift({
-      id: 'buy_' + Date.now(),
-      type: 'purchase',
-      amount: amount,
-      desc: `Compra de ${amount} créditos via PIX Instantâneo`,
-      date: Date.now()
-    });
-
-    saveResellerSession(session);
-    refreshHubDashboard();
-
-    alert(`🎉 Sucesso! ${amount} créditos foram adicionados à sua conta com sucesso!`);
-    modal.style.display = 'none';
-    initDirectBuyCreditsModalRestore();
+    handlePaymentApproved();
   });
+
+  // Polling automático no Mercado Pago a cada 2.5 segundos
+  pixPollingTimer = setInterval(async () => {
+    try {
+      const checkRes = await fetch(`/api/payment/status?id=${encodeURIComponent(paymentId)}`);
+      const checkData = await checkRes.json();
+      if (checkData.success && checkData.status === 'approved') {
+        handlePaymentApproved();
+      }
+    } catch(e) {}
+  }, 2500);
 }
 
 function initDirectBuyCreditsModalRestore() {
@@ -1788,5 +1914,75 @@ function initPartnershipsSection() {
   document.getElementById('btn-reload-partners')?.addEventListener('click', () => {
     renderPortalPartnerships();
   });
+
+  // Inicializa card de configurações do Mercado Pago
+  initMpAdminSettings();
 }
+
+function initMpAdminSettings() {
+  const form = document.getElementById('portal-form-mp-settings');
+  const badge = document.getElementById('mp-admin-status-badge');
+  const input = document.getElementById('portal-mp-access-token');
+
+  async function loadMpStatus() {
+    try {
+      const res = await fetch('/api/admin/settings');
+      const data = await res.json();
+      if (data.configured) {
+        if (badge) {
+          badge.style.background = '#dcfce7';
+          badge.style.color = '#15803d';
+          badge.innerHTML = `🟢 Conectado (${data.maskedToken})`;
+        }
+        if (input && !input.value) {
+          input.placeholder = `Ativo: ${data.maskedToken}`;
+        }
+      } else {
+        if (badge) {
+          badge.style.background = '#fee2e2';
+          badge.style.color = '#dc2626';
+          badge.innerHTML = '🔴 Não Configurado';
+        }
+      }
+    } catch(e) {}
+  }
+
+  loadMpStatus();
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = input?.value.trim();
+    if (!token) return alert('Por favor, digite o Access Token do Mercado Pago.');
+
+    const btn = document.getElementById('btn-save-mp-settings');
+    if (btn) btn.innerHTML = '⏳ Salvando...';
+
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': 'joaovitordc1010@gmail.com'
+        },
+        body: JSON.stringify({
+          adminEmail: 'joaovitordc1010@gmail.com',
+          mpAccessToken: token
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('🎉 Credencial do Mercado Pago salva com sucesso! O PIX automático agora está ativo em produção.');
+        input.value = '';
+        loadMpStatus();
+      } else {
+        alert('Erro ao salvar: ' + (data.error || 'Tente novamente.'));
+      }
+    } catch(err) {
+      alert('Erro de conexão ao salvar.');
+    } finally {
+      if (btn) btn.innerHTML = '<span>💾</span> Salvar Credencial';
+    }
+  });
+}
+
 
