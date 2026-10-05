@@ -38,6 +38,12 @@
     </nav>
 
     <div class="nav-right">
+      <!-- Botão Abrir Web Player -->
+      <a href="/tv/" class="btn-nav-webplayer" title="Assistir no Navegador ou Smart TV">
+        <span>📺</span>
+        <span>Assistir Web Player</span>
+      </a>
+
       <!-- Botão Entrar (Visível quando deslogado) -->
       <a href="#login" id="btn-nav-login" class="btn-nav-login">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -75,6 +81,7 @@
       <button type="button" id="btn-mobile-close" class="btn-mobile-close" aria-label="Fechar Menu">&times;</button>
     </div>
     <ul class="mobile-nav-links">
+      <li><a class="mobile-nav-link" href="/tv/" style="color: #facc15; font-weight: 700;"><span>📺</span> Assistir Web Player (TV)</a></li>
       <li><a class="mobile-nav-link active" data-tab="home" href="#home"><span>🏠</span> Início (Home)</a></li>
       <li><a class="mobile-nav-link" data-tab="login" href="#login"><span>📤</span> Enviar Playlist</a></li>
       <li><a class="mobile-nav-link highlight" data-tab="activation" href="#activation"><span>💎</span> Preços & Ativação</a></li>
@@ -114,7 +121,8 @@
         </p>
 
         <div class="hero-buttons">
-          <button id="btn-hero-activate" class="btn btn-gold">⚡ ATIVAR APLICATIVO</button>
+          <a href="/tv/" class="btn btn-gold" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 15px; padding: 14px 28px;">📺 ABRIR WEB PLAYER (TV)</a>
+          <button id="btn-hero-activate" class="btn btn-outline">⚡ ATIVAR APLICATIVO</button>
           <button id="btn-hero-upload" class="btn btn-outline">📋 GERENCIAR PLAYLISTS</button>
         </div>
 
