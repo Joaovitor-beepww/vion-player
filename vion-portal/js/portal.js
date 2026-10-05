@@ -795,12 +795,18 @@ function initPartnerRegistration() {
         })
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        showAlert(alertStep2, data?.error || 'Este e-mail já está cadastrado como parceiro. Por favor, faça login.', 'error');
+        return;
+      }
+
+      if (data.reseller) {
         saveResellerSession(data.reseller);
       }
     } catch(err) {
-      console.warn('Registro local de fallback:', err);
+      console.warn('Erro ao conectar ao servidor:', err);
     }
 
     // Grava autenticação local
@@ -826,10 +832,40 @@ function initCinemaLogin() {
   const passInput = document.getElementById('cinema-pass-input');
   const alertBox = document.getElementById('cinema-login-alert');
   const linkToReg = document.getElementById('link-goto-register-from-login');
+  const linkForgot = document.getElementById('cinema-link-forgot');
 
   linkToReg?.addEventListener('click', (e) => {
     e.preventDefault();
     showResellerView('register');
+  });
+
+  linkForgot?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const emailPrompt = prompt('Digite seu e-mail de login para redefinir a senha:');
+    if (!emailPrompt || !emailPrompt.trim()) return;
+    const newPassPrompt = prompt(`Digite a NOVA SENHA para a conta ${emailPrompt.trim()}:`);
+    if (!newPassPrompt || newPassPrompt.trim().length < 3) {
+      alert('A senha deve conter pelo menos 3 caracteres.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/reseller/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailPrompt.trim(), newPassword: newPassPrompt.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ ' + data.message);
+        if (userInput) userInput.value = emailPrompt.trim();
+        if (passInput) passInput.value = newPassPrompt.trim();
+      } else {
+        alert('❌ ' + (data.error || 'Falha ao redefinir senha.'));
+      }
+    } catch(err) {
+      alert('Erro de conexão ao redefinir senha.');
+    }
   });
 
   form?.addEventListener('submit', async (e) => {
