@@ -5,11 +5,15 @@ Write-Host "       Formato: .wgt (Tizen Web Widget) & USB"         -ForegroundCo
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$srcWeb      = "C:\Users\Windows10\Desktop\player-tv"
+$srcWeb      = $PSScriptRoot
 $tempBuild   = "$srcWeb\build-tizen"
-$finalWgt    = "C:\Users\Windows10\Desktop\vion-player.wgt"
-$usbDir      = "C:\Users\Windows10\Desktop\SAMSUNG_USB\user_widget"
+$baseDir     = Split-Path -Parent $srcWeb
+$tizenDir    = Join-Path $baseDir "Samsung_Tizen"
+if (-not (Test-Path $tizenDir)) { New-Item -ItemType Directory -Force -Path $tizenDir | Out-Null }
+$finalWgt    = "$tizenDir\vion-player.wgt"
+$usbDir      = "$tizenDir\SAMSUNG_USB\user_widget"
 $finalUsbWgt = "$usbDir\vion-player.wgt"
+
 
 Write-Host "[1/4] Limpando ambiente temporario..." -ForegroundColor Yellow
 if (Test-Path $tempBuild) {
@@ -32,8 +36,13 @@ Copy-Item "$srcWeb\js\*" "$tempBuild\js\" -Recurse -Force
 Write-Host "[3/4] Compactando pacote .wgt (Tizen Web Widget)..." -ForegroundColor Yellow
 if (Test-Path $finalWgt) { Remove-Item $finalWgt -Force }
 
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::CreateFromDirectory($tempBuild, $finalWgt, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+$jarExe = "C:\Users\Windows10\AppData\Local\Programs\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin\jar.exe"
+if (Test-Path $jarExe) {
+    & $jarExe -cMf $finalWgt -C $tempBuild .
+} else {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($tempBuild, $finalWgt, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+}
 
 Write-Host "[4/4] Gerando estrutura de Pendrive USB (pasta user_widget)..." -ForegroundColor Yellow
 if (Test-Path $usbDir) {
