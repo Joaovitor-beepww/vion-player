@@ -182,6 +182,7 @@ const App = {
     this.initCinemaBackdropSlideshow();
     this.setupPlatformLifecycle();
     this.updateEpgCalendar();
+    setTimeout(() => { this.checkAndroidAppUpdate(); }, 4000);
 
     const mac = localStorage.getItem('vion_mac_address');
 
@@ -2846,6 +2847,96 @@ const App = {
     this.toastTimeout = setTimeout(() => {
       toast.classList.remove('show');
     }, 4000);
+  },
+
+  // ===================================================================
+  // ATUALIZAÇÃO AUTOMÁTICA (ANDROID TV / FIRE TV IN-APP UPDATER)
+  // ===================================================================
+  async checkAndroidAppUpdate(isManual = false) {
+    if (!window.AndroidDevice || typeof window.AndroidDevice.downloadAndInstallUpdate !== 'function') {
+      if (isManual) this.showToast('Esta função está disponível no aplicativo Android TV.');
+      return;
+    }
+
+    const currentVersionCode = typeof window.AndroidDevice.getAppVersionCode === 'function'
+      ? window.AndroidDevice.getAppVersionCode()
+      : 19;
+
+    try {
+      const res = await fetch('https://vion.gestorpro.app.br/api/app/version');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data && data.success && data.versionCode > currentVersionCode) {
+        this.showUpdateDialog(data);
+      } else if (isManual) {
+        this.showToast('✔ Seu Vion Player já está na versão mais recente!');
+      }
+    } catch (e) {
+      if (isManual) this.showToast('Não foi possível verificar atualizações no momento.');
+    }
+  },
+
+  showUpdateDialog(data) {
+    const title = `🚀 Nova Versão Disponível (${data.versionName || 'Atualização'})`;
+    const desc = (data.releaseNotes || 'Uma nova versão do Vion Player está disponível com melhorias de velocidade e estabilidade.') + '\n\nDeseja atualizar agora diretamente pela TV?';
+
+    this.openDialog(title, desc, () => {
+      this.startAppUpdateDownload(data.apkUrl);
+    });
+  },
+
+  startAppUpdateDownload(apkUrl) {
+    this.showUpdateModal();
+    if (window.AndroidDevice && typeof window.AndroidDevice.downloadAndInstallUpdate === 'function') {
+      window.AndroidDevice.downloadAndInstallUpdate(apkUrl);
+    }
+  },
+
+  showUpdateModal() {
+    let modal = document.getElementById('tv-update-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'tv-update-modal';
+      modal.className = 'tv-dialog-overlay active';
+      modal.innerHTML = `
+        <div class="tv-dialog-box" style="max-width: 500px; text-align: center;">
+          <div style="font-size: 42px; margin-bottom: 12px;">⬇️</div>
+          <h3 id="update-modal-title" style="color: var(--primary-yellow); font-size: 22px; margin-bottom: 10px;">Baixando Atualização...</h3>
+          <p id="update-modal-desc" style="font-size: 15px; color: #cbd5e1; margin-bottom: 20px;">Preparando o download da nova versão...</p>
+          <div style="background: rgba(255,255,255,0.1); border-radius: 999px; height: 12px; width: 100%; overflow: hidden; margin-bottom: 14px;">
+            <div id="update-progress-bar" style="background: var(--grad-gold); height: 100%; width: 5%; transition: width 0.3s ease;"></div>
+          </div>
+          <span id="update-progress-percent" style="font-size: 16px; font-weight: 800; color: #fff;">5%</span>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    } else {
+      modal.classList.add('active');
+    }
+  },
+
+  onUpdateProgress(percent, message) {
+    const bar = document.getElementById('update-progress-bar');
+    const txt = document.getElementById('update-progress-percent');
+    const desc = document.getElementById('update-modal-desc');
+    if (bar) bar.style.width = Math.min(100, Math.max(0, percent)) + '%';
+    if (txt) txt.textContent = percent + '%';
+    if (desc && message) desc.textContent = message;
+    if (percent >= 100) {
+      const title = document.getElementById('update-modal-title');
+      if (title) title.textContent = 'Instalando Atualização...';
+      setTimeout(() => {
+        const modal = document.getElementById('tv-update-modal');
+        if (modal) modal.classList.remove('active');
+      }, 3000);
+    }
+  },
+
+  onUpdateError(error) {
+    const modal = document.getElementById('tv-update-modal');
+    if (modal) modal.classList.remove('active');
+    this.showToast('⚠️ ' + error);
   }
 };
 

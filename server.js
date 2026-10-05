@@ -1051,6 +1051,53 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ===================================================================
+  // 1b-2. ENDPOINT DE ATUALIZAÇÃO AUTOMÁTICA (OTA / AUTO-UPDATER)
+  // ===================================================================
+  if (pathname === '/api/app/version') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+    res.end(JSON.stringify({
+      success: true,
+      versionCode: 20,
+      versionName: '1.1.9',
+      apkUrl: 'https://vion.gestorpro.app.br/download/vion-player.apk',
+      directApk: 'https://vion.gestorpro.app.br/apk',
+      releaseNotes: 'Atualização automática integrada, player de vídeo aprimorado e navegação de controle remoto otimizada.',
+      forceUpdate: false
+    }));
+    return;
+  }
+
+  // Download direto do APK do Android TV / Fire TV
+  if (pathname === '/apk' || pathname === '/download/vion-player.apk' || pathname === '/vion-player.apk') {
+    const downloadDir = path.join(ROOT_PLAYER, 'download');
+    const primaryApk = path.join(downloadDir, 'vion-player.apk');
+    const rootApk = path.join(ROOT_PLAYER, 'vion-player.apk');
+    const targetApk = fs.existsSync(primaryApk) ? primaryApk : (fs.existsSync(rootApk) ? rootApk : null);
+
+    if (targetApk && fs.existsSync(targetApk)) {
+      fs.stat(targetApk, (err, stats) => {
+        if (err || !stats.isFile()) {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
+          res.end('APK não encontrado.');
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'application/vnd.android.package-archive',
+          'Content-Length': stats.size,
+          'Content-Disposition': 'attachment; filename="vion-player.apk"',
+          'Cache-Control': 'no-cache'
+        });
+        fs.createReadStream(targetApk).pipe(res);
+      });
+      return;
+    } else {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
+      res.end('APK não disponível no momento.');
+      return;
+    }
+  }
+
+  // ===================================================================
   // 1c. ENDPOINTS DE API PARA SINCRONIZAÇÃO PORTAL <-> TV / APP
   // ===================================================================
   if (pathname.startsWith('/api/device')) {
