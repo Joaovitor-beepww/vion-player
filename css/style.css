@@ -2204,9 +2204,9 @@ body {
   flex: 1;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 215px));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 155px));
   justify-content: start;
-  gap: 24px 18px;
+  gap: 16px 14px;
   align-content: start;
   padding: 12px 18px 100px 12px;
   scrollbar-width: none !important;
@@ -2226,15 +2226,16 @@ body {
   outline: none;
   transition: transform 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
   width: 100%;
+  max-width: 155px;
   scroll-margin: 50px;
 }
 
 .vod-poster-thumb {
   width: 100%;
   aspect-ratio: 2 / 3;
-  min-height: 260px;
+  min-height: unset;
   background: linear-gradient(145deg, #182236, #0e1422);
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
@@ -6397,17 +6398,45 @@ html[data-platform="tv"] *,
 
 /* Sidebar VOD (Imagem 2) */
 .vod-sidebar {
-  width: 320px !important;
-  min-width: 320px !important;
-  max-width: 320px !important;
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
   height: 100vh !important;
   background: #090b11 !important;
   border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
   display: flex !important;
   flex-direction: column !important;
-  padding: 24px 16px !important;
+  padding: 18px 12px !important;
   z-index: 5 !important;
   box-sizing: border-box !important;
+}
+
+/* Botão Voltar ao Início na Sidebar */
+.vod-sidebar-back-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+  margin-bottom: 12px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.vod-sidebar-back-btn.focused,
+.vod-sidebar-back-btn:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.4) !important;
+  transform: scale(1.02) !important;
 }
 
 /* Campo de Busca (Imagem 2) */
@@ -6534,25 +6563,27 @@ html[data-platform="tv"] *,
 }
 
 .vod-active-heading {
-  font-size: 32px !important;
+  font-size: 26px !important;
   font-weight: 800 !important;
   color: #ffffff !important;
   letter-spacing: 0.5px !important;
 }
 
-/* Grade de Posters VOD (Imagem 2) */
+/* Grade de Posters VOD (Imagem 2) - Proporcional de Cinema */
 .vod-grid-container {
   flex: 1 !important;
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)) !important;
-  gap: 24px 18px !important;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 155px)) !important;
+  gap: 16px 14px !important;
   overflow-y: auto !important;
-  padding-bottom: 60px !important;
+  padding-bottom: 80px !important;
   align-content: start !important;
 }
 
 /* Card de Pôster Individual (Aspecto 2:3 vertical) */
 .vod-poster-card {
+  width: 100% !important;
+  max-width: 155px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -6560,7 +6591,7 @@ html[data-platform="tv"] *,
   border: none !important;
   outline: none !important;
   cursor: pointer !important;
-  transition: transform 0.2s ease !important;
+  transition: transform 0.15s ease !important;
 }
 
 .vod-poster-thumb {
@@ -6574,8 +6605,9 @@ html[data-platform="tv"] *,
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.15s ease !important;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7) !important;
+  min-height: unset !important;
 }
 
 /* Três pontos "..." centralizados quando a imagem ainda não carregou (Imagem 2) */

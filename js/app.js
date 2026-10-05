@@ -823,6 +823,10 @@ const App = {
       this.syncPlaylistsFromPortal(true, true);
     });
 
+    document.getElementById('btn-logout-account-tv')?.addEventListener('click', () => {
+      this.logoutAccount();
+    });
+
     // Expansão para Tela Cheia a partir do Mini-Player
     document.getElementById('btn-expand-fullscreen')?.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -946,17 +950,9 @@ const App = {
       }
     });
 
-    // Desconectar Provedor
+    // Desconectar Provedor / Sair da Conta
     document.getElementById('btn-clear-playlist')?.addEventListener('click', () => {
-      this.openDialog('Desconectar Provedor?', 'Deseja desconectar a lista e sair da conta atual?', async () => {
-        await TVStorage.remove('cached_playlist');
-        await TVStorage.remove('cached_playlist_time');
-        const mac = localStorage.getItem('vion_mac_address');
-        localStorage.removeItem(`vion_playlists_${mac}`);
-        this.playlistData = null;
-        this.showToast('Conta desconectada com sucesso.');
-        this.goToScreen('reseller-login');
-      });
+      this.logoutAccount();
     });
 
     // Diálogo Customizado
@@ -1301,30 +1297,60 @@ const App = {
     const stored = localStorage.getItem(`vion_playlists_${mac}`);
     let playlists = stored ? JSON.parse(stored) : [];
 
+    const savedCode = localStorage.getItem('vion_saved_provider_code') || '';
+    const savedUser = localStorage.getItem('vion_saved_provider_user') || '';
+
+    // Se tiver lista em memória ou credenciais de provedor salvas (ex: TOURO), exibe card da conta
+    if (playlists.length === 0 && (this.playlistData || savedCode)) {
+      const pName = savedCode ? `Provedor ${savedCode} (${savedUser || 'Conectado'})` : 'Lista Conectada';
+      playlists = [{ name: pName, url: this.activePlaylistUrl || 'cached' }];
+    }
+
     if (playlists.length === 0) {
-      container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:30px;font-size:14px;">Nenhuma playlist ativa no dispositivo.<br>Adicione pelo portal ou via provedor.</div>';
+      container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:30px;font-size:14px;">Nenhuma playlist ativa no dispositivo.<br>Adicione pelo portal ou conecte com um provedor.</div>';
       return;
     }
 
     playlists.forEach(p => {
       const item = document.createElement('div');
-      item.className = 'playlist-tv-item focusable';
-      item.setAttribute('tabindex', '0');
+      item.className = 'playlist-tv-item';
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.justifyContent = 'space-between';
+      item.style.padding = '14px 18px';
+      item.style.borderRadius = '12px';
+      item.style.background = 'rgba(255, 255, 255, 0.05)';
+      item.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+      item.style.marginBottom = '12px';
 
       item.innerHTML = `
-        <div class="playlist-tv-left">
-          <span class="playlist-tv-badge">${escapeHtml(p.name)}</span>
+        <div class="playlist-tv-left" style="display:flex;align-items:center;gap:12px;">
+          <span class="playlist-tv-badge" style="background:var(--primary-yellow);color:#000;font-weight:800;padding:6px 12px;border-radius:6px;font-size:12px;">${escapeHtml(p.name)}</span>
           <div>
-            <div class="playlist-tv-title">${escapeHtml(p.name)}</div>
-            <div class="playlist-tv-status">● Lista Ativa no Dispositivo</div>
+            <div class="playlist-tv-title" style="font-size:16px;font-weight:700;color:#fff;">${escapeHtml(p.name)}</div>
+            <div class="playlist-tv-status" style="font-size:12px;color:#22c55e;">● Conectada no Dispositivo</div>
           </div>
         </div>
-        <div class="pill-btn" style="padding: 6px 16px; font-size: 13px;">Recarregar</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="pill-btn focusable btn-item-reload" tabindex="0" style="padding:8px 18px;font-size:13px;background:#ffffff;color:#000;font-weight:700;">🔄 Recarregar</button>
+          <button class="pill-btn focusable btn-item-disconnect" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">🚪 Desconectar</button>
+        </div>
       `;
 
-      item.addEventListener('click', () => {
-        this.activatePlaylistByUrl(p.url, p.name, true);
-        setTimeout(() => this.goToScreen('home'), 400);
+      // Botão Recarregar
+      item.querySelector('.btn-item-reload')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (p.url && p.url !== 'cached') {
+          this.activatePlaylistByUrl(p.url, p.name, true, false, true);
+        } else {
+          this.syncPlaylistsFromPortal(true, true);
+        }
+      });
+
+      // Botão Desconectar
+      item.querySelector('.btn-item-disconnect')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.logoutAccount();
       });
 
       container.appendChild(item);
@@ -2412,6 +2438,9 @@ const App = {
   goToScreen(screenId) {
     if (this.currentScreen !== screenId) {
       this.screenHistory.push(this.currentScreen);
+      try {
+        window.history.pushState({ screen: screenId, t: Date.now() }, '', window.location.href);
+      } catch (e) {}
     }
     this.currentScreen = screenId;
 
@@ -2450,10 +2479,47 @@ const App = {
     }
   },
 
+  logoutAccount() {
+    this.openDialog('Sair da Conta?', 'Deseja realmente desconectar a conta e remover a lista ativa deste dispositivo?', async () => {
+      try {
+        await TVStorage.remove('cached_playlist');
+        await TVStorage.remove('cached_playlist_time');
+      } catch (e) {}
+      const mac = localStorage.getItem('vion_mac_address');
+      if (mac) {
+        localStorage.removeItem(`vion_playlists_${mac}`);
+      }
+      localStorage.removeItem('vion_has_playlist');
+      localStorage.removeItem('vion_saved_provider_code');
+      localStorage.removeItem('vion_saved_provider_user');
+      localStorage.removeItem('vion_saved_provider_pass');
+      localStorage.removeItem('vion_provider_pass');
+      localStorage.removeItem('vion_active_playlist_url');
+      localStorage.removeItem('vion_active_playlist_name');
+
+      this.playlistData = null;
+      this.activePlaylistUrl = null;
+      if (this.player) {
+        this.player.stopMini();
+        this.player.close();
+      }
+
+      const codeInput = document.getElementById('input-reseller-code');
+      const userInput = document.getElementById('input-reseller-user');
+      const passInput = document.getElementById('input-reseller-pass');
+      if (codeInput) codeInput.value = '';
+      if (userInput) userInput.value = '';
+      if (passInput) passInput.value = '';
+
+      this.showToast('✅ Conta desconectada com sucesso.');
+      this.goToScreen('reseller-login');
+    });
+  },
+
   _lastBackTs: 0,
   handleBack() {
     const now = Date.now();
-    if (now - this._lastBackTs < 220) return;
+    if (now - this._lastBackTs < 160) return;
     this._lastBackTs = now;
 
     // Se um campo de texto estiver em foco, desfoque-o
@@ -2469,8 +2535,8 @@ const App = {
       return;
     }
 
-    // 1. Fecha diálogo de confirmação se estiver aberto
-    const confirmOverlay = document.getElementById('tv-confirm-dialog');
+    // 1. Fecha diálogo de confirmação se estiver aberto (corrigido id: modal-tv-dialog)
+    const confirmOverlay = document.getElementById('modal-tv-dialog');
     if (confirmOverlay && confirmOverlay.classList.contains('active')) {
       this.closeDialog();
       return;
@@ -2513,10 +2579,12 @@ const App = {
       const activeEl = document.querySelector('.screen.active .focused') || document.activeElement;
       const isInsideGrid = activeEl && (activeEl.classList.contains('vod-poster-card') || (activeEl.closest && activeEl.closest('#vod-grid')));
       if (isInsideGrid) {
-        // Se estiver nos cards de filmes/séries, apertar Voltar foca na categoria da barra lateral!
+        // Se estiver nos cards de filmes/séries, apertar Voltar foca no botão Voltar ou na categoria ativa!
+        const backBtn = document.getElementById('btn-back-from-vod');
         const targetPill = document.querySelector('.vod-sidebar-item.active-cat') || document.querySelector('.vod-sidebar-item');
-        if (targetPill && window.RemoteControl) {
-          RemoteControl.setFocus(targetPill);
+        const toFocus = backBtn || targetPill;
+        if (toFocus && window.RemoteControl) {
+          RemoteControl.setFocus(toFocus);
           return;
         }
       }
@@ -2542,8 +2610,18 @@ const App = {
     if (this.currentScreen === 'playlists' || this.currentScreen === 'settings' || this.currentScreen === 'reseller-login') {
       if (this.isDeviceExpired()) {
         this.goToScreen('expired');
-      } else {
+      } else if (this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0) {
         this.goToScreen('home');
+      } else {
+        this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
+          if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
+            AndroidDevice.exitApp();
+            return;
+          }
+          if (window.tizen) { try { tizen.application.getCurrentApplication().exit(); } catch(e) {} return; }
+          if (window.webOS) { try { window.close(); } catch(e) {} return; }
+          window.close();
+        });
       }
       return;
     }

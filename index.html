@@ -395,7 +395,7 @@
     <!-- Rodapé Moderno Discreto -->
     <footer class="home-modern-footer">
       <div class="home-footer-left">
-        <span class="footer-tag">VION PLAYER v1.1.8</span>
+        <span class="footer-tag">VION PLAYER v1.1.9</span>
         <span class="footer-sep">•</span>
         <span>Reprodutor Multimídia Ultra HD</span>
       </div>
@@ -428,14 +428,17 @@
       <div class="playlists-modal-card">
         <h2 style="font-size: 26px; margin-bottom: 8px;">Listas de Reprodução Conectadas</h2>
         <p style="color: var(--text-muted); font-size: 14px;">
-          Selecione uma playlist para carregar seus canais:
+          Selecione uma playlist para recarregar ou desconecte para sair da conta vinculada:
         </p>
 
         <div id="tv-playlists-list" class="playlists-tv-list"></div>
 
-        <div style="display: flex; gap: 15px; justify-content: flex-end;">
+        <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px;">
           <button id="btn-reload-playlists-tv" class="pill-btn focusable" tabindex="0" style="background: #ffffff; color: #000; font-weight: 700;">
             🔄 Sincronizar do Portal
+          </button>
+          <button id="btn-logout-account-tv" class="pill-btn focusable btn-danger-sub" tabindex="0" style="background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; color: #ef4444; font-weight: 700;">
+            🚪 Sair da Conta / Desconectar
           </button>
         </div>
       </div>
@@ -580,6 +583,11 @@
     <main class="superplay-vod-layout">
       <!-- Sidebar de Categorias (Estilo Imagem 2) -->
       <aside class="vod-sidebar">
+        <!-- Botão Voltar ao Início no Topo da Sidebar -->
+        <button type="button" id="btn-back-from-vod" class="vod-sidebar-back-btn focusable" tabindex="0">
+          <span>◀</span> <span>Voltar ao Início</span>
+        </button>
+
         <div class="vod-search-wrap">
           <span class="vod-search-ico">🔍</span>
           <input type="text" id="input-vod-search" class="vod-search-input focusable" placeholder="Search" tabindex="0">

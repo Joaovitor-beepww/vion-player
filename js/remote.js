@@ -11,7 +11,7 @@ const RemoteControl = {
     RIGHT:      [39],
     DOWN:       [40],
     ENTER:      [13, 32],
-    BACK:       [4, 10009, 461, 27, 8, 166],
+    BACK:       [4, 10009, 461, 27, 8, 166, 227, 228],
     CH_UP:      [427, 33, 117],
     CH_DOWN:    [428, 34, 118],
     PLAY:       [415, 179],
@@ -35,7 +35,18 @@ const RemoteControl = {
   init() {
     this.registerTizenKeys();
     this.registerWebOSKeys();
-    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+    window.addEventListener('keydown', (e) => this.handleKeyDown(e), { passive: false });
+
+    // Escuta popstate para capturar botão Voltar físico de controles de Smart TV no navegador
+    window.addEventListener('popstate', () => {
+      App.handleBack && App.handleBack();
+    });
+
+    // Escuta backbutton nativo de Smart TV
+    document.addEventListener('backbutton', (e) => {
+      e.preventDefault();
+      App.handleBack && App.handleBack();
+    });
 
     document.addEventListener('mouseover', (e) => {
       const el = e.target.closest ? e.target.closest('.focusable') : null;
@@ -64,12 +75,23 @@ const RemoteControl = {
         try { window.tizen.tvinputdevice.registerKey(k); } catch(e) {}
       });
     }
+    window.addEventListener('tizenhwkey', (e) => {
+      if (e.keyName === 'back') {
+        e.preventDefault();
+        App.handleBack && App.handleBack();
+      }
+    });
   },
 
   registerWebOSKeys() {
-    if (window.webOS) {
-      try { webOS.platformBack(); } catch(e) {}
-    }
+    // webOS não deve chamar platformBack() na inicialização pois fecha o app
+  },
+
+  isBackKey(code, e) {
+    if (this.KEYS.BACK.includes(code)) return true;
+    if (code === 461 || code === 10009 || code === 4 || code === 27 || code === 8 || code === 166 || code === 227 || code === 228) return true;
+    if (e && (e.key === 'Back' || e.key === 'BrowserBack' || e.key === 'GoBack' || e.key === 'Escape')) return true;
+    return false;
   },
 
   isEditingText(el) {
@@ -90,8 +112,7 @@ const RemoteControl = {
     if (isArrow) this._lastArrowTime = now;
 
     // 1. Tecla Voltar do controle remoto (Android TV, webOS, Tizen, Fire TV, PC Escape/Backspace)
-    const isBackKey = this.KEYS.BACK.includes(code);
-    if (isBackKey) {
+    if (this.isBackKey(code, e)) {
       const trailerModal = document.getElementById('modal-trailer-player');
       if (trailerModal && trailerModal.classList.contains('active')) {
         e.preventDefault();
@@ -105,6 +126,7 @@ const RemoteControl = {
         return; // Deixa o navegador apagar o texto normalmente
       }
       e.preventDefault();
+      e.stopPropagation();
       if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {
         ae.blur();
       }
