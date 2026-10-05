@@ -98,6 +98,19 @@ function initNavigation() {
     e.preventDefault();
     logoutDevice();
   });
+
+  // Fechamento universal de qualquer modal pelo 'X' ou clicando fora dele
+  document.addEventListener('click', (e) => {
+    const closeBtn = e.target.closest('.btn-close-modal');
+    if (closeBtn) {
+      const modal = closeBtn.closest('.modal-overlay');
+      if (modal) modal.style.display = 'none';
+      return;
+    }
+    if (e.target.classList.contains('modal-overlay')) {
+      e.target.style.display = 'none';
+    }
+  });
 }
 
 /**
@@ -1246,15 +1259,16 @@ function renderHubLinks() {
   const links = session.links || [];
 
   links.forEach(l => {
+    const liveUrl = `${window.location.origin}/portal/#reseller?ref=${encodeURIComponent(l.code || 'VION')}`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong>${escapeHtml(l.name)}</strong></td>
       <td><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${escapeHtml(l.code)}</code></td>
-      <td style="color: #0284c7; font-size: 13px;">${escapeHtml(l.url)}</td>
+      <td style="color: #0284c7; font-size: 13px;">${escapeHtml(liveUrl)}</td>
       <td><strong>${l.clicks || 0}</strong></td>
       <td><strong>${l.activations || 0}</strong></td>
       <td style="text-align: right;">
-        <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="navigator.clipboard.writeText('${l.url}'); alert('Link copiado!');">
+        <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="navigator.clipboard.writeText('${liveUrl}'); alert('Link copiado!');">
           📋 Copiar
         </button>
       </td>
@@ -1327,12 +1341,17 @@ function renderHubSubs() {
 function initActivateDeviceModal() {
   const modal = document.getElementById('modal-activate-device');
   const btnOpen = document.getElementById('btn-hub-open-activate');
+  const btnClose = document.getElementById('btn-close-activate-modal');
   const btnCancel = document.getElementById('btn-cancel-activate-modal');
-  const form = document.getElementById('modal-activate-form');
+  const form = document.getElementById('modal-activate-device-form') || document.getElementById('modal-activate-form');
   const alertBox = document.getElementById('activate-alert-box');
 
   btnOpen?.addEventListener('click', () => {
     if (modal) modal.style.display = 'flex';
+  });
+
+  btnClose?.addEventListener('click', () => {
+    if (modal) modal.style.display = 'none';
   });
 
   btnCancel?.addEventListener('click', () => {
