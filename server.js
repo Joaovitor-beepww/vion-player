@@ -385,7 +385,8 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
   '.m3u': 'text/plain; charset=UTF-8',
   '.m3u8': 'application/vnd.apple.mpegurl',
-  '.apk': 'application/vnd.android.package-archive'
+  '.apk': 'application/vnd.android.package-archive',
+  '.ipk': 'application/vnd.webos.ipk'
 };
 
 const server = http.createServer(async (req, res) => {
@@ -1347,6 +1348,36 @@ const server = http.createServer(async (req, res) => {
     } else {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
       res.end('APK não disponível no momento.');
+      return;
+    }
+  }
+
+  // Download direto do IPK do LG webOS
+  if (pathname === '/ipk' || pathname === '/download/vion-player.ipk' || pathname === '/vion-player.ipk') {
+    const downloadDir = path.join(ROOT_PLAYER, 'download');
+    const primaryIpk = path.join(downloadDir, 'vion-player.ipk');
+    const rootIpk = path.join(ROOT_PLAYER, 'vion-player.ipk');
+    const targetIpk = fs.existsSync(primaryIpk) ? primaryIpk : (fs.existsSync(rootIpk) ? rootIpk : null);
+
+    if (targetIpk && fs.existsSync(targetIpk)) {
+      fs.stat(targetIpk, (err, stats) => {
+        if (err || !stats.isFile()) {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
+          res.end('IPK não encontrado.');
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'application/vnd.webos.ipk',
+          'Content-Length': stats.size,
+          'Content-Disposition': 'attachment; filename="vion-player.ipk"',
+          'Cache-Control': 'no-cache'
+        });
+        fs.createReadStream(targetIpk).pipe(res);
+      });
+      return;
+    } else {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
+      res.end('IPK não disponível no momento.');
       return;
     }
   }
