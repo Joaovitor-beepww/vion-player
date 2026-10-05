@@ -1377,15 +1377,10 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
         </label>
         <input type="text" id="input-device-pay-mac" placeholder="Ex: 00:1A:79:B4:C2:5D" maxlength="17"
                style="width: 100%; font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box;">
-        <p style="font-size: 12px; color: #94a3b8; margin-top: 6px; line-height: 1.4;">
-          💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.
-        </p>
-
-        <label style="font-size: 13px; font-weight: 700; color: #cbd5e1; display: block; margin-top: 14px; margin-bottom: 6px;">
-          E-mail (opcional para recibo):
-        </label>
-        <input type="email" id="input-device-pay-email" placeholder="seuemail@exemplo.com"
-               style="width: 100%; font-size: 14px; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box;">
+        
+        <div id="device-mac-status-hint" style="margin-top: 8px; font-size: 12.5px; min-height: 20px;">
+          <span style="color: #94a3b8;">💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.</span>
+        </div>
 
         <div style="border-top: 1px solid #334155; padding-top: 18px; margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
           <button type="button" class="btn btn-gold" id="btn-device-pay-proceed" style="width: 100%; font-size: 15px; padding: 14px;">
@@ -1399,20 +1394,37 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
     </div>
   `;
 
-  // Auto-formatação de MAC Address (ex: 00:1A:79...)
+  // Auto-formatação de MAC Address (ex: 00:1A:79...) + Verificação em tempo real
   const macInput = document.getElementById('input-device-pay-mac');
+  const statusHint = document.getElementById('device-mac-status-hint');
   macInput?.focus();
-  macInput?.addEventListener('input', (e) => {
+  macInput?.addEventListener('input', async (e) => {
     let val = e.target.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
     if (val.length > 12) val = val.substring(0, 12);
     const parts = val.match(/.{1,2}/g) || [];
     e.target.value = parts.join(':');
+
+    if (e.target.value.length === 17) {
+      if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">🔄 Verificando se o aparelho está cadastrado...</span>';
+      try {
+        const checkRes = await fetch(`/api/device?mac=${encodeURIComponent(e.target.value)}`);
+        const checkData = await checkRes.json();
+        if (checkRes.ok && checkData.success) {
+          if (statusHint) statusHint.innerHTML = '<span style="color: #22c55e; font-weight: 700;">✔ Aparelho identificado no sistema! TV pronta para ativação.</span>';
+        } else {
+          if (statusHint) statusHint.innerHTML = '<span style="color: #f59e0b; font-weight: 600;">⚠️ Dispositivo não encontrado. Certifique-se de já ter aberto o Vion Player na TV.</span>';
+        }
+      } catch(err) {
+        if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.</span>';
+      }
+    } else {
+      if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.</span>';
+    }
   });
 
   // Prosseguir para gerar o PIX
   document.getElementById('btn-device-pay-proceed')?.addEventListener('click', async () => {
     let mac = (macInput?.value || '').trim().toUpperCase();
-    const email = (document.getElementById('input-device-pay-email')?.value || '').trim();
 
     // Validação básica do MAC
     const cleanMac = mac.replace(/[^0-9A-F]/g, '');
@@ -1420,6 +1432,19 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
       alert('Por favor, informe um endereço MAC válido contendo 12 dígitos (ex: 00:1A:79:B4:C2:5D).');
       macInput?.focus();
       return;
+    }
+
+    // Validação estrita: somente permite avançar se o MAC já existir no sistema (abriu o app na TV)
+    try {
+      const checkRes = await fetch(`/api/device?mac=${encodeURIComponent(mac)}`);
+      const checkData = await checkRes.json();
+      if (!checkRes.ok || !checkData.success) {
+        alert(`❌ Dispositivo não encontrado!\n\nO endereço MAC "${mac}" ainda não foi registrado no sistema.\n\nPor favor, abra o aplicativo Vion Player na sua TV pelo menos uma vez para que o seu aparelho seja reconhecido antes de realizar a ativação, ou verifique se digitou o MAC corretamente.`);
+        macInput?.focus();
+        return;
+      }
+    } catch(err) {
+      // Se houver falha de rede na checagem prévia, prossegue com cautela
     }
 
     // ETAPA 2: GERANDO COBRANÇA
@@ -1447,7 +1472,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
           plan: planType,
           mac: mac,
           amount: price,
-          email: email || 'cliente@vionplayer.app',
+          email: 'cliente@vionplayer.app',
           description: `Ativação ${planTitle} - MAC ${mac}`
         })
       });

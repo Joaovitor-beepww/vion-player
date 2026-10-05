@@ -211,7 +211,9 @@ function fulfillPayment(payment) {
     }
     const isLifetime = payment.plan === 'vitalicio' || payment.plan === 'lifetime';
     devices[normalizedMac].active = true;
+    devices[normalizedMac].activated = true;
     devices[normalizedMac].plan = isLifetime ? 'vitalicio' : 'anual';
+    devices[normalizedMac].expiresAt = isLifetime ? null : Date.now() + 365 * 24 * 60 * 60 * 1000;
     devices[normalizedMac].expiryDate = isLifetime
       ? Date.now() + 100 * 365 * 24 * 60 * 60 * 1000
       : Date.now() + 365 * 24 * 60 * 60 * 1000;
