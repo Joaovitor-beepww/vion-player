@@ -1567,16 +1567,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ===================================================================
-  // 4. SERVIR ARQUIVOS DO PORTAL OU PLAYER NA RAIZ (/)
+  // 4. SERVIR ARQUIVOS DO PORTAL NA RAIZ (/)
   // ===================================================================
   if (pathname === '/' || pathname === '') {
-    const ua = (req.headers['user-agent'] || '').toLowerCase();
-    const isSmartTV = /webos|web0s|lg browser|netcast|tizen|smart-tv|smarttv|android tv|googletv|crkey|aftb|aftt|hbbtv|bravia/i.test(ua);
-    if (isSmartTV) {
-      res.writeHead(302, { 'Location': '/tv/' });
-      res.end();
-      return;
-    }
     serveStaticFile(res, path.join(ROOT_PORTAL, 'index.html'), '/index.html');
     return;
   }
