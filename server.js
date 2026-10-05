@@ -1521,8 +1521,7 @@ const server = http.createServer(async (req, res) => {
   // 3. SERVIR ARQUIVOS DO PLAYER TV / WEB APP (/)
   // ===================================================================
   if (pathname === '/' || pathname === '') {
-    res.writeHead(302, { 'Location': '/portal/' });
-    res.end();
+    serveStaticFile(res, path.join(ROOT_PORTAL, 'index.html'), '/index.html');
     return;
   }
 
