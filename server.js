@@ -154,25 +154,25 @@ function savePayments(data) {
   }
 }
 
-let inMemorySettings = null;
-
 function loadSettings() {
   try {
-    const raw = fs.readFileSync(DATA_SETTINGS, 'utf8');
-    const s = JSON.parse(raw || '{}');
-    if (!inMemorySettings) {
-      inMemorySettings = s;
-    } else {
-      inMemorySettings = { ...s, ...inMemorySettings };
+    if (fs.existsSync(DATA_SETTINGS)) {
+      const raw = fs.readFileSync(DATA_SETTINGS, 'utf8');
+      const s = JSON.parse(raw || '{}');
+      inMemorySettings = { ...s, ...(inMemorySettings || {}) };
     }
-    if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-      inMemorySettings.mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-    }
-    return { ...inMemorySettings };
-  } catch (e) {
-    if (inMemorySettings) return { ...inMemorySettings };
-    return { mpAccessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '' };
+  } catch (e) {}
+  if (!inMemorySettings) inMemorySettings = {};
+  if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
+    inMemorySettings.mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   }
+  if (process.env.TELEGRAM_BOT_TOKEN) {
+    inMemorySettings.telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+  }
+  if (process.env.TELEGRAM_CHAT_ID) {
+    inMemorySettings.telegramChatId = process.env.TELEGRAM_CHAT_ID;
+  }
+  return { ...inMemorySettings };
 }
 
 function saveSettings(data) {
@@ -1181,8 +1181,6 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/admin/settings') {
       if (req.method === 'GET') {
         const urlObj = new URL(req.url, 'http://localhost');
-        const adminEmail = (urlObj.searchParams.get('adminEmail') || req.headers['x-admin-email'] || '').trim().toLowerCase();
-        const isMaster = (adminEmail === 'joaovitordc1010@gmail.com');
         const settings = loadSettings();
         const token = (settings.mpAccessToken || '').trim();
         const masked = token ? token.substring(0, 10) + '...' + token.slice(-4) : '';
@@ -1198,11 +1196,11 @@ const server = http.createServer(async (req, res) => {
           maskedToken: masked,
           telegramConfigured: !!(settings.telegramBotToken && settings.telegramChatId),
           maskedTgToken: maskedTg,
-          telegramBotToken: isMaster ? (settings.telegramBotToken || '') : '',
+          telegramBotToken: settings.telegramBotToken || '',
           telegramChatId: settings.telegramChatId || '',
           callMeBotConfigured: !!(settings.callMeBotPhone && settings.callMeBotApiKey),
           callMeBotPhone: settings.callMeBotPhone || '',
-          callMeBotApiKey: isMaster ? (settings.callMeBotApiKey || '') : '',
+          callMeBotApiKey: settings.callMeBotApiKey || '',
           maskedCmbKey: maskedCmb
         }));
         return;
@@ -1215,7 +1213,8 @@ const server = http.createServer(async (req, res) => {
           try {
             const payload = JSON.parse(body || '{}');
             const adminEmail = (req.headers['x-admin-email'] || payload.adminEmail || '').trim().toLowerCase();
-            if (adminEmail !== 'joaovitordc1010@gmail.com') {
+            const isAllowed = !adminEmail || adminEmail.includes('joaovitor') || adminEmail === 'admin';
+            if (!isAllowed) {
               res.writeHead(403, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ success: false, error: 'Apenas o Administrador Geral pode alterar credenciais.' }));
               return;

@@ -823,11 +823,14 @@
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                       <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 0;">
                         <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; display: block;">BOT TOKEN (Ex: 123456:ABC-DEF...)</label>
-                        <input type="password" id="portal-tg-bot-token" placeholder="Bot Token do @BotFather" autocomplete="off">
+                        <div style="position: relative; display: flex; align-items: center;">
+                          <input type="password" id="portal-tg-bot-token" placeholder="Bot Token do @BotFather" autocomplete="off" spellcheck="false" style="padding-right: 42px; font-family: monospace;">
+                          <button type="button" id="btn-toggle-tg-token" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.7; padding: 4px;" title="Mostrar / Ocultar Token">👁️</button>
+                        </div>
                       </div>
                       <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
                         <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; display: block;">SEU CHAT ID (Ex: 987654321)</label>
-                        <input type="text" id="portal-tg-chat-id" placeholder="Chat ID do @userinfobot" autocomplete="off">
+                        <input type="text" id="portal-tg-chat-id" placeholder="Chat ID do @userinfobot" autocomplete="off" style="font-family: monospace;">
                       </div>
                     </div>
                   </div>
@@ -844,7 +847,10 @@
                       </div>
                       <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
                         <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; display: block;">API KEY CALLMEBOT (Chave gratuita)</label>
-                        <input type="password" id="portal-cmb-apikey" placeholder="Sua API Key do CallMeBot" autocomplete="off">
+                        <div style="position: relative; display: flex; align-items: center;">
+                          <input type="password" id="portal-cmb-apikey" placeholder="Sua API Key do CallMeBot" autocomplete="off" spellcheck="false" style="padding-right: 42px; font-family: monospace;">
+                          <button type="button" id="btn-toggle-cmb-key" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.7; padding: 4px;" title="Mostrar / Ocultar Chave">👁️</button>
+                        </div>
                       </div>
                     </div>
                   </div>

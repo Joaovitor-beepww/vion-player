@@ -2510,8 +2510,44 @@ function initNotificationSettings() {
   const cmbPhoneInput = document.getElementById('portal-cmb-phone');
   const cmbKeyInput = document.getElementById('portal-cmb-apikey');
   const btnTest = document.getElementById('btn-test-notify');
+  const btnToggleTg = document.getElementById('btn-toggle-tg-token');
+  const btnToggleCmb = document.getElementById('btn-toggle-cmb-key');
 
-  // 1. Restaura imediatamente do localStorage para que os campos NUNCA apareçam em branco
+  if (btnToggleTg && tgTokenInput) {
+    btnToggleTg.onclick = () => {
+      tgTokenInput.type = tgTokenInput.type === 'password' ? 'text' : 'password';
+      btnToggleTg.textContent = tgTokenInput.type === 'password' ? '👁️' : '🔒';
+    };
+  }
+  if (btnToggleCmb && cmbKeyInput) {
+    btnToggleCmb.onclick = () => {
+      cmbKeyInput.type = cmbKeyInput.type === 'password' ? 'text' : 'password';
+      btnToggleCmb.textContent = cmbKeyInput.type === 'password' ? '👁️' : '🔒';
+    };
+  }
+
+  function updateStatusBadge(hasTg, hasCmb) {
+    if (!badge) return;
+    if (hasTg && hasCmb) {
+      badge.style.background = '#dcfce7';
+      badge.style.color = '#15803d';
+      badge.textContent = '🟢 Ativo (Telegram & WhatsApp)';
+    } else if (hasTg) {
+      badge.style.background = '#dcfce7';
+      badge.style.color = '#15803d';
+      badge.textContent = '🟢 Ativo (Telegram Bot)';
+    } else if (hasCmb) {
+      badge.style.background = '#dcfce7';
+      badge.style.color = '#15803d';
+      badge.textContent = '🟢 Ativo (WhatsApp CallMeBot)';
+    } else {
+      badge.style.background = '#fee2e2';
+      badge.style.color = '#dc2626';
+      badge.textContent = '🔴 Notificações Desativadas';
+    }
+  }
+
+  // 1. Restaura imediatamente do localStorage
   function restoreLocalNotifyCache() {
     try {
       const local = JSON.parse(localStorage.getItem('vion_notify_settings') || '{}');
@@ -2519,11 +2555,18 @@ function initNotificationSettings() {
       if (local.telegramChatId && tgChatIdInput && !tgChatIdInput.value) tgChatIdInput.value = local.telegramChatId;
       if (local.callMeBotPhone && cmbPhoneInput && !cmbPhoneInput.value) cmbPhoneInput.value = local.callMeBotPhone;
       if (local.callMeBotApiKey && cmbKeyInput && !cmbKeyInput.value) cmbKeyInput.value = local.callMeBotApiKey;
+
+      const hasTg = !!(local.telegramBotToken && local.telegramChatId);
+      const hasCmb = !!(local.callMeBotPhone && local.callMeBotApiKey);
+      if (hasTg || hasCmb) updateStatusBadge(hasTg, hasCmb);
     } catch(e) {}
   }
 
   async function loadNotifySettings() {
     restoreLocalNotifyCache();
+
+    let local = {};
+    try { local = JSON.parse(localStorage.getItem('vion_notify_settings') || '{}'); } catch(e) {}
 
     try {
       const res = await fetch(`/api/admin/settings?adminEmail=${encodeURIComponent(MASTER_ADMIN_EMAIL)}`, {
@@ -2531,61 +2574,45 @@ function initNotificationSettings() {
       });
       const data = await res.json();
       if (data.success) {
-        if (data.telegramBotToken && tgTokenInput) tgTokenInput.value = data.telegramBotToken;
-        if (data.telegramChatId && tgChatIdInput) tgChatIdInput.value = data.telegramChatId;
-        if (data.callMeBotPhone && cmbPhoneInput) cmbPhoneInput.value = data.callMeBotPhone;
-        if (data.callMeBotApiKey && cmbKeyInput) cmbKeyInput.value = data.callMeBotApiKey;
+        // Prioriza valor existente (servidor ou cache local), NUNCA apaga
+        const finalToken = (data.telegramBotToken || tgTokenInput?.value || local.telegramBotToken || '').trim();
+        const finalChatId = (data.telegramChatId || tgChatIdInput?.value || local.telegramChatId || '').trim();
+        const finalPhone = (data.callMeBotPhone || cmbPhoneInput?.value || local.callMeBotPhone || '').trim();
+        const finalKey = (data.callMeBotApiKey || cmbKeyInput?.value || local.callMeBotApiKey || '').trim();
 
-        // Se ainda não tiver valor mas estiver configurado no servidor, preenche o placeholder
-        if (data.telegramConfigured && tgTokenInput && !tgTokenInput.value) {
-          tgTokenInput.placeholder = 'Token configurado (' + (data.maskedTgToken || 'OK') + ')';
-        }
-        if (data.callMeBotConfigured && cmbKeyInput && !cmbKeyInput.value) {
-          cmbKeyInput.placeholder = 'Chave configurada (******)';
-        }
+        if (tgTokenInput && finalToken) tgTokenInput.value = finalToken;
+        if (tgChatIdInput && finalChatId) tgChatIdInput.value = finalChatId;
+        if (cmbPhoneInput && finalPhone) cmbPhoneInput.value = finalPhone;
+        if (cmbKeyInput && finalKey) cmbKeyInput.value = finalKey;
 
-        // Atualiza cache local permanente
-        const currentCache = {
-          telegramBotToken: tgTokenInput?.value || data.telegramBotToken || '',
-          telegramChatId: tgChatIdInput?.value || data.telegramChatId || '',
-          callMeBotPhone: cmbPhoneInput?.value || data.callMeBotPhone || '',
-          callMeBotApiKey: cmbKeyInput?.value || data.callMeBotApiKey || ''
+        // Salva cache permanente SEM PERDER os dados
+        const permanentCache = {
+          telegramBotToken: finalToken,
+          telegramChatId: finalChatId,
+          callMeBotPhone: finalPhone,
+          callMeBotApiKey: finalKey
         };
-        localStorage.setItem('vion_notify_settings', JSON.stringify(currentCache));
+        localStorage.setItem('vion_notify_settings', JSON.stringify(permanentCache));
 
-        // Resgate automático: se o backend estiver sem token mas o cliente tiver em cache, envia ao backend
-        if (currentCache.telegramBotToken && currentCache.telegramChatId && !data.telegramConfigured) {
+        // Se o cliente tem token no cache mas o backend perdeu (ex: redeploy do Render), envia ao backend automaticamente
+        if (finalToken && finalChatId && !data.telegramConfigured) {
           fetch('/api/admin/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-admin-email': MASTER_ADMIN_EMAIL },
             body: JSON.stringify({
               adminEmail: MASTER_ADMIN_EMAIL,
-              ...currentCache
+              ...permanentCache
             })
+          }).then(r => r.json()).then(postData => {
+            if (postData.success) {
+              updateStatusBadge(true, !!(finalPhone && finalKey));
+            }
           }).catch(() => {});
         }
 
-        if (badge) {
-          const hasTg = !!((tgTokenInput && tgTokenInput.value) || data.telegramConfigured);
-          const hasCmb = !!((cmbPhoneInput && cmbPhoneInput.value && cmbKeyInput && cmbKeyInput.value) || data.callMeBotConfigured);
-          if (hasTg && hasCmb) {
-            badge.style.background = '#dcfce7';
-            badge.style.color = '#15803d';
-            badge.textContent = '🟢 Ativo (Telegram & WhatsApp)';
-          } else if (hasTg) {
-            badge.style.background = '#dcfce7';
-            badge.style.color = '#15803d';
-            badge.textContent = '🟢 Ativo (Telegram Bot)';
-          } else if (hasCmb) {
-            badge.style.background = '#dcfce7';
-            badge.style.color = '#15803d';
-            badge.textContent = '🟢 Ativo (WhatsApp CallMeBot)';
-          } else {
-            badge.style.background = '#fee2e2';
-            badge.style.color = '#dc2626';
-            badge.textContent = '🔴 Notificações Desativadas';
-          }
-        }
+        const hasTg = !!(finalToken && finalChatId) || data.telegramConfigured;
+        const hasCmb = !!(finalPhone && finalKey) || data.callMeBotConfigured;
+        updateStatusBadge(hasTg, hasCmb);
       }
     } catch (e) {
       console.error('Erro ao carregar configurações de notificação:', e);
@@ -2597,16 +2624,35 @@ function initNotificationSettings() {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const payload = {
-      adminEmail: MASTER_ADMIN_EMAIL
-    };
-    if (tgTokenInput && tgTokenInput.value.trim()) payload.telegramBotToken = tgTokenInput.value.trim();
-    if (tgChatIdInput) payload.telegramChatId = tgChatIdInput.value.trim();
-    if (cmbPhoneInput) payload.callMeBotPhone = cmbPhoneInput.value.trim();
-    if (cmbKeyInput && cmbKeyInput.value.trim()) payload.callMeBotApiKey = cmbKeyInput.value.trim();
+    let local = {};
+    try { local = JSON.parse(localStorage.getItem('vion_notify_settings') || '{}'); } catch(e) {}
 
-    // Salva imediatamente no localStorage
+    const tokenVal = (tgTokenInput?.value || local.telegramBotToken || '').trim();
+    const chatIdVal = (tgChatIdInput?.value || local.telegramChatId || '').trim();
+    const phoneVal = (cmbPhoneInput?.value || local.callMeBotPhone || '').trim();
+    const keyVal = (cmbKeyInput?.value || local.callMeBotApiKey || '').trim();
+
+    if (!tokenVal && !chatIdVal && !phoneVal) {
+      alert('⚠️ Por favor, informe ao menos o Bot Token e Chat ID do Telegram.');
+      return;
+    }
+
+    const payload = {
+      adminEmail: MASTER_ADMIN_EMAIL,
+      telegramBotToken: tokenVal,
+      telegramChatId: chatIdVal,
+      callMeBotPhone: phoneVal,
+      callMeBotApiKey: keyVal
+    };
+
+    // Salva imediatamente no localStorage permanente
     localStorage.setItem('vion_notify_settings', JSON.stringify(payload));
+    if (tgTokenInput && tokenVal) tgTokenInput.value = tokenVal;
+    if (tgChatIdInput && chatIdVal) tgChatIdInput.value = chatIdVal;
+
+    const hasTg = !!(tokenVal && chatIdVal);
+    const hasCmb = !!(phoneVal && keyVal);
+    updateStatusBadge(hasTg, hasCmb);
 
     const btnSave = document.getElementById('btn-save-notify-settings');
     const oldBtnHtml = btnSave ? btnSave.innerHTML : '';
@@ -2620,14 +2666,10 @@ function initNotificationSettings() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('✔ Configurações salvas com sucesso! O Token e Chat ID foram gravados permanentemente.');
-        if (data.telegramBotToken && tgTokenInput) tgTokenInput.value = data.telegramBotToken;
-        if (data.telegramChatId && tgChatIdInput) tgChatIdInput.value = data.telegramChatId;
-        if (data.callMeBotPhone && cmbPhoneInput) cmbPhoneInput.value = data.callMeBotPhone;
-        if (data.callMeBotApiKey && cmbKeyInput) cmbKeyInput.value = data.callMeBotApiKey;
+        alert('✔ Configurações salvas com sucesso! As notificações automáticas no seu celular estão ativas.');
         loadNotifySettings();
       } else {
-        alert('Erro: ' + (data.error || 'Falha ao salvar.'));
+        alert('Erro: ' + (data.error || 'Falha ao salvar no servidor.'));
       }
     } catch (err) {
       alert('Erro de conexão: ' + err.message);
