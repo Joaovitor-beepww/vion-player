@@ -222,6 +222,64 @@ function fulfillPayment(payment) {
   }
 }
 
+async function sendAdminNewPartnerAlert(partner, isTest = false) {
+  const settings = loadSettings();
+  const phoneClean = (partner.phone || '').replace(/[^0-9]/g, '');
+  const waDirectUrl = phoneClean ? `https://wa.me/${phoneClean}` : '';
+  const title = isTest ? '🧪 TESTE DE NOTIFICAÇÃO - VION PLAYER' : '🔔 NOVO PARCEIRO CADASTRADO NO VION PLAYER!';
+
+  const textMsg = `${title}\n\n` +
+    `👤 *Nome:* ${(partner.firstName || '').trim()} ${(partner.lastName || '').trim()}\n` +
+    `🏢 *Empresa:* ${partner.company || 'Não informada'}\n` +
+    `📧 *E-mail:* ${partner.email || ''}\n` +
+    `📱 *WhatsApp:* ${partner.phone || 'Não informado'}\n` +
+    `📍 *País:* ${partner.country || 'Brasil'}\n` +
+    `💳 *Créditos Iniciais:* 0 créditos\n` +
+    (waDirectUrl ? `\n👉 *Chamar no WhatsApp:* ${waDirectUrl}` : '');
+
+  let sent = false;
+
+  // 1. Envio via Telegram Bot
+  if (settings.telegramBotToken && settings.telegramChatId) {
+    try {
+      const tgUrl = `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`;
+      const tgRes = await fetch(tgUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: settings.telegramChatId,
+          text: textMsg,
+          parse_mode: 'Markdown'
+        })
+      });
+      const tgData = await tgRes.json();
+      if (tgData.ok) {
+        sent = true;
+        console.log(`[Alert Telegram] Notificação enviada para chat ${settings.telegramChatId}`);
+      } else {
+        console.error('[Alert Telegram] Resposta:', tgData);
+      }
+    } catch (e) {
+      console.error('[Alert Telegram] Erro ao enviar:', e.message);
+    }
+  }
+
+  // 2. Envio via CallMeBot (WhatsApp Gratuito)
+  if (settings.callMeBotPhone && settings.callMeBotApiKey) {
+    try {
+      const cleanMsg = encodeURIComponent(textMsg.replace(/\*/g, ''));
+      const cmbUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(settings.callMeBotPhone)}&text=${cleanMsg}&apikey=${encodeURIComponent(settings.callMeBotApiKey)}`;
+      await fetch(cmbUrl);
+      sent = true;
+      console.log(`[Alert WhatsApp] Notificação enviada para ${settings.callMeBotPhone}`);
+    } catch (e) {
+      console.error('[Alert WhatsApp] Erro ao enviar:', e.message);
+    }
+  }
+
+  return sent;
+}
+
 async function createMercadoPagoPix({ amount, description, email, paymentId, notificationUrl }) {
   const settings = loadSettings();
   const token = (settings.mpAccessToken || process.env.MERCADO_PAGO_ACCESS_TOKEN || '').trim();
@@ -574,6 +632,9 @@ const server = http.createServer(async (req, res) => {
             saveResellers(resellers);
             console.log(`[Reseller API] Novo parceiro registrado: ${email} (${company})`);
 
+            // Dispara notificação instantânea no celular do Administrador Geral
+            sendAdminNewPartnerAlert(newReseller).catch(e => console.error('[Alert Error]:', e));
+
             const safeReseller = { ...newReseller };
             delete safeReseller.password;
             res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -817,9 +878,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ===================================================================
-  // 1b. ENDPOINTS DE PAGAMENTO PIX AUTOMÁTICO (MERCADO PAGO)
+  // 1b. ENDPOINTS DE PAGAMENTO PIX AUTOMÁTICO E CONFIGURAÇÕES ADMIN
   // ===================================================================
-  if (pathname.startsWith('/api/payment') || pathname.startsWith('/api/webhook/mercadopago') || pathname.startsWith('/api/admin/settings')) {
+  if (pathname.startsWith('/api/payment') || pathname.startsWith('/api/webhook/mercadopago') || pathname.startsWith('/api/admin/')) {
 
     // 1. Webhook de Notificação Automática do Mercado Pago
     if (pathname === '/api/webhook/mercadopago' || pathname.startsWith('/api/webhook/mercadopago')) {
@@ -1042,17 +1103,28 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // 5. Configurações do Mercado Pago (Admin Master)
+    // 5. Configurações Administrativas (Mercado Pago & Alertas no Celular)
     if (pathname === '/api/admin/settings') {
       if (req.method === 'GET') {
         const settings = loadSettings();
         const token = (settings.mpAccessToken || '').trim();
         const masked = token ? token.substring(0, 10) + '...' + token.slice(-4) : '';
+        const tgBot = (settings.telegramBotToken || '').trim();
+        const maskedTg = tgBot ? tgBot.substring(0, 6) + '...' + tgBot.slice(-4) : '';
+        const cmbKey = (settings.callMeBotApiKey || '').trim();
+        const maskedCmb = cmbKey ? '******' : '';
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: true,
           configured: !!token,
-          maskedToken: masked
+          maskedToken: masked,
+          telegramConfigured: !!(settings.telegramBotToken && settings.telegramChatId),
+          maskedTgToken: maskedTg,
+          telegramChatId: settings.telegramChatId || '',
+          callMeBotConfigured: !!(settings.callMeBotPhone && settings.callMeBotApiKey),
+          callMeBotPhone: settings.callMeBotPhone || '',
+          maskedCmbKey: maskedCmb
         }));
         return;
       }
@@ -1077,11 +1149,23 @@ const server = http.createServer(async (req, res) => {
             if (payload.mpPublicKey !== undefined) {
               current.mpPublicKey = String(payload.mpPublicKey || '').trim();
             }
-            saveSettings(current);
+            if (payload.telegramBotToken !== undefined) {
+              current.telegramBotToken = String(payload.telegramBotToken || '').trim();
+            }
+            if (payload.telegramChatId !== undefined) {
+              current.telegramChatId = String(payload.telegramChatId || '').trim();
+            }
+            if (payload.callMeBotPhone !== undefined) {
+              current.callMeBotPhone = String(payload.callMeBotPhone || '').trim();
+            }
+            if (payload.callMeBotApiKey !== undefined) {
+              current.callMeBotApiKey = String(payload.callMeBotApiKey || '').trim();
+            }
 
-            console.log('[Settings] Credenciais Mercado Pago atualizadas com sucesso pelo Admin.');
+            saveSettings(current);
+            console.log('[Settings] Configurações administrativas atualizadas com sucesso pelo Admin.');
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, message: 'Configurações do Mercado Pago salvas com sucesso!' }));
+            res.end(JSON.stringify({ success: true, message: 'Configurações salvas com sucesso!' }));
           } catch(e) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, error: e.message }));
@@ -1089,6 +1173,44 @@ const server = http.createServer(async (req, res) => {
         });
         return;
       }
+    }
+
+    // 6. Teste de Notificação Instantânea no Celular
+    if (pathname === '/api/admin/notify-test' && req.method === 'POST') {
+      let body = '';
+      req.on('data', c => body += c);
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const adminEmail = (req.headers['x-admin-email'] || payload.adminEmail || '').trim().toLowerCase();
+          if (adminEmail !== 'joaovitordc1010@gmail.com') {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Apenas o Administrador Geral pode disparar testes.' }));
+            return;
+          }
+
+          const dummyPartner = {
+            firstName: 'João',
+            lastName: 'Vitor (Teste)',
+            company: 'Vion Player Oficial',
+            email: 'joaovitordc1010@gmail.com',
+            phone: '+55 11 99999-9999',
+            country: 'Brasil'
+          };
+
+          const sent = await sendAdminNewPartnerAlert(dummyPartner, true);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            sent,
+            message: sent ? 'Notificação de teste enviada com sucesso para o seu celular!' : 'Nenhum canal ativo ou falha no envio. Verifique suas credenciais de Telegram ou CallMeBot.'
+          }));
+        } catch(e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: e.message }));
+        }
+      });
+      return;
     }
   }
 

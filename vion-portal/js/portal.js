@@ -620,8 +620,10 @@ function initResellerPortal() {
   initDirectBuyCredits();
   initProfileModal();
   initActivateDeviceModal();
+  initActivationReceiptModal();
   initAddSubModal();
   initPartnershipsSection();
+  initNotificationSettings();
 
   // Verifica estado inicial de autenticação
   const isAuth = localStorage.getItem('vion_reseller_auth') === 'true';
@@ -1684,10 +1686,16 @@ function renderHubDevices(query = '') {
       <td>${escapeHtml(d.comment || 'Cliente')}</td>
       <td><span style="font-size: 12px; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-weight: 700;">${d.plan === 'lifetime' ? '⭐ Vitalício' : '📅 1 Ano'}</span></td>
       <td><span style="font-size: 12px; background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-weight: 700;">● Ativo</span></td>
-      <td style="text-align: right;">
-        <button type="button" class="btn-del-device" style="background: transparent; border: none; color: #ef4444; font-size: 16px; cursor: pointer;">✕</button>
+      <td style="text-align: right; white-space: nowrap;">
+        <button type="button" class="btn-receipt-row" data-mac="${escapeHtml(d.mac)}" data-comment="${escapeHtml(d.comment || 'Cliente')}" data-plan="${escapeHtml(d.plan || '1year')}" data-date="${d.date || Date.now()}" title="Ver Comprovante de Ativação" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #b45309; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; margin-right: 8px; cursor: pointer;">
+          📄 Recibo
+        </button>
+        <button type="button" class="btn-del-device" style="background: transparent; border: none; color: #ef4444; font-size: 16px; cursor: pointer;" title="Excluir">✕</button>
       </td>
     `;
+    tr.querySelector('.btn-receipt-row')?.addEventListener('click', () => {
+      openActivationReceiptModal(d.mac, d.comment || 'Cliente', d.plan || '1year', d.expiresAt, d.date || Date.now());
+    });
     tr.querySelector('.btn-del-device')?.addEventListener('click', () => {
       if (confirm(`Remover dispositivo MAC ${d.mac}?`)) {
         session.activations = session.activations.filter(x => x.mac !== d.mac);
@@ -1942,10 +1950,12 @@ function initActivateDeviceModal() {
     renderHubDevices();
 
     showAlert(alertBox, `✔ Dispositivo MAC ${mac} ativado com sucesso!`, 'success');
+    const actItem = session.activations[0];
     setTimeout(() => {
       if (modal) modal.style.display = 'none';
       if (alertBox) alertBox.style.display = 'none';
-    }, 900);
+      openActivationReceiptModal(mac, comment, plan, actItem ? actItem.expiresAt : null, Date.now());
+    }, 700);
   });
 }
 
@@ -2303,6 +2313,179 @@ function initMpAdminSettings() {
       alert('Erro de conexão ao salvar.');
     } finally {
       if (btn) btn.innerHTML = '<span>💾</span> Salvar Credencial';
+    }
+  });
+}
+
+// ===================================================================
+// 4.9 COMPROVANTE DE ATIVAÇÃO PROFISSIONAL (WHATSAPP & RECIBO)
+// ===================================================================
+
+function openActivationReceiptModal(mac, client, plan, expiresAt, date) {
+  const modal = document.getElementById('modal-receipt');
+  if (!modal) return;
+
+  const macEl = document.getElementById('receipt-mac');
+  const clientEl = document.getElementById('receipt-client');
+  const planEl = document.getElementById('receipt-plan');
+  const expiryEl = document.getElementById('receipt-expiry');
+  const dateEl = document.getElementById('receipt-date');
+  const btnWa = document.getElementById('btn-receipt-whatsapp');
+  const btnCopy = document.getElementById('btn-receipt-copy');
+
+  const isLifetime = (plan === 'lifetime');
+  const planText = isLifetime ? 'Licença Vitalícia ⭐' : 'Licença 1 Ano 📅';
+  
+  let expiryText = 'Vitalícia (Sem expiração)';
+  if (!isLifetime) {
+    const expMs = expiresAt || (Date.now() + 365 * 24 * 60 * 60 * 1000);
+    expiryText = new Date(expMs).toLocaleDateString('pt-BR');
+  }
+
+  const actDateText = new Date(date || Date.now()).toLocaleString('pt-BR');
+
+  if (macEl) macEl.textContent = mac;
+  if (clientEl) clientEl.textContent = client || 'Cliente';
+  if (planEl) planEl.textContent = planText;
+  if (expiryEl) expiryEl.textContent = expiryText;
+  if (dateEl) dateEl.textContent = actDateText;
+
+  // Mensagem profissional formatada para o WhatsApp
+  const waMessage = 
+`🌟 *COMPROVANTE DE ATIVAÇÃO - VION PLAYER* 🌟\n\n` +
+`Olá! Sua licença do aplicativo *Vion Player* foi ativada com sucesso! 🚀\n\n` +
+`📱 *Dispositivo (MAC):* ${mac}\n` +
+`👤 *Cliente:* ${client || 'Cliente'}\n` +
+`💎 *Plano:* ${planText}\n` +
+`📅 *Validade:* ${expiryText}\n` +
+`✅ *Status:* ATIVO E LIBERADO\n\n` +
+`Aproveite a melhor experiência em filmes, séries e canais na sua Smart TV! 🍿✨\n` +
+`Dúvidas ou suporte? Estamos à disposição!`;
+
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waMessage)}`;
+  if (btnWa) btnWa.setAttribute('href', waUrl);
+
+  if (btnCopy) {
+    btnCopy.onclick = () => {
+      navigator.clipboard.writeText(waMessage).then(() => {
+        btnCopy.innerHTML = '<span>✅</span> Mensagem Copiada!';
+        setTimeout(() => {
+          btnCopy.innerHTML = '<span>📋</span> Copiar Texto do Comprovante';
+        }, 2000);
+      }).catch(() => {
+        alert('Não foi possível copiar automaticamente.');
+      });
+    };
+  }
+
+  modal.style.display = 'flex';
+}
+
+function initActivationReceiptModal() {
+  const modal = document.getElementById('modal-receipt');
+  const btnClose = document.getElementById('btn-close-receipt-modal');
+
+  btnClose?.addEventListener('click', () => {
+    if (modal) modal.style.display = 'none';
+  });
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+}
+
+// ===================================================================
+// 4.10 CONFIGURAÇÃO DE ALERTAS NO CELULAR (TELEGRAM & WHATSAPP)
+// ===================================================================
+
+function initNotificationSettings() {
+  const form = document.getElementById('portal-form-notify-settings');
+  const badge = document.getElementById('notify-admin-status-badge');
+  const tgTokenInput = document.getElementById('portal-tg-bot-token');
+  const tgChatIdInput = document.getElementById('portal-tg-chat-id');
+  const cmbPhoneInput = document.getElementById('portal-cmb-phone');
+  const cmbKeyInput = document.getElementById('portal-cmb-apikey');
+  const btnTest = document.getElementById('btn-test-notify');
+
+  async function loadNotifySettings() {
+    try {
+      const res = await fetch('/api/admin/settings');
+      const data = await res.json();
+      if (data.success) {
+        if (data.telegramChatId && tgChatIdInput) tgChatIdInput.value = data.telegramChatId;
+        if (data.callMeBotPhone && cmbPhoneInput) cmbPhoneInput.value = data.callMeBotPhone;
+        if (data.telegramConfigured && tgTokenInput) tgTokenInput.placeholder = 'Token configurado (' + (data.maskedTgToken || 'OK') + ')';
+        if (data.callMeBotConfigured && cmbKeyInput) cmbKeyInput.placeholder = 'Chave configurada (******)';
+
+        if (badge) {
+          if (data.telegramConfigured && data.callMeBotConfigured) {
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#15803d';
+            badge.textContent = '🟢 Ativo (Telegram & WhatsApp)';
+          } else if (data.telegramConfigured) {
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#15803d';
+            badge.textContent = '🟢 Ativo (Telegram Bot)';
+          } else if (data.callMeBotConfigured) {
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#15803d';
+            badge.textContent = '🟢 Ativo (WhatsApp CallMeBot)';
+          } else {
+            badge.style.background = '#fee2e2';
+            badge.style.color = '#dc2626';
+            badge.textContent = '🔴 Notificações Desativadas';
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao carregar configurações de notificação:', e);
+    }
+  }
+
+  loadNotifySettings();
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      adminEmail: MASTER_ADMIN_EMAIL
+    };
+    if (tgTokenInput && tgTokenInput.value.trim()) payload.telegramBotToken = tgTokenInput.value.trim();
+    if (tgChatIdInput) payload.telegramChatId = tgChatIdInput.value.trim();
+    if (cmbPhoneInput) payload.callMeBotPhone = cmbPhoneInput.value.trim();
+    if (cmbKeyInput && cmbKeyInput.value.trim()) payload.callMeBotApiKey = cmbKeyInput.value.trim();
+
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Configurações de alerta salvas com sucesso!');
+        loadNotifySettings();
+      } else {
+        alert('Erro: ' + (data.error || 'Falha ao salvar.'));
+      }
+    } catch (err) {
+      alert('Erro de conexão: ' + err.message);
+    }
+  });
+
+  btnTest?.addEventListener('click', async () => {
+    btnTest.textContent = 'Enviando...';
+    try {
+      const res = await fetch('/api/admin/notify-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminEmail: MASTER_ADMIN_EMAIL })
+      });
+      const data = await res.json();
+      alert(data.message || 'Teste finalizado.');
+    } catch (err) {
+      alert('Erro ao enviar teste: ' + err.message);
+    } finally {
+      btnTest.innerHTML = '<span>📲</span> Enviar Notificação de Teste';
     }
   });
 }
