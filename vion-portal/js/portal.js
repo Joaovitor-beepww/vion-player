@@ -15,6 +15,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (initialHash && ['home', 'login', 'manage-playlists', 'activation', 'reseller'].includes(initialHash)) {
     switchTab(initialHash);
   }
+
+  // Captura automática de MAC pela URL (ex: ?mac=00:1A:79... ou #activation?mac=...)
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    let urlMac = urlParams.get('mac');
+    if (!urlMac && window.location.hash.includes('?')) {
+      const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
+      urlMac = hashParams.get('mac');
+    }
+    if (urlMac) {
+      sessionStorage.setItem('vion_prefill_mac', urlMac.trim().toUpperCase());
+      const loginMac = document.getElementById('login-mac-input');
+      if (loginMac) {
+        loginMac.value = urlMac.trim().toUpperCase();
+        loginMac.dispatchEvent(new Event('input'));
+      }
+    }
+  } catch(e) {}
 });
 
 window.addEventListener('hashchange', () => {
@@ -1386,6 +1404,12 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
       if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.</span>';
     }
   });
+
+  const prefillMac = sessionStorage.getItem('vion_prefill_mac');
+  if (prefillMac && macInput) {
+    macInput.value = prefillMac;
+    macInput.dispatchEvent(new Event('input'));
+  }
 
   // Prosseguir para gerar o PIX
   document.getElementById('btn-device-pay-proceed')?.addEventListener('click', async () => {
