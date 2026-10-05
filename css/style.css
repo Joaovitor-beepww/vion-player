@@ -6489,22 +6489,22 @@ html.is-tv * {
   text-overflow: ellipsis !important;
 }
 
-/* Grade de Posters Proporcionais (mais filmes por linha, visual cinema 120px) */
+/* Grade de Posters Proporcionais Compactos (8 a 10 capas por linha, visual cinema denso) */
 .vod-grid-container {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(105px, 120px)) !important;
-  gap: 12px 10px !important;
-  padding: 8px 14px 40px 10px !important;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 96px)) !important;
+  gap: 10px 8px !important;
+  padding: 6px 10px 40px 8px !important;
   justify-content: start !important;
 }
 
 .vod-poster-card {
   width: 100% !important;
-  max-width: 120px !important;
+  max-width: 96px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 4px !important;
   scroll-margin: 30px !important;
   outline: none !important;
   border: none !important;
@@ -6522,14 +6522,14 @@ html.is-tv * {
 
 .vod-poster-thumb {
   width: 100% !important;
-  height: 165px !important;
-  max-height: 165px !important;
+  height: 135px !important;
+  max-height: 135px !important;
   aspect-ratio: 2 / 3 !important;
   min-height: 0 !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   overflow: hidden !important;
-  border: 2.5px solid transparent !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65) !important;
+  border: 2px solid transparent !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65) !important;
   background: #0f172a !important;
   position: relative !important;
   transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.2s ease, box-shadow 0.2s ease !important;
@@ -6541,7 +6541,7 @@ html.is-tv * {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   display: block !important;
 }
 
@@ -6550,14 +6550,14 @@ html.is-tv * {
 }
 
 .vod-poster-title {
-  font-size: 11px !important;
-  line-height: 1.25 !important;
-  max-height: 30px !important;
-  max-width: 115px !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  max-height: 25px !important;
+  max-width: 92px !important;
   font-weight: 600 !important;
   color: #cbd5e1 !important;
   text-align: center !important;
-  margin-top: 4px !important;
+  margin-top: 3px !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   display: -webkit-box !important;
@@ -6939,24 +6939,25 @@ html[data-platform="tv"] *,
   letter-spacing: 0.5px !important;
 }
 
-/* Grade de Posters VOD - Proporcional de Cinema (120px) */
+/* Grade de Posters VOD - Proporcional Compacto (96px, 8 a 10 capas por linha) */
 .vod-grid-container {
   flex: 1 !important;
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(105px, 120px)) !important;
-  gap: 12px 10px !important;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 96px)) !important;
+  gap: 10px 8px !important;
   overflow-y: auto !important;
-  padding-bottom: 80px !important;
+  padding: 6px 10px 80px 8px !important;
   align-content: start !important;
 }
 
 /* Card de Pôster Individual (Aspecto 2:3 vertical compacto) */
 .vod-poster-card {
   width: 100% !important;
-  max-width: 120px !important;
+  max-width: 96px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
+  gap: 4px !important;
   background: transparent !important;
   border: none !important;
   outline: none !important;
@@ -6966,10 +6967,10 @@ html[data-platform="tv"] *,
 
 .vod-poster-thumb {
   width: 100% !important;
-  height: 165px !important;
-  max-height: 165px !important;
+  height: 135px !important;
+  max-height: 135px !important;
   aspect-ratio: 2 / 3 !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   background: #13151d !important;
   border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
   position: relative !important;
@@ -6978,7 +6979,7 @@ html[data-platform="tv"] *,
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.15s ease !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7) !important;
   min-height: unset !important;
 }
 
@@ -6992,8 +6993,8 @@ html[data-platform="tv"] *,
   justify-content: center !important;
   background: #13151d !important;
   color: #71788e !important;
-  font-size: 28px !important;
-  letter-spacing: 3px !important;
+  font-size: 24px !important;
+  letter-spacing: 2px !important;
   z-index: 1 !important;
 }
 
@@ -7004,9 +7005,9 @@ html[data-platform="tv"] *,
 
 .poster-fallback-cover::after {
   content: '•••' !important;
-  font-size: 26px !important;
+  font-size: 20px !important;
   color: #64748b !important;
-  letter-spacing: 4px !important;
+  letter-spacing: 3px !important;
 }
 
 .vod-poster-thumb img {
@@ -7018,7 +7019,7 @@ html[data-platform="tv"] *,
   z-index: 2 !important;
   opacity: 1 !important;
   display: block !important;
-  border-radius: 10px !important;
+  border-radius: 6px !important;
   transition: opacity 0.25s ease !important;
 }
 
@@ -7029,13 +7030,14 @@ html[data-platform="tv"] *,
 }
 
 .vod-poster-title {
-  font-size: 11px !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
   font-weight: 600 !important;
   color: #e2e8f0 !important;
   text-align: center !important;
-  margin-top: 5px !important;
+  margin-top: 3px !important;
   width: 100% !important;
-  max-width: 115px !important;
+  max-width: 92px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;

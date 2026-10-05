@@ -104,7 +104,7 @@ const App = {
   activeChannelIndex: 0,
   filteredItems: [],
   renderedCount: 0,
-  PAGE_SIZE: 60,
+  PAGE_SIZE: 120,
   activeSeries: null,
   activeSeason: 1,
   clockInterval: null,
@@ -1556,15 +1556,6 @@ const App = {
   expandMiniToFullscreen() {
     if (!this.filteredItems || this.filteredItems.length === 0) return;
     const current = this.filteredItems[this.activeChannelIndex] || this.filteredItems[0];
-    
-    // 1. Android TV: Abre PlayerActivity de hardware nativo do Android (1080p60 FHD impecável, sem travamentos)
-    if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
-      this.player.stopMini();
-      AndroidDevice.openPlayer(current.url, current.name, current.category, false);
-      return;
-    }
-
-    // 2. Outras plataformas (LG webOS, Tizen, Web):
     this.player.expandMiniFullscreen(current.name, current.category, this.activeChannelIndex + 1);
   },
 

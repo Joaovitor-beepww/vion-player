@@ -719,13 +719,6 @@ class TVVideoPlayer {
    * Mantém o stream rodando 100% contínuo, sem reconectar e sem buffering!
    */
   expandMiniFullscreen(title, category, channelNumber) {
-    // 1. Prioridade no Android TV: Abre PlayerActivity com decodificação 100% de hardware (FHD 60fps sem falhas)
-    if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function' && this.currentActiveStream) {
-      this.stopMini();
-      AndroidDevice.openPlayer(this.currentActiveStream.url, title, category, false);
-      return;
-    }
-
     const box = document.getElementById('mini-player-container');
     if (!box) return;
 

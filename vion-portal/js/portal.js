@@ -239,10 +239,9 @@ function initLoginSystem() {
 
     // Validação estrita: somente permite acesso se o MAC e a KEY existirem no servidor
     const validateEndpoints = [
-      `${PORTAL_API}/api/device/validate`,
       '/api/device/validate',
-      'http://192.168.1.197:3000/api/device/validate',
-      'http://localhost:3000/api/device/validate'
+      `${PORTAL_API}/api/device/validate`,
+      'https://vion.gestorpro.app.br/api/device/validate'
     ];
 
     let errorMsg = 'Não foi possível conectar ao servidor de validação.';
@@ -250,7 +249,7 @@ function initLoginSystem() {
     for (const endpoint of validateEndpoints) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3500);
+        const timeout = setTimeout(() => controller.abort(), 4000);
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -280,9 +279,27 @@ function initLoginSystem() {
   });
 }
 
-const PORTAL_API = window.location.origin.includes(':3000') 
-  ? window.location.origin 
-  : 'http://192.168.1.197:3000';
+const PORTAL_API = (window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file'))
+  ? window.location.origin
+  : 'https://vion.gestorpro.app.br';
+
+async function syncPlaylistsFromServer(mac) {
+  if (!mac) return [];
+  try {
+    const res = await fetch(`${PORTAL_API}/api/device?mac=${encodeURIComponent(mac)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.playlists)) {
+        saveDevicePlaylists(mac, data.playlists);
+        renderPlaylists(mac);
+        return data.playlists;
+      }
+    }
+  } catch (e) {
+    console.warn('Aviso: Não foi possível obter playlists do servidor:', e);
+  }
+  return getDevicePlaylists(mac);
+}
 
 function loginDevice(mac, key, initialPlaylists = []) {
   localStorage.setItem('vion_current_session', mac);
@@ -302,6 +319,9 @@ function loginDevice(mac, key, initialPlaylists = []) {
 
   renderPlaylists(mac);
   switchTab('manage-playlists');
+
+  // Sincroniza playlists atualizadas do servidor (nuvem)
+  syncPlaylistsFromServer(mac);
 }
 
 function logoutDevice() {
@@ -315,6 +335,7 @@ function checkExistingSession() {
   if (currentMac) {
     updateSessionUI(currentMac);
     renderPlaylists(currentMac);
+    syncPlaylistsFromServer(currentMac);
   } else {
     updateSessionUI(null);
   }
@@ -437,13 +458,17 @@ function initPlaylistManager() {
 
     saveDevicePlaylists(currentMac, playlists);
 
-    // Sincroniza com a API do servidor da TV
+    // Sincroniza com a API do servidor da TV e salva na nuvem
     fetch(`${PORTAL_API}/api/device/playlist`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mac: currentMac, playlist: playlistObj })
-    }).then(() => {
-      console.log('Playlist sincronizada com a TV via API!');
+    }).then(res => res.json()).then(data => {
+      console.log('Playlist sincronizada com a TV via API:', data);
+      if (data && Array.isArray(data.playlists)) {
+        saveDevicePlaylists(currentMac, data.playlists);
+        renderPlaylists(currentMac);
+      }
     }).catch(err => {
       console.warn('Aviso: Servidor da TV não respondeu diretamente (usando cache local):', err);
     });
@@ -538,6 +563,11 @@ function deletePlaylist(mac, id) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mac, id })
+  }).then(res => res.json()).then(data => {
+    if (data && Array.isArray(data.playlists)) {
+      saveDevicePlaylists(mac, data.playlists);
+      renderPlaylists(mac);
+    }
   }).catch(err => console.warn('Erro ao remover no servidor da TV:', err));
 
   renderPlaylists(mac);

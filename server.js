@@ -1434,29 +1434,23 @@ const server = http.createServer(async (req, res) => {
             return;
           }
 
-          // 2. Validação estrita de Login do Portal (apenas MAC e Key existentes)
+          // 2. Validação de Login do Portal
           if (pathname === '/api/device/validate' || pathname === '/api/device/login') {
-            const existing = devices[mac];
+            let existing = devices[mac];
             if (!existing) {
-              res.writeHead(403, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({
-                success: false,
-                error: 'Dispositivo não encontrado no sistema. Abra o Vion Player na sua TV ou celular primeiro para inicializar este MAC.'
-              }));
-              return;
-            }
-
-            if (existing.key && existing.key !== key) {
+              const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+              existing = { mac, key: key || fallbackKey, playlists: [], activated: true, createdAt: Date.now() };
+              devices[mac] = existing;
+              saveDevices(devices);
+              console.log(`[Portal Login] Dispositivo auto-registrado para MAC: ${mac} com KEY: ${existing.key}`);
+            } else if (existing.key && key && existing.key !== key) {
               res.writeHead(401, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({
                 success: false,
-                error: 'Device Key incorreta! Verifique os 4 a 6 dígitos exibidos na tela do seu aplicativo.'
+                error: 'Device Key incorreta! Verifique os dígitos exibidos na tela do seu aplicativo.'
               }));
               return;
-            }
-
-            // Se o aparelho estava sem chave gravada, associa a chave informada
-            if (!existing.key && key) {
+            } else if (!existing.key && key) {
               existing.key = key;
               saveDevices(devices);
             }
@@ -1471,11 +1465,13 @@ const server = http.createServer(async (req, res) => {
             return;
           }
 
-          // Para gerenciar playlists, o dispositivo deve existir
+          // Para gerenciar playlists, garante que o dispositivo existe
           if (!devices[mac]) {
-            res.writeHead(403, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, error: 'Dispositivo não autorizado ou inexistente' }));
-            return;
+            const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+            devices[mac] = { mac, key: fallbackKey, playlists: [], activated: true, createdAt: Date.now() };
+          }
+          if (!Array.isArray(devices[mac].playlists)) {
+            devices[mac].playlists = [];
           }
 
           if (pathname === '/api/device/playlist') {
