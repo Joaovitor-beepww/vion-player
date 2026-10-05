@@ -679,24 +679,31 @@ class TVVideoPlayer {
       else this.showMiniLoading(false);
     };
 
-    // ESTRATÉGIA ROBUSTA PARA CANAIS HD, FHD E SD:
-    // Se o canal já termina em .m3u8, prioriza HLS com fallback para nativo.
-    // Se termina em .ts (padrão de canais HD e FHD em IPTV), testa .m3u8 e cai rapidamente para nativo/mpegts se necessário.
+    // ESTRATÉGIA DE ALTA VELOCIDADE PARA SMART TV (CANAL AO VIVO SEM ATRASO E SEM TELA PRETA):
+    // 1. Se o canal termina em .ts (padrão de canais IPTV HD/FHD), roda mpegts.js IMEDIATAMENTE (sem esperar 6.5s de fallbacks).
+    // 2. Se o canal já termina em .m3u8, prioriza HLS com fallback para nativo/mpegts.
+    // 3. Demais extensões tentam nativo -> hls -> mpegts.
     if (isHls) {
       tryHls(cleanUrl, () => {
         tryNativeDirect(cleanUrl, () => {
           tryMpegts(null);
         });
       });
-    } else {
-      tryHls(m3u8Candidate, () => {
-        tryNativeDirect(cleanUrl, () => {
-          tryMpegts(() => {
+    } else if (cleanUrl.toLowerCase().includes('.ts')) {
+      tryMpegts(() => {
+        tryHls(m3u8Candidate, () => {
+          tryNativeDirect(cleanUrl, () => {
             if (this.miniVideo) {
               this.miniVideo.src = cleanUrl;
               this.miniVideo.play().catch(() => {});
             }
           });
+        });
+      });
+    } else {
+      tryNativeDirect(cleanUrl, () => {
+        tryHls(cleanUrl, () => {
+          tryMpegts(null);
         });
       });
     }
@@ -1020,7 +1027,12 @@ class TVVideoPlayer {
       this.miniHls = null;
     }
     if (this.miniMpegts) {
-      try { this.miniMpegts.destroy(); } catch (e) {}
+      try {
+        this.miniMpegts.pause();
+        this.miniMpegts.unload();
+        this.miniMpegts.detachMediaElement();
+        this.miniMpegts.destroy();
+      } catch (e) {}
       this.miniMpegts = null;
     }
     if (this.miniVideo) {

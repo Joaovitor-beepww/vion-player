@@ -2574,20 +2574,8 @@ const App = {
       return;
     }
 
-    // 6. Se estiver em filmes ou séries:
+    // 6. Se estiver em filmes ou séries, volta imediatamente para o Início
     if (this.currentScreen === 'vod') {
-      const activeEl = document.querySelector('.screen.active .focused') || document.activeElement;
-      const isInsideGrid = activeEl && (activeEl.classList.contains('vod-poster-card') || (activeEl.closest && activeEl.closest('#vod-grid')));
-      if (isInsideGrid) {
-        // Se estiver nos cards de filmes/séries, apertar Voltar foca no botão Voltar ou na categoria ativa!
-        const backBtn = document.getElementById('btn-back-from-vod');
-        const targetPill = document.querySelector('.vod-sidebar-item.active-cat') || document.querySelector('.vod-sidebar-item');
-        const toFocus = backBtn || targetPill;
-        if (toFocus && window.RemoteControl) {
-          RemoteControl.setFocus(toFocus);
-          return;
-        }
-      }
       this.goToScreen('home');
       return;
     }
@@ -2972,6 +2960,8 @@ const App = {
     }, 4000);
   }
 };
+
+window.App = App;
 
 function escapeHtml(str) {
   if (!str) return '';

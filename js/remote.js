@@ -96,7 +96,7 @@ const RemoteControl = {
 
   isEditingText(el) {
     if (!el) return false;
-    return el.tagName === 'TEXTAREA' || el.isContentEditable === true || (el.tagName === 'INPUT' && el.type !== 'range');
+    return (el === document.activeElement) && (el.tagName === 'TEXTAREA' || el.isContentEditable === true || (el.tagName === 'INPUT' && el.type !== 'range'));
   },
 
   handleKeyDown(e) {
@@ -304,7 +304,16 @@ const RemoteControl = {
     else if (this.KEYS.UP.includes(code)) direction = 'UP';
     else if (this.KEYS.ENTER.includes(code)) {
       e.preventDefault();
-      if (currentEl) currentEl.click();
+      if (currentEl) {
+        if (currentEl.tagName === 'INPUT' || currentEl.tagName === 'TEXTAREA') {
+          try {
+            currentEl.focus();
+            currentEl.select && currentEl.select();
+          } catch(e) {}
+          return;
+        }
+        currentEl.click();
+      }
       return;
     }
 
@@ -759,10 +768,25 @@ const RemoteControl = {
     const prev = document.querySelector('.focused');
     if (prev && prev !== element) prev.classList.remove('focused');
     element.classList.add('focused');
-    if (document.activeElement !== element) {
-      try { element.focus({ preventScroll: true }); }
-      catch(e) { element.focus(); }
+
+    const isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
+    const currentActive = document.activeElement;
+
+    // Se o elemento ativo atual for um input e estivermos saindo dele, fecha o teclado
+    if (currentActive && currentActive !== element && (currentActive.tagName === 'INPUT' || currentActive.tagName === 'TEXTAREA')) {
+      try { currentActive.blur(); } catch(e) {}
     }
+
+    // Se o elemento for um input, NÃO chamamos .focus() nativo automaticamente na navegação!
+    // Apenas marcamos com a classe .focused para navegação visual do controle remoto.
+    // O teclado só abre quando o usuário pressionar OK/ENTER ou clicar nele!
+    if (!isInput) {
+      if (document.activeElement !== element) {
+        try { element.focus({ preventScroll: true }); }
+        catch(e) { element.focus(); }
+      }
+    }
+
     if (shouldScroll) {
       element.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
     }
@@ -777,3 +801,5 @@ const RemoteControl = {
     }
   }
 };
+
+window.RemoteControl = RemoteControl;
