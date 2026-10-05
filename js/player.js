@@ -523,11 +523,11 @@ class TVVideoPlayer {
             highBufferWatchdogPeriod: 2,
             nudgeOffset: 0.2,
             nudgeMaxRetry: 3,
-            manifestLoadingTimeOut: 3000,
+            manifestLoadingTimeOut: 2000,
             manifestLoadingMaxRetry: 1,
-            levelLoadingTimeOut: 3000,
+            levelLoadingTimeOut: 2000,
             levelLoadingMaxRetry: 1,
-            fragLoadingTimeOut: 4000,
+            fragLoadingTimeOut: 3000,
             fragLoadingMaxRetry: 2
           });
 
@@ -536,10 +536,10 @@ class TVVideoPlayer {
 
           const hlsWatchdog = setTimeout(() => {
             if (this.miniHls && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn('HLS prévia timeout (3.5s) em HD/FHD, acionando fallback rápido');
+              console.warn('HLS prévia timeout (2.5s) em HD/FHD, acionando fallback rápido');
               failAndContinue();
             }
-          }, 3500);
+          }, 2500);
 
           this.miniHls.on(Hls.Events.MANIFEST_PARSED, () => {
             startPlay();
@@ -641,8 +641,28 @@ class TVVideoPlayer {
       }
     };
 
-    // 3. Fallback mpegts.js (para canais em MPEG-TS direto)
+    // 3. Fallback mpegts.js com watchdog ativo e buffer habilitado (ótimo para canais SD)
     const tryMpegts = (onFail) => {
+      let mpegtsFailed = false;
+      let mpegtsWatchdog = null;
+
+      const cleanupAndFail = () => {
+        if (mpegtsFailed) return;
+        mpegtsFailed = true;
+        clearTimeout(mpegtsWatchdog);
+        if (this.miniMpegts) {
+          try {
+            this.miniMpegts.pause();
+            this.miniMpegts.unload();
+            this.miniMpegts.detachMediaElement();
+            this.miniMpegts.destroy();
+          } catch (e) {}
+          this.miniMpegts = null;
+        }
+        if (typeof onFail === 'function') onFail();
+        else this.showMiniLoading(false);
+      };
+
       if (window.mpegts && typeof mpegts.isSupported === 'function' && mpegts.isSupported()) {
         try {
           this.miniMpegts = mpegts.createPlayer({
@@ -651,9 +671,10 @@ class TVVideoPlayer {
             url: cleanUrl,
             cors: false
           }, {
-            enableWorker: false, // Sem Worker para máxima compatibilidade em Smart TV
+            enableWorker: false,
             lazyLoad: false,
-            enableStashBuffer: false,
+            enableStashBuffer: true,
+            stashInitialSize: 512 * 1024,
             autoCleanupSourceBuffer: true,
             autoCleanupMaxBackwardDuration: 10,
             autoCleanupMinBackwardDuration: 5
@@ -662,48 +683,45 @@ class TVVideoPlayer {
           this.miniMpegts.load();
           startPlay();
 
-          this.miniMpegts.on(mpegts.Events.ERROR, () => {
-            if (this.miniMpegts) {
-              try { this.miniMpegts.destroy(); } catch (e) {}
-              this.miniMpegts = null;
+          mpegtsWatchdog = setTimeout(() => {
+            if (this.miniMpegts && this.miniVideo && this.miniVideo.readyState < 2) {
+              console.warn('mpegts não iniciou em 2.5s, caindo para fallback');
+              cleanupAndFail();
             }
-            if (typeof onFail === 'function') onFail();
-            else this.showMiniLoading(false);
+          }, 2500);
+
+          this.miniMpegts.on(mpegts.Events.ERROR, () => {
+            cleanupAndFail();
           });
           return;
         } catch (e) {
-          console.warn('mpegts falhou:', e);
+          console.warn('mpegts falhou na inicialização:', e);
+          cleanupAndFail();
+          return;
         }
       }
-      if (typeof onFail === 'function') onFail();
-      else this.showMiniLoading(false);
+      cleanupAndFail();
     };
 
-    // ESTRATÉGIA DE ALTA VELOCIDADE PARA SMART TV (CANAL AO VIVO SEM ATRASO E SEM TELA PRETA):
-    // 1. Se o canal termina em .ts (padrão de canais IPTV HD/FHD), roda mpegts.js IMEDIATAMENTE (sem esperar 6.5s de fallbacks).
-    // 2. Se o canal já termina em .m3u8, prioriza HLS com fallback para nativo/mpegts.
-    // 3. Demais extensões tentam nativo -> hls -> mpegts.
+    // ESTRATÉGIA UNIVERSAL PARA CANAIS AO VIVO (SD, HD, FHD E 4K):
+    // 1. Canais FHD e HD usam HLS (.m3u8) com decodificação por hardware a 60fps na Smart TV (sem sobrecarregar CPU com TS puro).
+    // 2. Se o servidor não entregar HLS ou falhar rápido, tenta nativo direto no HTML5 video tag.
+    // 3. Fallback mpegts.js para transmissões SD ou raw TS que necessitem de demuxer JS.
     if (isHls) {
       tryHls(cleanUrl, () => {
         tryNativeDirect(cleanUrl, () => {
           tryMpegts(null);
         });
       });
-    } else if (cleanUrl.toLowerCase().includes('.ts')) {
-      tryMpegts(() => {
-        tryHls(m3u8Candidate, () => {
-          tryNativeDirect(cleanUrl, () => {
+    } else {
+      tryHls(m3u8Candidate, () => {
+        tryNativeDirect(cleanUrl, () => {
+          tryMpegts(() => {
             if (this.miniVideo) {
               this.miniVideo.src = cleanUrl;
               this.miniVideo.play().catch(() => {});
             }
           });
-        });
-      });
-    } else {
-      tryNativeDirect(cleanUrl, () => {
-        tryHls(cleanUrl, () => {
-          tryMpegts(null);
         });
       });
     }
