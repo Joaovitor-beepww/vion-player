@@ -589,17 +589,17 @@ function getResellerSession() {
       country: 'Brasil',
       address: 'São Paulo, Brasil',
       phone: '+55 11 99999-9999',
-      credits: isMaster ? 9999 : parseInt(localStorage.getItem('vion_reseller_credits') || '25', 10),
+      credits: isMaster ? 9999 : parseInt(localStorage.getItem('vion_reseller_credits') || '0', 10),
       activations: JSON.parse(localStorage.getItem('vion_reseller_devices') || '[]'),
-      creditHistory: [
-        { id: 'h1', type: 'bonus', amount: 25, desc: 'Créditos Iniciais de Parceiro', date: Date.now() - 86400000 * 2 }
-      ],
+      creditHistory: isMaster ? [
+        { id: 'h1', type: 'initial', amount: 9999, desc: 'Créditos Iniciais de Administrador', date: Date.now() }
+      ] : [],
       links: [
-        { id: 'l1', name: 'Link Oficial de Divulgação', code: 'VION-' + (isMaster ? 'JV' : 'PRO'), clicks: 18, activations: 4, url: `${window.location.origin}/portal#reseller?ref=VION-PRO` }
+        { id: 'l1', name: 'Link Oficial de Divulgação', code: 'VION-' + (isMaster ? 'JV' : 'PRO'), clicks: 0, activations: 0, url: `${window.location.origin}/portal#reseller?ref=VION-PRO` }
       ],
       subs: JSON.parse(localStorage.getItem('vion_reseller_subs') || '[]'),
       withdrawals: [],
-      earnings: 320.00
+      earnings: 0.00
     };
     if (email) localStorage.setItem(`vion_reseller_data_${email}`, JSON.stringify(data));
   }
@@ -1728,11 +1728,124 @@ function renderHubCreditHistory() {
   });
 }
 
-function renderHubSubs() {
+async function renderHubSubs() {
   const tbody = document.getElementById('hub-subs-tbody');
   if (!tbody) return;
-  tbody.innerHTML = '';
 
+  const isMaster = isCurrentUserMasterAdmin();
+  const titleEl = document.querySelector('#hub-sub-subs .hub-section-header h2');
+  const addBtn = document.getElementById('btn-hub-open-add-sub');
+
+  if (isMaster) {
+    if (addBtn) addBtn.style.display = 'none';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Carregando parceiros cadastrados...</td></tr>';
+
+    try {
+      const res = await fetch(`/api/admin/resellers?adminEmail=${encodeURIComponent(MASTER_ADMIN_EMAIL)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.resellers)) {
+        tbody.innerHTML = '';
+        const partners = data.resellers.filter(r => (r.email || '').toLowerCase() !== MASTER_ADMIN_EMAIL.toLowerCase());
+
+        if (titleEl) {
+          titleEl.innerHTML = `Parceiros e Revendedores Cadastrados <span style="font-size: 13px; background: rgba(245, 158, 11, 0.15); color: #b45309; padding: 3px 10px; border-radius: 20px; font-weight: 700; margin-left: 8px;">${partners.length} parceiro(s)</span>`;
+        }
+
+        if (partners.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 30px;">Nenhum parceiro cadastrado pelo site ainda.</td></tr>`;
+          return;
+        }
+
+        partners.forEach(p => {
+          const tr = document.createElement('tr');
+          const dateFormatted = p.createdAt ? new Date(p.createdAt).toLocaleDateString('pt-BR') : '-';
+          const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
+          const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Olá ${(p.firstName || '').trim()}, tudo bem? Sou o administrador do Vion Player.`)}` : null;
+
+          tr.innerHTML = `
+            <td>
+              <strong style="color: #0f172a; font-size: 14px; display: block;">${escapeHtml(p.company || ((p.firstName || '') + ' ' + (p.lastName || '')))}</strong>
+              <span style="font-size: 12px; color: #64748b;">${escapeHtml(((p.firstName || '') + ' ' + (p.lastName || '')).trim())}</span>
+            </td>
+            <td>
+              <a href="mailto:${escapeHtml(p.email)}" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 13px;">${escapeHtml(p.email)}</a>
+            </td>
+            <td>
+              ${p.phone ? `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(p.phone)}</span>
+                  ${waUrl ? `
+                    <a href="${waUrl}" target="_blank" rel="noopener noreferrer" title="Conversar no WhatsApp" style="display: inline-flex; align-items: center; justify-content: center; background: #22c55e; color: #fff; width: 26px; height: 26px; border-radius: 50%; text-decoration: none; font-size: 13px; box-shadow: 0 2px 4px rgba(34,197,94,0.3);">
+                      💬
+                    </a>
+                  ` : ''}
+                </div>
+              ` : '<span style="color: #94a3b8;">-</span>'}
+            </td>
+            <td>
+              <span style="background: ${p.credits > 0 ? '#dcfce7' : '#f1f5f9'}; color: ${p.credits > 0 ? '#15803d' : '#475569'}; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 13px; display: inline-block;">
+                ${p.credits || 0} créditos
+              </span>
+            </td>
+            <td style="color: #64748b; font-size: 13px;">${dateFormatted}</td>
+            <td style="text-align: right; white-space: nowrap;">
+              <button type="button" class="btn btn-gold btn-adjust-credits" data-email="${escapeHtml(p.email)}" data-name="${escapeHtml(p.firstName || p.company)}" data-current="${p.credits || 0}" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 6px;">
+                + Créditos
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Event listener para adicionar créditos
+        tbody.querySelectorAll('.btn-adjust-credits').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const email = btn.getAttribute('data-email');
+            const name = btn.getAttribute('data-name');
+            const current = btn.getAttribute('data-current');
+            const amountStr = prompt(`Adicionar ou remover créditos para ${name} (${email}):\nSaldo atual: ${current} créditos.\n\nDigite a quantidade a ADICIONAR (ex: 10, 50, 100) ou a REMOVER (ex: -5):`);
+            if (!amountStr) return;
+            const amount = parseInt(amountStr, 10);
+            if (isNaN(amount) || amount === 0) {
+              alert('Quantidade inválida.');
+              return;
+            }
+
+            try {
+              const resp = await fetch('/api/admin/reseller/adjust-credits', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  adminEmail: MASTER_ADMIN_EMAIL,
+                  targetEmail: email,
+                  amount: amount,
+                  reason: `Ajuste manual de ${amount} créditos pelo Administrador`
+                })
+              });
+              const result = await resp.json();
+              if (result.success) {
+                alert(`✅ Sucesso! ${amount > 0 ? '+' : ''}${amount} créditos ajustados para ${name}.\nNovo saldo: ${result.reseller.credits} créditos.`);
+                renderHubSubs();
+              } else {
+                alert('Erro: ' + (result.error || 'Falha ao ajustar créditos.'));
+              }
+            } catch (err) {
+              alert('Erro de conexão: ' + err.message);
+            }
+          });
+        });
+        return;
+      }
+    } catch (err) {
+      console.error('[Admin] Erro ao carregar parceiros cadastrados:', err);
+    }
+  }
+
+  // Visualização para Revendedores Comuns
+  if (titleEl) titleEl.textContent = 'Meus Sub-revendedores';
+  if (addBtn) addBtn.style.display = 'inline-flex';
+
+  tbody.innerHTML = '';
   const session = getResellerSession();
   const subs = session.subs || [];
 

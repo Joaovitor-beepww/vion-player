@@ -70,17 +70,9 @@
       "reseller",
       "reference"
     ],
-    "credits": 10,
+    "credits": 0,
     "activations": [],
-    "creditHistory": [
-      {
-        "id": "h_1791122404978",
-        "type": "bonus",
-        "amount": 10,
-        "desc": "Bônus de Boas-Vindas de Cadastro",
-        "date": 1791122404978
-      }
-    ],
+    "creditHistory": [],
     "links": [
       {
         "id": "l_1791122404978",

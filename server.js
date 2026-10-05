@@ -453,9 +453,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ===================================================================
-  // 1b. ENDPOINTS DE API DO REVENDEDOR (/api/reseller/*)
+  // 1b. ENDPOINTS DE API DO REVENDEDOR E ADMIN GERAL (/api/reseller/* e /api/admin/*)
   // ===================================================================
-  if (pathname.startsWith('/api/reseller')) {
+  if (pathname.startsWith('/api/reseller') || pathname.startsWith('/api/admin/reseller')) {
     // 1. Obter Perfil e Dados do Revendedor
     if (pathname === '/api/reseller/profile' || pathname === '/api/reseller/data') {
       const email = (urlObj.searchParams.get('email') || '').trim().toLowerCase();
@@ -472,6 +472,28 @@ const server = http.createServer(async (req, res) => {
       delete safeReseller.password;
       res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
       res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+      return;
+    }
+
+    // 1b. Listar Todos os Revendedores e Parceiros Cadastrados (Apenas Administrador Geral)
+    if (pathname === '/api/admin/resellers') {
+      const adminEmail = (urlObj.searchParams.get('adminEmail') || req.headers['x-admin-email'] || '').trim().toLowerCase();
+      if (adminEmail !== 'joaovitordc1010@gmail.com') {
+        res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ success: false, error: 'Acesso restrito: apenas o Administrador Geral pode visualizar a lista completa de revendedores.' }));
+        return;
+      }
+
+      const resellers = loadResellers();
+      const list = Object.values(resellers).map(r => {
+        const safe = { ...r };
+        delete safe.password;
+        return safe;
+      });
+      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ success: true, count: list.length, resellers: list }));
       return;
     }
 
@@ -520,17 +542,17 @@ const server = http.createServer(async (req, res) => {
               address,
               phone,
               partnerTypes,
-              credits: isMaster ? 9999 : 10,
+              credits: isMaster ? 9999 : 0,
               activations: [],
-              creditHistory: [
+              creditHistory: isMaster ? [
                 {
                   id: 'h_' + Date.now(),
-                  type: 'bonus',
-                  amount: isMaster ? 9999 : 10,
-                  desc: 'Bônus de Boas-Vindas de Cadastro',
+                  type: 'initial',
+                  amount: 9999,
+                  desc: 'Créditos Iniciais de Administrador',
                   date: Date.now()
                 }
-              ],
+              ] : [],
               links: [
                 {
                   id: 'l_' + Date.now(),
@@ -731,6 +753,52 @@ const server = http.createServer(async (req, res) => {
 
             saveResellers(resellers);
             const safeReseller = { ...reseller };
+            delete safeReseller.password;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+            return;
+          }
+
+          // 7. Ajustar Créditos de um Revendedor (Admin Geral)
+          if (pathname === '/api/admin/reseller/adjust-credits') {
+            const adminEmail = (payload.adminEmail || req.headers['x-admin-email'] || '').trim().toLowerCase();
+            const targetEmail = (payload.targetEmail || '').trim().toLowerCase();
+            const amount = parseInt(payload.amount, 10);
+            const reason = (payload.reason || 'Ajuste manual pelo Administrador').trim();
+
+            if (adminEmail !== 'joaovitordc1010@gmail.com') {
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Apenas o Administrador Geral pode ajustar créditos.' }));
+              return;
+            }
+
+            if (!targetEmail || isNaN(amount)) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Dados inválidos para ajuste de créditos.' }));
+              return;
+            }
+
+            const target = resellers[targetEmail];
+            if (!target) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Revendedor não encontrado.' }));
+              return;
+            }
+
+            target.credits = Math.max(0, (target.credits || 0) + amount);
+            if (!Array.isArray(target.creditHistory)) target.creditHistory = [];
+            target.creditHistory.unshift({
+              id: 'adj_' + Date.now(),
+              type: amount >= 0 ? 'admin_add' : 'admin_deduct',
+              amount: amount,
+              desc: reason,
+              date: Date.now()
+            });
+
+            saveResellers(resellers);
+            console.log(`[Admin] Créditos ajustados para ${targetEmail}: ${amount > 0 ? '+' : ''}${amount}. Novo saldo: ${target.credits}`);
+
+            const safeReseller = { ...target };
             delete safeReseller.password;
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: true, reseller: safeReseller }));
