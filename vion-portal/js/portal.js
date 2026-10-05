@@ -710,12 +710,12 @@ function initPartnerRegistration() {
   });
 
   // AVANÇAR: ETAPA 1 -> ETAPA 2 (Imagem 1 -> Imagem 2)
-  step1Form?.addEventListener('submit', (e) => {
+  step1Form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const company = document.getElementById('reg-company')?.value.trim();
     const firstName = document.getElementById('reg-first-name')?.value.trim();
     const lastName = document.getElementById('reg-last-name')?.value.trim();
-    const email = document.getElementById('reg-email')?.value.trim();
+    const email = document.getElementById('reg-email')?.value.trim().toLowerCase();
     const password = document.getElementById('reg-password')?.value.trim();
 
     if (!company || !firstName || !lastName || !email || !password) {
@@ -727,6 +727,16 @@ function initPartnerRegistration() {
       showAlert(alertStep1, 'A senha deve conter pelo menos 4 caracteres.', 'error');
       return;
     }
+
+    // Validação imediata: se o e-mail já existe, bloqueia logo na etapa 1!
+    try {
+      const chkRes = await fetch(`/api/reseller/check-email?email=${encodeURIComponent(email)}`);
+      const chkData = await chkRes.json();
+      if (chkData.exists) {
+        showAlert(alertStep1, '⚠️ Este e-mail já está cadastrado no sistema! Por favor, faça login com sua conta.', 'error');
+        return;
+      }
+    } catch(err) {}
 
     if (alertStep1) alertStep1.style.display = 'none';
 
@@ -798,28 +808,30 @@ function initPartnerRegistration() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        showAlert(alertStep2, data?.error || 'Este e-mail já está cadastrado como parceiro. Por favor, faça login.', 'error');
+        showAlert(alertStep2, data?.error || 'Este e-mail já está cadastrado no sistema. Por favor, faça login.', 'error');
         return;
       }
 
       if (data.reseller) {
         saveResellerSession(data.reseller);
       }
+
+      // Grava autenticação local APENAS se o cadastro foi aceito pelo servidor
+      const isMaster = (email === MASTER_ADMIN_EMAIL.toLowerCase());
+      localStorage.setItem('vion_reseller_auth', 'true');
+      localStorage.setItem('vion_reseller_user', email);
+      localStorage.setItem('vion_is_master_admin', isMaster ? 'true' : 'false');
+
+      showAlert(alertStep2, '✔ Cadastro realizado com sucesso! Entrando no seu painel...', 'success');
+
+      setTimeout(() => {
+        showResellerView('dashboard');
+      }, 700);
+
     } catch(err) {
-      console.warn('Erro ao conectar ao servidor:', err);
+      showAlert(alertStep2, 'Erro ao conectar ao servidor. Tente novamente.', 'error');
+      return;
     }
-
-    // Grava autenticação local
-    const isMaster = (email === MASTER_ADMIN_EMAIL.toLowerCase());
-    localStorage.setItem('vion_reseller_auth', 'true');
-    localStorage.setItem('vion_reseller_user', email);
-    localStorage.setItem('vion_is_master_admin', isMaster ? 'true' : 'false');
-
-    showAlert(alertStep2, '✔ Cadastro realizado com sucesso! Entrando no seu painel...', 'success');
-
-    setTimeout(() => {
-      showResellerView('dashboard');
-    }, 700);
   });
 }
 

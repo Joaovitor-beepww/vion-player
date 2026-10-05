@@ -555,6 +555,16 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 1c. Verificar se o e-mail já existe (validação em tempo real)
+    if (pathname === '/api/reseller/check-email') {
+      const email = (urlObj.searchParams.get('email') || '').trim().toLowerCase();
+      const resellers = loadResellers();
+      const exists = Object.keys(resellers).some(k => k.toLowerCase() === email);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ success: true, exists }));
+      return;
+    }
+
     if (req.method === 'POST') {
       let body = '';
       req.on('data', chunk => body += chunk);
@@ -581,31 +591,18 @@ const server = http.createServer(async (req, res) => {
               return;
             }
 
-            const isMaster = (email === 'joaovitordc1010@gmail.com');
-
-            // Se for o Administrador Geral tentando cadastrar ou atualizar seus dados:
-            if (isMaster && resellers[email]) {
-              resellers[email].password = password;
-              resellers[email].firstName = firstName;
-              resellers[email].lastName = lastName;
-              resellers[email].company = company || resellers[email].company;
-              resellers[email].phone = phone || resellers[email].phone;
-              resellers[email].address = address || resellers[email].address;
-              resellers[email].country = country || resellers[email].country;
-              saveResellers(resellers);
-              console.log(`[Reseller API] Senha e dados do Administrador Geral atualizados com sucesso via cadastro!`);
-              const safeReseller = { ...resellers[email] };
-              delete safeReseller.password;
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true, reseller: safeReseller, isMaster: true }));
-              return;
-            }
-
-            if (resellers[email]) {
+            // BLOQUEIO ESTRITO: Ninguém pode cadastrar o mesmo e-mail mais de uma vez!
+            const emailExists = Object.keys(resellers).some(k => k.toLowerCase() === email);
+            if (emailExists) {
               res.writeHead(409, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: false, error: 'Este e-mail já está cadastrado como parceiro. Por favor, faça login.' }));
+              res.end(JSON.stringify({
+                success: false,
+                error: 'Este e-mail já está cadastrado no sistema. Por favor, faça login com sua conta ou utilize a opção "Forgot password".'
+              }));
               return;
             }
+
+            const isMaster = (email === 'joaovitordc1010@gmail.com');
 
             const cleanCode = (firstName + Math.floor(100 + Math.random() * 900)).toUpperCase().replace(/[^A-Z0-9]/g, '');
             const newReseller = {
