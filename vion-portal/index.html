@@ -310,17 +310,10 @@
 
           <!-- Tipo de parceiro -->
           <div class="partner-check-section">
-            <p class="partner-check-title">Por favor, escolha o tipo de parceiro</p>
-            <label class="partner-custom-checkbox">
-              <input type="checkbox" id="check-partner-reseller" checked>
-              <span class="checkmark"></span>
-              <span>Revendedor</span>
-            </label>
-            <label class="partner-custom-checkbox">
-              <input type="checkbox" id="check-partner-reference" checked>
-              <span class="checkmark"></span>
-              <span>Referência</span>
-            </label>
+            <p class="partner-check-title">Tipo de Parceria</p>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; color: #fbbf24; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+              <span>⚡</span> Revendedor Oficial (Compra de créditos e ativação direta de telas)
+            </div>
           </div>
 
           <!-- Termos e políticas -->
@@ -455,9 +448,6 @@
                 <button type="button" class="dropdown-item" id="menu-buy-credits">
                   <span class="item-icon">⚡</span> Compre mais créditos
                 </button>
-                <button type="button" class="dropdown-item" id="menu-withdraw-funds">
-                  <span class="item-icon">💳</span> Retirar fundos
-                </button>
                 <button type="button" class="dropdown-item" id="menu-edit-profile">
                   <span class="item-icon">👤</span> Editar perfil
                 </button>
@@ -485,12 +475,6 @@
               <button type="button" class="hub-nav-btn" data-sub="credits-history" title="Histórico de créditos">
                 <span class="nav-icon">💳</span> <span class="nav-text">Histórico de créditos</span>
               </button>
-              <button type="button" class="hub-nav-btn" data-sub="links" title="Links de referência">
-                <span class="nav-icon">🔗</span> <span class="nav-text">Links de referência</span>
-              </button>
-              <button type="button" class="hub-nav-btn" data-sub="withdrawals" title="Histórico de retiradas">
-                <span class="nav-icon">💰</span> <span class="nav-text">Histórico de retiradas</span>
-              </button>
               <button type="button" class="hub-nav-btn" data-sub="subs" title="Meus revendedores">
                 <span class="nav-icon">👥</span> <span class="nav-text">Meus revendedores</span>
               </button>
@@ -509,7 +493,7 @@
               <a href="mailto:joaovitordc1010@gmail.com" class="support-mail-btn" title="joaovitordc1010@gmail.com">
                 <span>✉️</span> <span class="support-mail-text">joaovitordc1010@gmail.com</span>
               </a>
-              <span class="version-tag">Referência/Revendedor v1.0.0</span>
+              <span class="version-tag">Painel do Revendedor v1.0.0</span>
             </div>
           </aside>
 
@@ -600,54 +584,6 @@
                   </div>
                 </div>
 
-                <!-- Card 4: Links -->
-                <div class="hub-black-card">
-                  <div class="card-head-title">Links</div>
-                  <div class="card-stats-rows">
-                    <div class="stat-line-double">
-                      <div class="stat-item">
-                        <span>Total de links :</span>
-                        <strong id="card-links-total">0</strong>
-                      </div>
-                      <div class="stat-item right">
-                        <span>Links hoje :</span>
-                        <strong id="card-links-today">0</strong>
-                      </div>
-                    </div>
-                    <div class="stat-line-double">
-                      <div class="stat-item">
-                        <span>Total ativado :</span>
-                        <strong id="card-links-act-total">0</strong>
-                      </div>
-                      <div class="stat-item right">
-                        <span>Ativado hoje :</span>
-                        <strong id="card-links-act-today">0</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Card 5: Ganhos -->
-                <div class="hub-black-card">
-                  <div class="card-head-title">Ganhos</div>
-                  <div class="card-stats-rows">
-                    <div class="stat-line">
-                      <span>Total :</span>
-                      <strong id="card-earn-total">0</strong>
-                    </div>
-                    <div class="stat-line-double">
-                      <div class="stat-item">
-                        <span id="card-earn-month-name">Outubro :</span>
-                        <strong id="card-earn-month">0</strong>
-                      </div>
-                      <div class="stat-item right">
-                        <span>Hoje :</span>
-                        <strong id="card-earn-today">0</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
 
             </div>
@@ -717,71 +653,7 @@
             </div>
 
             <!-- =========================================================
-                 SUB-ABA 4: LINKS DE REFERÊNCIA
-                 ========================================================= -->
-            <div id="hub-sub-links" class="hub-sub-content">
-              <div class="hub-section-header">
-                <h2>Links de Referência</h2>
-                <button type="button" id="btn-create-ref-link" class="btn-hub-action-gold">
-                  <span>+</span> Criar Novo Link
-                </button>
-              </div>
-
-              <div class="hub-table-wrapper">
-                <table class="hub-table">
-                  <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>Código</th>
-                      <th>Link Compartilhável</th>
-                      <th>Cliques</th>
-                      <th>Ativações</th>
-                      <th style="text-align: right;">Copiar</th>
-                    </tr>
-                  </thead>
-                  <tbody id="hub-links-tbody">
-                    <!-- Dinâmico -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- =========================================================
-                 SUB-ABA 5: HISTÓRICO DE RETIRADAS
-                 ========================================================= -->
-            <div id="hub-sub-withdrawals" class="hub-sub-content">
-              <div class="hub-section-header">
-                <div>
-                  <h2>Histórico de Retiradas</h2>
-                  <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-                    Solicite saques das suas comissões via PIX instantâneo.
-                  </p>
-                </div>
-                <button type="button" id="btn-hub-open-withdraw" class="btn-hub-action-gold">
-                  <span>💸</span> Solicitar Retirada
-                </button>
-              </div>
-
-              <div class="hub-table-wrapper">
-                <table class="hub-table">
-                  <thead>
-                    <tr>
-                      <th>Data</th>
-                      <th>Valor (R$)</th>
-                      <th>Chave PIX</th>
-                      <th>Tipo</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody id="hub-withdrawals-tbody">
-                    <!-- Dinâmico -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- =========================================================
-                 SUB-ABA 6: MEUS REVENDEDORES
+                 SUB-ABA 4: MEUS REVENDEDORES
                  ========================================================= -->
             <div id="hub-sub-subs" class="hub-sub-content">
               <div class="hub-section-header">
@@ -1142,54 +1014,6 @@
 
   <script src="/portal/js/portal.js"></script>
 
-  <!-- ===================================================================
-       MODAL: RETIRAR FUNDOS (SAQUE VIA PIX)
-       =================================================================== -->
-  <div id="modal-withdraw-funds" class="modal-overlay">
-    <div class="modal-box" style="max-width: 480px;">
-      <div class="modal-header">
-        <h3>Retirar Fundos / Comissões</h3>
-        <button id="btn-close-withdraw-modal" class="btn-close-modal">&times;</button>
-      </div>
-
-      <form id="form-withdraw-funds" style="padding-top: 10px;">
-        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 20px;">
-          <span style="font-size: 13px; color: #94a3b8;">Saldo disponível para saque:</span>
-          <div style="font-size: 24px; font-weight: 800; color: #22c55e; margin-top: 2px;">
-            R$ <span id="withdraw-available-val">0,00</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Valor da Retirada (R$)</label>
-          <input type="number" id="input-withdraw-amount" min="10" step="0.01" placeholder="Ex: 100.00" required>
-        </div>
-
-        <div class="form-group">
-          <label>Tipo de Chave PIX</label>
-          <select id="select-withdraw-pix-type" class="reseller-select-input">
-            <option value="CPF">CPF</option>
-            <option value="CNPJ">CNPJ</option>
-            <option value="Email">E-mail</option>
-            <option value="Telefone">Telefone / Celular</option>
-            <option value="Aleatoria">Chave Aleatória (EVP)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Chave PIX para Depósito</label>
-          <input type="text" id="input-withdraw-pix-key" placeholder="Digite sua chave PIX" required autocomplete="off">
-        </div>
-
-        <div id="withdraw-alert-box" class="alert-box"></div>
-
-        <div class="modal-footer">
-          <button type="button" id="btn-cancel-withdraw" class="btn btn-secondary">Cancelar</button>
-          <button type="submit" class="btn btn-gold">Confirmar Saque</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- ===================================================================
        MODAL: EDITAR PERFIL DO REVENDEDOR

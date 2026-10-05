@@ -553,7 +553,6 @@ function initResellerPortal() {
   initCinemaLogin();
   initHubDashboard();
   initDirectBuyCredits();
-  initWithdrawalModal();
   initProfileModal();
   initActivateDeviceModal();
   initAddSubModal();
@@ -703,8 +702,6 @@ function initPartnerRegistration() {
     const phoneNumber = document.getElementById('reg-phone-number')?.value.trim();
     const fullPhone = `${phoneCode} ${phoneNumber}`;
 
-    const isReseller = document.getElementById('check-partner-reseller')?.checked;
-    const isReference = document.getElementById('check-partner-reference')?.checked;
     const terms = document.getElementById('check-partner-terms')?.checked;
 
     if (!address || !phoneNumber) {
@@ -719,9 +716,7 @@ function initPartnerRegistration() {
 
     showAlert(alertStep2, '🔄 Criando sua conta de parceiro...', 'info');
 
-    const partnerTypes = [];
-    if (isReseller) partnerTypes.push('reseller');
-    if (isReference) partnerTypes.push('reference');
+    const partnerTypes = ['reseller'];
 
     try {
       const res = await fetch('/api/reseller/register', {
@@ -855,15 +850,6 @@ function initHubDashboard() {
     openDirectBuyModal();
   });
 
-  document.getElementById('menu-withdraw-funds')?.addEventListener('click', () => {
-    dropdownMenu?.classList.remove('active');
-    openWithdrawModal();
-  });
-
-  document.getElementById('btn-hub-open-withdraw')?.addEventListener('click', () => {
-    openWithdrawModal();
-  });
-
   document.getElementById('menu-edit-profile')?.addEventListener('click', () => {
     dropdownMenu?.classList.remove('active');
     openProfileModal();
@@ -948,8 +934,6 @@ function switchHubSubView(targetSub) {
   // Renders específicos
   if (targetSub === 'devices') renderHubDevices();
   if (targetSub === 'credits-history') renderHubCreditHistory();
-  if (targetSub === 'links') renderHubLinks();
-  if (targetSub === 'withdrawals') renderHubWithdrawals();
   if (targetSub === 'subs') renderHubSubs();
   if (targetSub === 'partnerships') {
     if (!isCurrentUserMasterAdmin()) {
@@ -976,7 +960,7 @@ function refreshHubDashboard() {
   if (flagEl) flagEl.textContent = session.country === 'Estados Unidos' ? '🇺🇸' : (session.country === 'Portugal' ? '🇵🇹' : '🇧🇷');
   if (masterBtn) masterBtn.style.display = isMaster ? 'flex' : 'none';
 
-  // ATUALIZA OS 5 CARDS PRETOS (IMAGEM 4)
+  // ATUALIZA OS CARDS PRETOS DO REVENDEDOR
   const devices = session.activations || [];
   const todayStr = new Date().toISOString().slice(0, 10);
   const now = new Date();
@@ -1005,25 +989,6 @@ function refreshHubDashboard() {
   setText('card-sub-month-name', `${curMonthName} :`);
   setText('card-sub-month', subs.length > 0 ? 1 : 0);
   setText('card-sub-today', 0);
-
-  // Card 4: Links
-  const links = session.links || [];
-  const linkClicks = links.reduce((a, b) => a + (b.clicks || 0), 0);
-  const linkActs = links.reduce((a, b) => a + (b.activations || 0), 0);
-  setText('card-links-total', links.length);
-  setText('card-links-today', 0);
-  setText('card-links-act-total', linkActs);
-  setText('card-links-act-today', 0);
-
-  // Card 5: Ganhos
-  const earnings = session.earnings || 0;
-  setText('card-earn-total', earnings.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
-  setText('card-earn-month-name', `${curMonthName} :`);
-  setText('card-earn-month', (earnings * 0.4).toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
-  setText('card-earn-today', '0,00');
-
-  // Ganhos no saque
-  setText('withdraw-available-val', earnings.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
 }
 
 function setText(id, val) {
@@ -1694,60 +1659,6 @@ function renderHubCreditHistory() {
   });
 }
 
-function renderHubLinks() {
-  const tbody = document.getElementById('hub-links-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-
-  const session = getResellerSession();
-  const links = session.links || [];
-
-  links.forEach(l => {
-    const liveUrl = `${window.location.origin}/portal/#reseller?ref=${encodeURIComponent(l.code || 'VION')}`;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${escapeHtml(l.name)}</strong></td>
-      <td><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${escapeHtml(l.code)}</code></td>
-      <td style="color: #0284c7; font-size: 13px;">${escapeHtml(liveUrl)}</td>
-      <td><strong>${l.clicks || 0}</strong></td>
-      <td><strong>${l.activations || 0}</strong></td>
-      <td style="text-align: right;">
-        <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="navigator.clipboard.writeText('${liveUrl}'); alert('Link copiado!');">
-          📋 Copiar
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function renderHubWithdrawals() {
-  const tbody = document.getElementById('hub-withdrawals-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-
-  const session = getResellerSession();
-  const withs = session.withdrawals || [];
-
-  if (withs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">Nenhuma retirada solicitada ainda.</td></tr>`;
-    return;
-  }
-
-  withs.forEach(w => {
-    const tr = document.createElement('tr');
-    const dateFormatted = new Date(w.date || Date.now()).toLocaleString('pt-BR');
-    tr.innerHTML = `
-      <td>${dateFormatted}</td>
-      <td style="font-weight: 800; color: #16a34a;">R$ ${(w.amount || 0).toFixed(2)}</td>
-      <td style="font-family: monospace;">${escapeHtml(w.pixKey)}</td>
-      <td>${escapeHtml(w.pixType || 'PIX')}</td>
-      <td><span style="font-size: 12px; background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 4px; font-weight: 700;">${escapeHtml(w.status || 'Pendente')}</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
 function renderHubSubs() {
   const tbody = document.getElementById('hub-subs-tbody');
   if (!tbody) return;
@@ -1853,64 +1764,6 @@ function initActivateDeviceModal() {
       if (modal) modal.style.display = 'none';
       if (alertBox) alertBox.style.display = 'none';
     }, 900);
-  });
-}
-
-function openWithdrawModal() {
-  const modal = document.getElementById('modal-withdraw-funds');
-  if (modal) modal.style.display = 'flex';
-}
-
-function initWithdrawalModal() {
-  const modal = document.getElementById('modal-withdraw-funds');
-  const btnClose = document.getElementById('btn-close-withdraw-modal');
-  const btnCancel = document.getElementById('btn-cancel-withdraw');
-  const form = document.getElementById('form-withdraw-funds');
-  const alertBox = document.getElementById('withdraw-alert-box');
-
-  [btnClose, btnCancel].forEach(b => b?.addEventListener('click', () => {
-    if (modal) modal.style.display = 'none';
-  }));
-
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const amount = parseFloat(document.getElementById('input-withdraw-amount')?.value);
-    const pixType = document.getElementById('select-withdraw-pix-type')?.value;
-    const pixKey = document.getElementById('input-withdraw-pix-key')?.value.trim();
-
-    const session = getResellerSession();
-    if (!amount || amount <= 0 || amount > (session.earnings || 0)) {
-      showAlert(alertBox, 'Valor de saque inválido ou saldo insuficiente.', 'error');
-      return;
-    }
-
-    showAlert(alertBox, '🔄 Processando solicitação de retirada...', 'info');
-
-    try {
-      await fetch('/api/reseller/withdraw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: session.email, amount, pixType, pixKey })
-      });
-    } catch(err) {}
-
-    session.earnings -= amount;
-    if (!Array.isArray(session.withdrawals)) session.withdrawals = [];
-    session.withdrawals.unshift({
-      id: 'w_' + Date.now(),
-      amount, pixType, pixKey,
-      status: 'Pendente',
-      date: Date.now()
-    });
-
-    saveResellerSession(session);
-    refreshHubDashboard();
-
-    showAlert(alertBox, `✔ Solicitação de retirada de R$ ${amount.toFixed(2)} enviada!`, 'success');
-    setTimeout(() => {
-      if (modal) modal.style.display = 'none';
-      if (alertBox) alertBox.style.display = 'none';
-    }, 1000);
   });
 }
 
