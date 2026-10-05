@@ -708,11 +708,13 @@ body {
   display: block;
 }
 
-/* Responsividade Mobile / Telas Menores */
-@media screen and (max-width: 1024px) {
+/* Responsividade Mobile Portrait (Apenas Celular Vertical Estrito) */
+@media screen and (max-width: 600px) and (orientation: portrait) {
   .login-lux-container {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 16px;
+    max-height: 96vh;
+    overflow-y: auto;
   }
   .login-poster-grid-canvas {
     display: none;
@@ -737,6 +739,349 @@ body {
   }
   .portal-device-keys {
     justify-content: center;
+  }
+}
+
+/* ===================================================================
+   TELA DE LOGIN LUXUOSA PARA SMART TV / ANDROID TV / WIDESCREEN
+   Layout Estrito de 2 Colunas Horizontais Lado a Lado (16:9)
+   Garante 100% de visibilidade sem cortes e sem scroll em qualquer TV
+   =================================================================== */
+html[data-platform="tv"] .login-lux-container,
+html.is-tv .login-lux-container,
+body .login-lux-container {
+  display: grid !important;
+  grid-template-columns: 1.15fr 1fr !important;
+  gap: 24px !important;
+  max-width: 1040px !important;
+  width: 95% !important;
+  max-height: 94vh !important;
+  margin: auto !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+html[data-platform="tv"] .login-lux-left,
+html.is-tv .login-lux-left,
+body .login-lux-left {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  text-align: left !important;
+  gap: 8px !important;
+}
+
+html[data-platform="tv"] .login-logo-card,
+html.is-tv .login-logo-card,
+body .login-logo-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  text-align: left !important;
+  gap: 12px !important;
+}
+
+html[data-platform="tv"] .login-logo-img-wrapper,
+html.is-tv .login-logo-img-wrapper,
+body .login-logo-img-wrapper {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 16px !important;
+  padding: 4px !important;
+  flex-shrink: 0 !important;
+}
+
+html[data-platform="tv"] .brand-vion,
+html.is-tv .brand-vion,
+body .brand-vion {
+  font-size: 26px !important;
+}
+
+html[data-platform="tv"] .brand-player,
+html.is-tv .brand-player,
+body .brand-player {
+  font-size: 16px !important;
+}
+
+html[data-platform="tv"] .login-tag-neutral,
+html.is-tv .login-tag-neutral,
+body .login-tag-neutral {
+  font-size: 9.5px !important;
+  padding: 2px 7px !important;
+}
+
+html[data-platform="tv"] .login-hero-slogan h2,
+html.is-tv .login-hero-slogan h2,
+body .login-hero-slogan h2 {
+  font-size: 16px !important;
+  margin: 0 !important;
+}
+
+html[data-platform="tv"] .login-hero-slogan .slogan-gold,
+html.is-tv .login-hero-slogan .slogan-gold,
+body .login-hero-slogan .slogan-gold {
+  font-size: 14px !important;
+  margin: 1px 0 0 0 !important;
+}
+
+html[data-platform="tv"] .login-brand-text,
+html.is-tv .login-brand-text,
+body .login-brand-text {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: baseline !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
+
+html[data-platform="tv"] .login-features-grid,
+html.is-tv .login-features-grid,
+body .login-features-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 6px !important;
+}
+
+html[data-platform="tv"] .feature-item,
+html.is-tv .feature-item,
+body .feature-item {
+  padding: 6px 4px !important;
+  border-radius: 10px !important;
+}
+
+html[data-platform="tv"] .feat-ico,
+html.is-tv .feat-ico,
+body .feat-ico {
+  font-size: 16px !important;
+  margin-bottom: 2px !important;
+}
+
+html[data-platform="tv"] .feat-title,
+html.is-tv .feat-title,
+body .feat-title {
+  font-size: 9.5px !important;
+}
+
+html[data-platform="tv"] .feat-sub,
+html.is-tv .feat-sub,
+body .feat-sub {
+  font-size: 8.5px !important;
+}
+
+html[data-platform="tv"] .login-portal-box,
+html.is-tv .login-portal-box,
+body .login-portal-box {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  text-align: left !important;
+  gap: 14px !important;
+  padding: 10px 14px !important;
+  border-radius: 14px !important;
+}
+
+html[data-platform="tv"] .login-qr-frame,
+html.is-tv .login-qr-frame,
+body .login-qr-frame {
+  padding: 4px !important;
+  border-radius: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+html[data-platform="tv"] .login-qr-code-img,
+html.is-tv .login-qr-code-img,
+body .login-qr-code-img {
+  width: 82px !important;
+  height: 82px !important;
+  display: block !important;
+}
+
+html[data-platform="tv"] .login-portal-info,
+html.is-tv .login-portal-info,
+body .login-portal-info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  gap: 3px !important;
+}
+
+html[data-platform="tv"] .portal-badge-live,
+html.is-tv .portal-badge-live,
+body .portal-badge-live {
+  font-size: 10px !important;
+  letter-spacing: 0.8px !important;
+}
+
+html[data-platform="tv"] .portal-desc,
+html.is-tv .portal-desc,
+body .portal-desc {
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+}
+
+html[data-platform="tv"] .portal-url-tag,
+html.is-tv .portal-url-tag,
+body .portal-url-tag {
+  font-size: 11.5px !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+}
+
+html[data-platform="tv"] .portal-device-keys,
+html.is-tv .portal-device-keys,
+body .portal-device-keys {
+  display: flex !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  margin-top: 2px !important;
+}
+
+html[data-platform="tv"] .login-device-compat,
+html.is-tv .login-device-compat,
+body .login-device-compat {
+  text-align: left !important;
+  font-size: 10px !important;
+}
+
+/* Card de Login da Direita (TV) */
+html[data-platform="tv"] .reseller-login-card,
+html.is-tv .reseller-login-card,
+body .reseller-login-card {
+  width: 100% !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
+  padding: 18px 22px !important;
+  border-radius: 16px !important;
+  box-sizing: border-box !important;
+}
+
+html[data-platform="tv"] .reseller-card-header,
+html.is-tv .reseller-card-header,
+body .reseller-card-header {
+  margin-bottom: 8px !important;
+  text-align: left !important;
+}
+
+html[data-platform="tv"] .reseller-card-header h2,
+html.is-tv .reseller-card-header h2,
+body .reseller-card-header h2 {
+  font-size: 21px !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+html[data-platform="tv"] .reseller-card-header p,
+html.is-tv .reseller-card-header p,
+body .reseller-card-header p {
+  font-size: 11px !important;
+  margin-top: 2px !important;
+}
+
+html[data-platform="tv"] .reseller-form-group,
+html.is-tv .reseller-form-group,
+body .reseller-form-group {
+  margin-bottom: 6px !important;
+}
+
+html[data-platform="tv"] .reseller-form-group label,
+html.is-tv .reseller-form-group label,
+body .reseller-form-group label {
+  font-size: 10px !important;
+  margin-bottom: 2px !important;
+}
+
+html[data-platform="tv"] .reseller-form-group input,
+html.is-tv .reseller-form-group input,
+body .reseller-form-group input {
+  height: 38px !important;
+  font-size: 13px !important;
+  padding: 6px 12px 6px 36px !important;
+  border-radius: 10px !important;
+}
+
+html[data-platform="tv"] .btn-reseller-login,
+html.is-tv .btn-reseller-login,
+body .btn-reseller-login {
+  height: 42px !important;
+  font-size: 14px !important;
+  margin-top: 6px !important;
+  border-radius: 10px !important;
+}
+
+html[data-platform="tv"] .btn-skip-login,
+html.is-tv .btn-skip-login,
+body .btn-skip-login {
+  height: 28px !important;
+  font-size: 11px !important;
+  margin-top: 4px !important;
+  border-radius: 8px !important;
+}
+
+html[data-platform="tv"] .reseller-form-footer,
+html.is-tv .reseller-form-footer,
+body .reseller-form-footer {
+  margin-top: 4px !important;
+  padding-top: 4px !important;
+  font-size: 10px !important;
+}
+
+html[data-platform="tv"] .login-card-signature,
+html.is-tv .login-card-signature,
+body .login-card-signature {
+  margin-top: 4px !important;
+}
+
+html[data-platform="tv"] .sig-name,
+html.is-tv .sig-name,
+body .sig-name {
+  font-size: 18px !important;
+}
+
+html[data-platform="tv"] .sig-motto,
+html.is-tv .sig-motto,
+body .sig-motto {
+  font-size: 8px !important;
+}
+
+/* Telas Maiores (1080p nativo sem escala e 4K) */
+@media screen and (min-width: 1400px) and (min-height: 800px) {
+  html[data-platform="tv"] .login-lux-container,
+  html.is-tv .login-lux-container,
+  body .login-lux-container {
+    max-width: 1160px !important;
+    gap: 36px !important;
+  }
+  html[data-platform="tv"] .login-logo-img-wrapper,
+  html.is-tv .login-logo-img-wrapper,
+  body .login-logo-img-wrapper {
+    width: 76px !important;
+    height: 76px !important;
+  }
+  html[data-platform="tv"] .login-qr-code-img,
+  html.is-tv .login-qr-code-img,
+  body .login-qr-code-img {
+    width: 92px !important;
+    height: 92px !important;
+  }
+  html[data-platform="tv"] .reseller-login-card,
+  html.is-tv .reseller-login-card,
+  body .reseller-login-card {
+    max-width: 450px !important;
+    padding: 24px 28px !important;
+  }
+  html[data-platform="tv"] .reseller-form-group input,
+  html.is-tv .reseller-form-group input,
+  body .reseller-form-group input {
+    height: 44px !important;
+    font-size: 14px !important;
+  }
+  html[data-platform="tv"] .btn-reseller-login,
+  html.is-tv .btn-reseller-login,
+  body .btn-reseller-login {
+    height: 46px !important;
+    font-size: 15px !important;
   }
 }
 
