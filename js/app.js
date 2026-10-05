@@ -137,6 +137,7 @@ const App = {
     if (!mac) return null;
     const apiUrls = [
       `/api/device?mac=${encodeURIComponent(mac)}`,
+      `https://vion.gestorpro.app.br/api/device?mac=${encodeURIComponent(mac)}`,
       `http://192.168.1.197:3000/api/device?mac=${encodeURIComponent(mac)}`,
       `http://localhost:3000/api/device?mac=${encodeURIComponent(mac)}`
     ];
@@ -345,6 +346,7 @@ const App = {
     if (!mac) return;
     const endpoints = [
       '/api/device/register',
+      'https://vion.gestorpro.app.br/api/device/register',
       'http://192.168.1.197:3000/api/device/register',
       'http://localhost:3000/api/device/register'
     ];
@@ -820,6 +822,7 @@ const App = {
   async syncPartnershipsSilently() {
     const apiUrls = [
       '/api/partnerships',
+      'https://vion.gestorpro.app.br/api/partnerships',
       'http://192.168.1.197:3000/api/partnerships',
       'http://localhost:3000/api/partnerships'
     ];
