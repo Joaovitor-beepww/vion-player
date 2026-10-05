@@ -182,7 +182,6 @@ const App = {
     this.initCinemaBackdropSlideshow();
     this.setupPlatformLifecycle();
     this.updateEpgCalendar();
-    setTimeout(() => { this.checkAndroidAppUpdate(); }, 4000);
 
     const mac = localStorage.getItem('vion_mac_address');
 
@@ -958,11 +957,6 @@ const App = {
         this.showToast('Conta desconectada com sucesso.');
         this.goToScreen('reseller-login');
       });
-    });
-
-    // Verificar Atualizações manualmente na tela de Configurações
-    document.getElementById('btn-check-update')?.addEventListener('click', () => {
-      this.checkAndroidAppUpdate(true);
     });
 
     // Diálogo Customizado
@@ -2482,16 +2476,6 @@ const App = {
       return;
     }
 
-    // 1b. Fecha modal de atualização do app se estiver aberto (e não estiver baixando)
-    const updateModal = document.getElementById('modal-app-update');
-    if (updateModal && updateModal.classList.contains('active')) {
-      const progressSec = document.getElementById('update-progress-section');
-      if (!progressSec || progressSec.style.display === 'none') {
-        updateModal.classList.remove('active');
-        return;
-      }
-    }
-
     // 2. Fecha modal de filme ou série se estiver aberto
     const movieModal = document.getElementById('modal-movie-details');
     if (movieModal && movieModal.classList.contains('active')) {
@@ -2908,134 +2892,6 @@ const App = {
     this.toastTimeout = setTimeout(() => {
       toast.classList.remove('show');
     }, 4000);
-  },
-
-  // ===================================================================
-  // ATUALIZAÇÃO AUTOMÁTICA (ANDROID TV / FIRE TV IN-APP UPDATER)
-  // ===================================================================
-  async checkAndroidAppUpdate(isManual = false) {
-    if (!window.AndroidDevice || typeof window.AndroidDevice.downloadAndInstallUpdate !== 'function') {
-      if (isManual) {
-        this.showUpdateDialog({
-          versionName: '1.1.9',
-          releaseNotes: 'Modo de teste: Nova tela inicial de luxo, QR Code de pareamento dinâmico e instalador automático de atualizações.',
-          apkUrl: 'https://vion.gestorpro.app.br/apk'
-        });
-      }
-      return;
-    }
-
-    const currentVersionCode = typeof window.AndroidDevice.getAppVersionCode === 'function'
-      ? window.AndroidDevice.getAppVersionCode()
-      : 19;
-
-    try {
-      const res = await fetch('https://vion.gestorpro.app.br/api/app/version');
-      if (!res.ok) return;
-      const data = await res.json();
-
-      if (data && data.success && data.versionCode > currentVersionCode) {
-        this.showUpdateDialog(data);
-      } else if (isManual) {
-        this.showToast('✔ Seu Vion Player já está na versão mais recente!');
-      }
-    } catch (e) {
-      if (isManual) this.showToast('Não foi possível verificar atualizações no momento.');
-    }
-  },
-
-  showUpdateDialog(data) {
-    const modal = document.getElementById('modal-app-update');
-    if (!modal) return;
-
-    const currentVer = typeof window.AndroidDevice?.getAppVersionName === 'function'
-      ? window.AndroidDevice.getAppVersionName()
-      : '1.1.8';
-
-    const titleEl = document.getElementById('update-new-version-title');
-    const currEl = document.getElementById('update-curr-ver');
-    const targetEl = document.getElementById('update-target-ver');
-    const notesEl = document.getElementById('update-release-notes');
-    const btnConfirm = document.getElementById('btn-confirm-update');
-    const btnDismiss = document.getElementById('btn-dismiss-update');
-    const progressSec = document.getElementById('update-progress-section');
-    const actionsSec = document.getElementById('update-actions-section');
-
-    if (titleEl) titleEl.textContent = `Vion Player v${data.versionName || '1.1.9'}`;
-    if (currEl) currEl.textContent = `v${currentVer}`;
-    if (targetEl) targetEl.textContent = `v${data.versionName || '1.1.9'}`;
-    if (notesEl && data.releaseNotes) notesEl.textContent = data.releaseNotes;
-
-    if (progressSec) progressSec.style.display = 'none';
-    if (actionsSec) actionsSec.style.display = 'flex';
-
-    modal.classList.add('active');
-
-    // Foco D-Pad no botão de Atualizar
-    if (btnConfirm) {
-      if (typeof RemoteControl !== 'undefined' && RemoteControl.setFocus) {
-        RemoteControl.setFocus(btnConfirm);
-      } else {
-        btnConfirm.focus();
-      }
-      btnConfirm.onclick = () => {
-        this.startAppUpdateDownload(data.apkUrl || 'https://vion.gestorpro.app.br/apk');
-      };
-    }
-
-    if (btnDismiss) {
-      btnDismiss.onclick = () => {
-        modal.classList.remove('active');
-      };
-    }
-  },
-
-  startAppUpdateDownload(apkUrl) {
-    const progressSec = document.getElementById('update-progress-section');
-    const actionsSec = document.getElementById('update-actions-section');
-    if (progressSec) progressSec.style.display = 'block';
-    if (actionsSec) actionsSec.style.display = 'none';
-
-    if (window.AndroidDevice && typeof window.AndroidDevice.downloadAndInstallUpdate === 'function') {
-      window.AndroidDevice.downloadAndInstallUpdate(apkUrl);
-    } else {
-      // Demonstração no navegador / teste
-      let fakePct = 5;
-      const fakeTimer = setInterval(() => {
-        fakePct += 15;
-        if (fakePct >= 100) {
-          clearInterval(fakeTimer);
-          this.onUpdateProgress(100, 'Download concluído! Abrindo instalador...');
-        } else {
-          this.onUpdateProgress(fakePct, `Baixando atualização... [${fakePct}%]`);
-        }
-      }, 350);
-    }
-  },
-
-  onUpdateProgress(percent, message) {
-    const fill = document.getElementById('update-progress-fill');
-    const statusMsg = document.getElementById('update-status-msg');
-    const percentLabel = document.getElementById('update-percent-label');
-
-    const cleanPct = Math.min(100, Math.max(0, percent));
-    if (fill) fill.style.width = cleanPct + '%';
-    if (percentLabel) percentLabel.textContent = cleanPct + '%';
-    if (statusMsg && message) statusMsg.textContent = message;
-
-    if (cleanPct >= 100) {
-      if (statusMsg) statusMsg.textContent = '🎉 Download concluído! Iniciando instalação...';
-      setTimeout(() => {
-        const modal = document.getElementById('modal-app-update');
-        if (modal) modal.classList.remove('active');
-      }, 4000);
-    }
-  },
-
-  onUpdateError(error) {
-    const modal = document.getElementById('modal-app-update');
-    if (modal) modal.classList.remove('active');
-    this.showToast('⚠️ ' + error);
   }
 };
 
