@@ -173,7 +173,7 @@
                 MAIS POPULAR
               </div>
               <div class="plan-name">Licença Vitalícia</div>
-              <div class="plan-price">R$ 49,90 <span>/ pagamento único</span></div>
+              <div class="plan-price">R$ 30,00 <span>/ pagamento único</span></div>
               <ul class="plan-features">
                 <li>✓ Ativação permanente</li>
                 <li>✓ Atualizações gratuitas</li>
@@ -181,20 +181,20 @@
                 <li>✓ Transferível para nova TV</li>
               </ul>
             </div>
-            <button class="btn btn-gold" style="width: 100%;">ATIVAR VITALÍCIA</button>
+            <button type="button" class="btn btn-gold" onclick="openDevicePaymentModal('vitalicio', 30, 'Licença Vitalícia')" style="width: 100%;">ATIVAR VITALÍCIA</button>
           </div>
 
           <div class="pricing-card">
             <div>
               <div class="plan-name">Licença Anual</div>
-              <div class="plan-price">R$ 24,90 <span>/ 12 meses</span></div>
+              <div class="plan-price">R$ 20,00 <span>/ 12 meses</span></div>
               <ul class="plan-features">
                 <li>✓ Acesso total por 1 ano</li>
                 <li>✓ Todas as funções inclusas</li>
                 <li>✓ Renovável a qualquer momento</li>
               </ul>
             </div>
-            <button class="btn btn-outline" style="width: 100%;">ATIVAR 1 ANO</button>
+            <button type="button" class="btn btn-outline" onclick="openDevicePaymentModal('anual', 20, 'Licença Anual')" style="width: 100%;">ATIVAR 1 ANO</button>
           </div>
         </div>
       </div>
@@ -1109,16 +1109,16 @@
             <button type="button" class="btn btn-outline pack-btn">Comprar</button>
           </div>
         </div>
-
-        <div style="margin-top: 25px; background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 16px; text-align: center;">
-          <p style="font-size: 13.5px; color: var(--text-white); margin-bottom: 8px;">
-            ⚡ Ativação imediata via PIX automático ou com nossos atendentes.
-          </p>
-          <a href="https://wa.me/5514998539797?text=Ola%2C+gostaria+de+liberar+creditos+para+revenda+do+Vion+Player" target="_blank" class="btn btn-gold" style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; padding: 10px 24px;">
-            <span>💬</span> Chamar no WhatsApp para Liberar Créditos
-          </a>
-        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: ATIVAÇÃO DE DISPOSITIVO DIRETO VIA PIX MERCADO PAGO
+       =================================================================== -->
+  <div id="modal-pay-device" class="modal-overlay" style="display: none;">
+    <div class="modal-box" style="max-width: 500px;">
+      <!-- Dinâmico via JS -->
     </div>
   </div>
 

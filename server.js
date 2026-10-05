@@ -200,13 +200,23 @@ function fulfillPayment(payment) {
   } else if (payment.type === 'activation' && payment.mac) {
     const devices = loadDevices();
     const normalizedMac = payment.mac.trim().toUpperCase();
-    if (devices[normalizedMac]) {
-      devices[normalizedMac].active = true;
-      devices[normalizedMac].expiryDate = Date.now() + 365 * 24 * 60 * 60 * 1000;
-      devices[normalizedMac].plan = payment.plan || 'vitalicio';
-      saveDevices(devices);
-      console.log(`[PIX Mercado Pago] Dispositivo ${normalizedMac} ativado com sucesso!`);
+    if (!devices[normalizedMac]) {
+      const fallbackKey = String(Math.abs(normalizedMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+      devices[normalizedMac] = {
+        mac: normalizedMac,
+        key: fallbackKey,
+        playlists: [],
+        registeredAt: Date.now()
+      };
     }
+    const isLifetime = payment.plan === 'vitalicio' || payment.plan === 'lifetime';
+    devices[normalizedMac].active = true;
+    devices[normalizedMac].plan = isLifetime ? 'vitalicio' : 'anual';
+    devices[normalizedMac].expiryDate = isLifetime
+      ? Date.now() + 100 * 365 * 24 * 60 * 60 * 1000
+      : Date.now() + 365 * 24 * 60 * 60 * 1000;
+    saveDevices(devices);
+    console.log(`[PIX Mercado Pago] Dispositivo ${normalizedMac} ativado com sucesso! Plano: ${devices[normalizedMac].plan}`);
   }
 }
 
@@ -917,6 +927,7 @@ const server = http.createServer(async (req, res) => {
             payments[mpRes.id] = {
               id: mpRes.id,
               type,
+              plan: payload.plan || '',
               email,
               amount,
               credits,
@@ -946,6 +957,7 @@ const server = http.createServer(async (req, res) => {
               payments[demoId] = {
                 id: demoId,
                 type,
+                plan: payload.plan || '',
                 email,
                 amount,
                 credits,

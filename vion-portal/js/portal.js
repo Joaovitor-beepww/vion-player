@@ -1322,18 +1322,280 @@ function initDirectBuyCreditsModalRestore() {
           <button type="button" class="btn btn-outline pack-btn">Comprar</button>
         </div>
       </div>
-
-      <div style="margin-top: 25px; background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 16px; text-align: center;">
-        <p style="font-size: 13.5px; color: var(--text-white); margin-bottom: 8px;">
-          ⚡ Ativação imediata via PIX automático ou com nossos atendentes.
-        </p>
-        <a href="https://wa.me/5514998539797?text=Ola%2C+gostaria+de+liberar+creditos+para+revenda+do+Vion+Player" target="_blank" class="btn btn-gold" style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; padding: 10px 24px;">
-          <span>💬</span> Chamar no WhatsApp para Liberar Créditos
-        </a>
-      </div>
     </div>
   `;
 }
+
+// ===================================================================
+// ATIVAÇÃO DIRETA DE DISPOSITIVO VIA PIX MERCADO PAGO (CLIENTE FINAL)
+// ===================================================================
+let devicePixPollingTimer = null;
+
+function clearDevicePixPolling() {
+  if (devicePixPollingTimer) {
+    clearInterval(devicePixPollingTimer);
+    devicePixPollingTimer = null;
+  }
+}
+
+function closeDevicePayModal() {
+  clearDevicePixPolling();
+  const modal = document.getElementById('modal-pay-device');
+  if (modal) modal.style.display = 'none';
+}
+
+window.openDevicePaymentModal = function(planType, price, planTitle) {
+  clearDevicePixPolling();
+  const modal = document.getElementById('modal-pay-device');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  const modalBox = modal.querySelector('.modal-box');
+  const isLifetime = planType === 'vitalicio';
+
+  // ETAPA 1: DIGITAÇÃO DO ENDEREÇO MAC
+  modalBox.innerHTML = `
+    <div class="modal-header">
+      <h3>Ativação do Vion Player na TV</h3>
+      <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
+    </div>
+
+    <div style="padding: 10px 0;">
+      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 14px; margin-bottom: 18px; text-align: center;">
+        <span style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Plano Selecionado:</span>
+        <div style="font-size: 20px; font-weight: 800; color: #f59e0b; margin: 2px 0;">
+          ${planTitle}
+        </div>
+        <div style="font-size: 18px; font-weight: 900; color: #ffffff;">
+          R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ${isLifetime ? '(Pagamento Único)' : '(12 Meses)'}
+        </div>
+      </div>
+
+      <div style="text-align: left;">
+        <label style="font-size: 13px; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">
+          Endereço MAC da TV ou Aparelho:
+        </label>
+        <input type="text" id="input-device-pay-mac" placeholder="Ex: 00:1A:79:B4:C2:5D" maxlength="17"
+               style="width: 100%; font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box;">
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 6px; line-height: 1.4;">
+          💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.
+        </p>
+
+        <label style="font-size: 13px; font-weight: 700; color: #cbd5e1; display: block; margin-top: 14px; margin-bottom: 6px;">
+          E-mail (opcional para recibo):
+        </label>
+        <input type="email" id="input-device-pay-email" placeholder="seuemail@exemplo.com"
+               style="width: 100%; font-size: 14px; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box;">
+
+        <div style="border-top: 1px solid #334155; padding-top: 18px; margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn btn-gold" id="btn-device-pay-proceed" style="width: 100%; font-size: 15px; padding: 14px;">
+            ⚡ Gerar PIX para Ativação Instantânea (R$ ${price},00)
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeDevicePayModal()" style="width: 100%;">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Auto-formatação de MAC Address (ex: 00:1A:79...)
+  const macInput = document.getElementById('input-device-pay-mac');
+  macInput?.focus();
+  macInput?.addEventListener('input', (e) => {
+    let val = e.target.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+    if (val.length > 12) val = val.substring(0, 12);
+    const parts = val.match(/.{1,2}/g) || [];
+    e.target.value = parts.join(':');
+  });
+
+  // Prosseguir para gerar o PIX
+  document.getElementById('btn-device-pay-proceed')?.addEventListener('click', async () => {
+    let mac = (macInput?.value || '').trim().toUpperCase();
+    const email = (document.getElementById('input-device-pay-email')?.value || '').trim();
+
+    // Validação básica do MAC
+    const cleanMac = mac.replace(/[^0-9A-F]/g, '');
+    if (cleanMac.length !== 12) {
+      alert('Por favor, informe um endereço MAC válido contendo 12 dígitos (ex: 00:1A:79:B4:C2:5D).');
+      macInput?.focus();
+      return;
+    }
+
+    // ETAPA 2: GERANDO COBRANÇA
+    modalBox.innerHTML = `
+      <div class="modal-header">
+        <h3>Ativação do Vion Player</h3>
+        <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
+      </div>
+      <div style="padding: 40px 20px; text-align: center;">
+        <div class="pix-spinner"></div>
+        <p style="margin-top: 18px; color: #cbd5e1; font-weight: 600; font-size: 15px;">
+          Gerando QR Code PIX oficial para o MAC ${mac}...
+        </p>
+        <span style="font-size: 13px; color: var(--text-muted);">Aguarde alguns instantes</span>
+      </div>
+    `;
+
+    let payData = null;
+    try {
+      const res = await fetch('/api/payment/create-pix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'activation',
+          plan: planType,
+          mac: mac,
+          amount: price,
+          email: email || 'cliente@vionplayer.app',
+          description: `Ativação ${planTitle} - MAC ${mac}`
+        })
+      });
+      payData = await res.json();
+    } catch(err) {
+      payData = { success: false, error: 'Falha de comunicação com o servidor de pagamentos.' };
+    }
+
+    if (!payData || !payData.success) {
+      modalBox.innerHTML = `
+        <div class="modal-header">
+          <h3>Erro ao Gerar Cobrança</h3>
+          <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
+        </div>
+        <div style="padding: 30px 20px; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+          <p style="color: #ef4444; font-weight: 600; font-size: 15px; margin-bottom: 16px;">
+            ${payData?.error || 'Não foi possível gerar a chave PIX no momento.'}
+          </p>
+          <button type="button" class="btn btn-secondary" onclick="openDevicePaymentModal('${planType}', ${price}, '${planTitle}')">
+            ← Tentar Novamente
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    // ETAPA 3: TELA DE PAGAMENTO PIX PARA O MAC
+    const qrCode = payData.qrCode || '';
+    const qrCodeBase64 = payData.qrCodeBase64 || '';
+    const paymentId = payData.paymentId;
+    const isDemo = !!payData.isDemo;
+
+    modalBox.innerHTML = `
+      <div class="modal-header">
+        <h3>Pagamento PIX - Ativação de TV</h3>
+        <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
+      </div>
+
+      <div style="padding: 10px 0; text-align: center;">
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 13px; color: #94a3b8;">Aparelho a ser Ativado:</div>
+          <div style="font-family: monospace; font-size: 18px; font-weight: 800; color: #f59e0b; letter-spacing: 1px; margin: 2px 0;">
+            ${mac}
+          </div>
+          <div style="font-size: 14px; font-weight: 700; color: #ffffff;">
+            ${planTitle} • R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </div>
+        </div>
+
+        ${qrCodeBase64 ? `
+          <div class="pix-qr-container">
+            <img src="data:image/png;base64,${qrCodeBase64}" alt="QR Code PIX Mercado Pago" class="pix-qr-image">
+          </div>
+          <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
+            Abra o app do seu banco e aponte a câmera para o QR Code acima.
+          </p>
+        ` : `
+          <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
+            Pague via <strong>PIX Copia e Cola</strong> no aplicativo do seu banco:
+          </p>
+        `}
+
+        <div class="pix-key-display" id="device-pix-copy-text" style="font-size: 11px; max-height: 60px; overflow-y: auto; user-select: all;">${qrCode}</div>
+
+        <button type="button" class="btn btn-outline" id="btn-copy-device-pix-code" style="margin-top: 10px; margin-bottom: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span>📋</span> Copiar Código PIX Copia e Cola
+        </button>
+
+        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+          <span class="pulse-indicator"></span>
+          <span style="font-size: 13px; color: #86efac; font-weight: 600;">
+            Aguardando pagamento no banco... Liberação automática do MAC
+          </span>
+        </div>
+
+        ${(isDemo || payData.notConfigured) ? `
+          <button type="button" class="btn btn-gold" id="btn-simulate-device-pix-success" style="width: 100%; margin-top: 14px; font-size: 14px; padding: 12px;">
+            ⚡ Simular Pagamento Aprovado Imediato (Teste)
+          </button>
+        ` : ''}
+
+        <div style="border-top: 1px solid #334155; padding-top: 14px; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeDevicePayModal()" style="width: 100%;">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Botão Copiar
+    document.getElementById('btn-copy-device-pix-code')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(qrCode);
+      const btn = document.getElementById('btn-copy-device-pix-code');
+      if (btn) btn.innerHTML = '<span>✅</span> Código PIX Copiado com Sucesso!';
+      setTimeout(() => {
+        if (btn) btn.innerHTML = '<span>📋</span> Copiar Código PIX Copia e Cola';
+      }, 3000);
+    });
+
+    // Função de Ativação Concluída
+    const handleDevicePaymentApproved = () => {
+      clearDevicePixPolling();
+      modalBox.innerHTML = `
+        <div style="padding: 36px 20px; text-align: center;">
+          <div style="font-size: 64px; margin-bottom: 12px;">🎉</div>
+          <h3 style="color: #22c55e; font-size: 24px; font-weight: 800; margin-bottom: 8px;">
+            Aparelho Ativado com Sucesso!
+          </h3>
+          <p style="color: #cbd5e1; font-size: 15px; margin-bottom: 8px;">
+            O dispositivo com MAC <strong style="color: #f59e0b; font-family: monospace;">${mac}</strong> foi ativado com a <strong>${planTitle}</strong>!
+          </p>
+          <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 24px;">
+            Basta abrir ou reiniciar o Vion Player na sua TV para começar a assistir.
+          </p>
+          <button type="button" class="btn btn-gold" onclick="closeDevicePayModal()" style="padding: 12px 36px; font-size: 15px;">
+            Concluir
+          </button>
+        </div>
+      `;
+    };
+
+    // Botão Simular (se disponível)
+    document.getElementById('btn-simulate-device-pix-success')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-simulate-device-pix-success');
+      if (btn) btn.innerHTML = '⏳ Confirmando liberação...';
+      try {
+        await fetch('/api/payment/simulate-approval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId })
+        });
+      } catch(e) {}
+      handleDevicePaymentApproved();
+    });
+
+    // Polling de verificação ao vivo no Mercado Pago
+    devicePixPollingTimer = setInterval(async () => {
+      try {
+        const checkRes = await fetch(`/api/payment/status?id=${encodeURIComponent(paymentId)}`);
+        const checkData = await checkRes.json();
+        if (checkData.success && checkData.status === 'approved') {
+          handleDevicePaymentApproved();
+        }
+      } catch(e) {}
+    }, 2500);
+  });
+};
 
 // ===================================================================
 // 4.5 SUB-ABAS DO PAINEL (DISPOSITIVOS, CRÉDITOS, LINKS, RETIRADAS, SUBS)
