@@ -19,11 +19,13 @@ New-Item -ItemType Directory -Force -Path $tempBuild | Out-Null
 New-Item -ItemType Directory -Force -Path "$tempBuild\css" | Out-Null
 New-Item -ItemType Directory -Force -Path "$tempBuild\js" | Out-Null
 
-Write-Host "[2/4] Copiando arquivos otimizados para Smart TV..." -ForegroundColor Yellow
+Write-Host "[2/4] Copiando arquivos e gerando assinatura digital (author-signature.xml)..." -ForegroundColor Yellow
+& node "$srcWeb\sign-tizen-wgt.js"
 Copy-Item "$srcWeb\config.xml" "$tempBuild\config.xml" -Force
 Copy-Item "$srcWeb\index.html" "$tempBuild\index.html" -Force
 Copy-Item "$srcWeb\icon.png" "$tempBuild\icon.png" -Force
 Copy-Item "$srcWeb\logo.png" "$tempBuild\logo.png" -Force
+Copy-Item "$srcWeb\author-signature.xml" "$tempBuild\author-signature.xml" -Force
 Copy-Item "$srcWeb\css\*" "$tempBuild\css\" -Recurse -Force
 Copy-Item "$srcWeb\js\*" "$tempBuild\js\" -Recurse -Force
 

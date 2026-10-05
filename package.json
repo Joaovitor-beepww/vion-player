@@ -6,7 +6,15 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["iptv", "smart-tv", "tizen", "webos"],
+  "keywords": [
+    "iptv",
+    "smart-tv",
+    "tizen",
+    "webos"
+  ],
   "author": "Vion Player Team",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "xml-crypto": "^6.3.3"
+  }
 }
