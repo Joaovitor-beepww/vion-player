@@ -84,38 +84,31 @@ body {
 
 .cinema-backdrop-layer {
   position: absolute;
-  inset: -15px;
+  inset: 0;
   background-size: cover;
   background-position: center 30%;
   background-repeat: no-repeat;
   opacity: 0;
-  transform: scale(1);
-  filter: saturate(1.05) contrast(1.05);
-  transition: opacity 1.8s ease-in-out, transform 10s ease-out;
-  will-change: opacity, transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  transition: opacity 1.2s ease-in-out;
+  pointer-events: none;
 }
 
 .cinema-backdrop-layer.active {
-  opacity: 0.38;
-  transform: scale(1.04);
+  opacity: 0.35;
 }
 
 /* Vinheta escura profissional: garante legibilidade impecável dos cards e texto */
 .cinema-backdrop-vignette {
   position: absolute;
   inset: 0;
-  background: 
-    linear-gradient(to bottom, rgba(10, 13, 20, 0.72) 0%, rgba(10, 13, 20, 0.42) 35%, rgba(10, 13, 20, 0.88) 80%, #0a0d14 100%),
-    radial-gradient(circle at 50% 50%, rgba(10, 13, 20, 0.45) 0%, rgba(10, 13, 20, 0.95) 100%);
+  background: rgba(10, 13, 20, 0.88);
   z-index: 1;
 }
 
 .ambient-cinema-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 15% 20%, rgba(250, 204, 21, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
-  z-index: 2;
+  display: none !important;
 }
 
 /* ===================================================================
@@ -170,16 +163,15 @@ body {
 }
 
 /* Feixes de Luz Dourada Neon de Fundo */
+/* Feixes de Luz Dourada de Fundo (Ultra leve & Acelerado por GPU) */
 .login-bg-beam-1 {
   position: absolute;
   width: 140%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 1), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.4), transparent);
   transform: rotate(-32deg);
   top: 15%;
   left: -20%;
-  filter: blur(1px);
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.6);
   pointer-events: none;
   z-index: 1;
 }
@@ -187,53 +179,40 @@ body {
 .login-bg-beam-2 {
   position: absolute;
   width: 140%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.5), transparent);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
   transform: rotate(-32deg);
   bottom: 20%;
   left: -20%;
-  filter: blur(1px);
-  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
   pointer-events: none;
   z-index: 1;
 }
 
 .login-glow-radial {
-  position: absolute;
-  top: 20%;
-  left: 15%;
-  width: 480px;
-  height: 480px;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
-  filter: blur(60px);
-  pointer-events: none;
-  z-index: 1;
+  display: none !important;
 }
 
-/* Grade de Posters Cinematográfica no Fundo */
+/* Grade de Posters Cinematográfica no Fundo (Leve sem mascaramento pesado) */
 .login-poster-grid-canvas {
   position: absolute;
   left: -5%;
   top: -10%;
   width: 48%;
   height: 120%;
-  opacity: 0.14;
+  opacity: 0.08;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   transform: rotate(-8deg);
   pointer-events: none;
   z-index: 1;
-  mask-image: radial-gradient(circle at 60% 50%, rgba(0,0,0,1) 30%, transparent 80%);
-  -webkit-mask-image: radial-gradient(circle at 60% 50%, rgba(0,0,0,1) 30%, transparent 80%);
 }
 
 .poster-tile {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #111827;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   height: 180px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
 }
 
 /* Container Principal Widescreen (16:9) */
@@ -383,12 +362,11 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(135deg, rgba(12, 18, 34, 0.95), rgba(8, 12, 22, 0.95));
+  background: #0c1220;
   border: 1.5px solid rgba(245, 158, 11, 0.35);
   border-radius: 18px;
   padding: 14px 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .login-qr-frame {
@@ -485,13 +463,11 @@ body {
 
 /* Coluna Direita: Card de Login Flutuante */
 .reseller-login-card {
-  background: rgba(11, 15, 25, 0.96);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1.5px solid rgba(245, 158, 11, 0.3);
-  border-radius: 24px;
+  background: #0b0f19;
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-radius: 20px;
   padding: 26px 30px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   width: 100%;
   max-width: 440px;
   margin: auto;
@@ -564,14 +540,16 @@ body {
   font-size: 13.5px;
   font-weight: 600;
   outline: none;
-  transition: all 0.2s;
+  transition: none !important;
   box-sizing: border-box;
 }
 
 .reseller-form-group input:focus,
 .reseller-form-group input.focused {
   border-color: #f59e0b !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3), 0 0 20px rgba(245, 158, 11, 0.25) !important;
+  outline: 2px solid #f59e0b !important;
+  outline-offset: 1px !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4) !important;
   background: #0c1220;
 }
 
@@ -2619,7 +2597,6 @@ body {
   display: flex !important;
   gap: 10px !important;
   overflow-x: auto !important;
-  scroll-behavior: smooth !important;
   flex: 1 !important;
   padding: 6px 2px !important;
   scrollbar-width: none !important;
@@ -6328,9 +6305,9 @@ html[data-platform="tv"] *,
   justify-content: center !important;
   gap: 12px !important;
   cursor: pointer !important;
-  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  transition: transform 0.04s linear !important;
   position: relative !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
 }
 
 .home-nav-tile .tile-icon {
@@ -6338,7 +6315,7 @@ html[data-platform="tv"] *,
   align-items: center !important;
   justify-content: center !important;
   color: #ffffff !important;
-  transition: transform 0.2s ease, color 0.2s ease !important;
+  transition: none !important;
 }
 
 .home-nav-tile .tile-title {
@@ -6347,21 +6324,21 @@ html[data-platform="tv"] *,
   color: #ffffff !important;
   letter-spacing: 0.5px !important;
   text-align: center !important;
-  transition: color 0.2s ease !important;
+  transition: none !important;
 }
 
-/* Foco no Tile da Home (Borda branca brilhante e elevação estilo Imagem 1) */
+/* Foco no Tile da Home (Borda branca nítida, resposta instantânea) */
 .home-nav-tile.focused,
 .home-nav-tile:hover {
   border: 2.5px solid #ffffff !important;
   background: #1c202d !important;
-  transform: scale(1.08) translateY(-4px) !important;
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 16px 36px rgba(0, 0, 0, 0.9) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.45) !important;
   z-index: 10 !important;
 }
 
 .home-nav-tile.focused .tile-icon {
-  transform: scale(1.1) !important;
+  transform: scale(1.05) !important;
   color: #ffffff !important;
 }
 
@@ -6385,7 +6362,7 @@ html[data-platform="tv"] *,
   align-items: center !important;
   gap: 8px !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: none !important;
 }
 
 .home-sub-btn.focused,
@@ -6393,7 +6370,8 @@ html[data-platform="tv"] *,
   background: #ffffff !important;
   color: #000000 !important;
   border-color: #ffffff !important;
-  transform: scale(1.05) !important;
+  transform: scale(1.04) !important;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.4) !important;
 }
 
 .home-sub-btn.btn-danger-sub.focused,
@@ -6401,6 +6379,7 @@ html[data-platform="tv"] *,
   background: #ef4444 !important;
   color: #ffffff !important;
   border-color: #ef4444 !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.5) !important;
 }
 
 
@@ -7303,4 +7282,118 @@ html[data-platform="tv"] *,
   50% { transform: scale(1.3); opacity: 1; }
   100% { transform: scale(0.9); opacity: 0.7; }
 }
+
+/* ===================================================================
+   TURBO PERFORMANCE & RESPOSTA INSTANTÂNEA PARA SMART TV / ANDROID TV
+   Elimina 100% dos gargalos de renderização, transições lentas e blurs
+   =================================================================== */
+
+/* 1. Desativação global de filtros e blurs pesados de GPU */
+*, *::before, *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  text-shadow: none !important;
+}
+
+/* 2. Zero-latency: Foco e troca de opções instantâneas no controle remoto */
+.focusable,
+.focused,
+.home-nav-tile,
+.home-sub-btn,
+.reseller-form-group input,
+.btn-reseller-login,
+.btn-skip-login,
+.vod-sidebar-item,
+.vod-poster-card,
+.vod-poster-thumb,
+.live-ch-row,
+.episode-item,
+.season-tab-btn,
+.action-btn-cinema,
+.live-cat-pill,
+.vod-pill {
+  transition: transform 0.04s linear, background-color 0.04s linear, border-color 0.04s linear !important;
+}
+
+/* 3. Foco de alto contraste e rápida renderização na GPU */
+.focusable.focused {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.45) !important;
+  z-index: 10 !important;
+}
+
+/* Foco nas opções da Home */
+.home-nav-tile.focused {
+  border: 2.5px solid #ffffff !important;
+  background: #1c202d !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.45) !important;
+  outline: none !important;
+}
+
+/* Foco nos campos de Login */
+.reseller-form-group input.focused,
+.reseller-form-group input:focus {
+  border-color: #f59e0b !important;
+  outline: 2.5px solid #f59e0b !important;
+  outline-offset: 1px !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4) !important;
+  background: #0f172a !important;
+}
+
+.btn-reseller-login.focused {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6) !important;
+}
+
+.btn-skip-login.focused {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Foco nos canais ao vivo */
+.live-ch-row.focused {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.live-ch-row.focused .live-ch-num,
+.live-ch-row.focused .live-ch-name {
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+.live-ch-row.focused .live-ch-sub {
+  color: #334155 !important;
+}
+
+/* Foco nos posters de Filmes e Séries */
+.vod-poster-card.focused {
+  transform: scale(1.04) !important;
+  outline: none !important;
+}
+
+.vod-poster-card.focused .vod-poster-thumb {
+  border: 2.5px solid #ffffff !important;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.5) !important;
+  transform: none !important;
+}
+
+/* 4. Aceleração de hardware em listas roláveis */
+.live-channels-scroll,
+.vod-categories-scroll,
+.vod-grid-container,
+.series-episodes-list {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: scroll-position;
+  scrollbar-width: none;
+}
+
 

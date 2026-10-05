@@ -625,7 +625,7 @@ const App = {
 
     if (this.backdropInterval) clearInterval(this.backdropInterval);
 
-    // Faz transição suave entre cenas de filmes a cada 8.5 segundos
+    // Faz transição suave entre cenas de filmes a cada 18 segundos (economia de CPU/GPU em TV)
     this.backdropInterval = setInterval(() => {
       this.backdropIndex = (this.backdropIndex + 1) % this.CINEMA_BACKDROPS.length;
       const nextUrl = this.CINEMA_BACKDROPS[this.backdropIndex];
@@ -642,7 +642,7 @@ const App = {
         nextLayer = temp;
       };
       img.src = nextUrl;
-    }, 8500);
+    }, 18000);
   },
 
   getActiveSectionData() {
@@ -2097,13 +2097,13 @@ const App = {
       if (isInitial) initialSeasonBtn = btn;
 
       btn.addEventListener('focus', () => {
-        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        btn.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
       });
 
       btn.addEventListener('click', () => {
         document.querySelectorAll('.season-tab-btn').forEach(b => b.classList.remove('active-season'));
         btn.classList.add('active-season');
-        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        btn.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
         this.renderSeriesEpisodes(sNum);
       });
 

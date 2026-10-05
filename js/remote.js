@@ -80,6 +80,15 @@ const RemoteControl = {
   handleKeyDown(e) {
     const code = e.keyCode;
 
+    // Proteção contra buffer/fila de repetição de teclas do controle remoto da TV
+    const now = performance.now();
+    const isArrow = this.KEYS.UP.includes(code) || this.KEYS.DOWN.includes(code) || this.KEYS.LEFT.includes(code) || this.KEYS.RIGHT.includes(code);
+    if (isArrow && this._lastArrowTime && (now - this._lastArrowTime < 45)) {
+      e.preventDefault();
+      return;
+    }
+    if (isArrow) this._lastArrowTime = now;
+
     // 1. Tecla Voltar do controle remoto (Android TV, webOS, Tizen, Fire TV, PC Escape/Backspace)
     const isBackKey = this.KEYS.BACK.includes(code);
     if (isBackKey) {
@@ -308,6 +317,38 @@ const RemoteControl = {
   navigateFast(currentEl, direction) {
     if (!currentEl) return null;
 
+    // 0. TELA DE LOGIN DO PROVEDOR (#screen-reseller-login)
+    if (currentEl.id === 'input-reseller-user') {
+      if (direction === 'DOWN') return document.getElementById('input-reseller-pass');
+      return null;
+    }
+    if (currentEl.id === 'input-reseller-pass') {
+      if (direction === 'UP') return document.getElementById('input-reseller-user');
+      if (direction === 'RIGHT') return document.getElementById('btn-toggle-login-pass');
+      if (direction === 'DOWN') return document.getElementById('input-reseller-code');
+      return null;
+    }
+    if (currentEl.id === 'btn-toggle-login-pass') {
+      if (direction === 'LEFT') return document.getElementById('input-reseller-pass');
+      if (direction === 'UP') return document.getElementById('input-reseller-user');
+      if (direction === 'DOWN') return document.getElementById('input-reseller-code');
+      return null;
+    }
+    if (currentEl.id === 'input-reseller-code') {
+      if (direction === 'UP') return document.getElementById('input-reseller-pass');
+      if (direction === 'DOWN') return document.getElementById('btn-do-reseller-login');
+      return null;
+    }
+    if (currentEl.id === 'btn-do-reseller-login') {
+      if (direction === 'UP') return document.getElementById('input-reseller-code');
+      if (direction === 'DOWN') return document.getElementById('btn-skip-login');
+      return null;
+    }
+    if (currentEl.id === 'btn-skip-login') {
+      if (direction === 'UP') return document.getElementById('btn-do-reseller-login');
+      return null;
+    }
+
     // 1. CANAIS AO VIVO (.live-ch-row)
     if (currentEl.classList.contains('live-ch-row')) {
       if (direction === 'DOWN') {
@@ -526,8 +567,22 @@ const RemoteControl = {
         return prev;
       }
       if (direction === 'DOWN') {
-        return document.getElementById('btn-top-reload') || document.querySelector('.home-sub-btn') || document.getElementById('btn-home-playlists');
+        const action = currentEl.getAttribute('data-action');
+        if (action === 'playlist' || action === 'settings') {
+          return document.getElementById('btn-top-exit') || document.getElementById('btn-top-reload');
+        }
+        return document.getElementById('btn-top-reload') || document.querySelector('.home-sub-btn');
       }
+      return null;
+    }
+    if (currentEl.id === 'btn-top-reload') {
+      if (direction === 'RIGHT') return document.getElementById('btn-top-exit');
+      if (direction === 'UP') return document.querySelector('.home-nav-tile[data-action="series"]') || document.querySelector('.home-nav-tile');
+      return null;
+    }
+    if (currentEl.id === 'btn-top-exit') {
+      if (direction === 'LEFT') return document.getElementById('btn-top-reload');
+      if (direction === 'UP') return document.querySelector('.home-nav-tile[data-action="settings"]') || document.querySelector('.home-nav-tile');
       return null;
     }
     if (currentEl.classList.contains('home-sub-btn') || currentEl.classList.contains('quick-action-pill')) {
@@ -690,11 +745,11 @@ const RemoteControl = {
       element.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
     }
 
-    // Auto-carregamento contínuo para navegação remota na grade VOD ao se aproximar do fim
+    // Auto-carregamento contínuo super leve para navegação VOD (O(1) sem varredura pesada do DOM)
     if (element.classList.contains('vod-poster-card') && window.App && typeof App.renderMoreVodItems === 'function') {
-      const allCards = document.querySelectorAll('.vod-poster-card');
-      const idx = Array.prototype.indexOf.call(allCards, element);
-      if (idx >= 0 && idx >= allCards.length - 15 && App.renderedCount < (App.filteredItems ? App.filteredItems.length : 0)) {
+      const next1 = element.nextElementSibling;
+      const next2 = next1 ? next1.nextElementSibling : null;
+      if (!next2 && App.renderedCount < (App.filteredItems ? App.filteredItems.length : 0)) {
         App.renderMoreVodItems();
       }
     }
