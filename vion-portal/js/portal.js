@@ -892,6 +892,13 @@ function initHubDashboard() {
     if (backdrop) backdrop.classList.remove('active');
   }
 
+  // Restaurar estado da sidebar no Desktop
+  const savedCollapsed = localStorage.getItem('vion_hub_sidebar_collapsed') === 'true';
+  const hubGrid = document.querySelector('.hub-body-grid');
+  if (savedCollapsed && window.innerWidth > 860 && hubGrid) {
+    hubGrid.classList.add('sidebar-collapsed');
+  }
+
   btnHamburger?.addEventListener('click', () => {
     const isMobile = window.innerWidth <= 860;
     if (isMobile) {
@@ -900,7 +907,10 @@ function initHubDashboard() {
       else openMobileSidebar();
     } else {
       const grid = document.querySelector('.hub-body-grid');
-      grid?.classList.toggle('sidebar-collapsed');
+      const isCollapsed = grid?.classList.toggle('sidebar-collapsed');
+      try {
+        localStorage.setItem('vion_hub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+      } catch(e) {}
     }
   });
 

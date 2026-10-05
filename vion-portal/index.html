@@ -473,46 +473,45 @@
         <!-- Corpo Principal: Sidebar + Conteúdo -->
         <div class="hub-body-grid">
           
-          <!-- Sidebar Lateral Preta (Imagem 4) -->
+          <!-- Sidebar Lateral Preta (Imagem 4 & Imagem 3 colapsada) -->
           <aside id="hub-sidebar" class="hub-sidebar">
             <nav class="hub-nav-menu">
-              <button type="button" class="hub-nav-btn active" data-sub="dashboard">
-                <span class="nav-icon">📊</span> Painel
+              <button type="button" class="hub-nav-btn active" data-sub="dashboard" title="Painel">
+                <span class="nav-icon">📊</span> <span class="nav-text">Painel</span>
               </button>
-              <button type="button" class="hub-nav-btn" data-sub="devices">
-                <span class="nav-icon">📱</span> Dispositivos
+              <button type="button" class="hub-nav-btn" data-sub="devices" title="Dispositivos">
+                <span class="nav-icon">📱</span> <span class="nav-text">Dispositivos</span>
               </button>
-              <button type="button" class="hub-nav-btn" data-sub="credits-history">
-                <span class="nav-icon">💳</span> Histórico de créditos
+              <button type="button" class="hub-nav-btn" data-sub="credits-history" title="Histórico de créditos">
+                <span class="nav-icon">💳</span> <span class="nav-text">Histórico de créditos</span>
               </button>
-              <button type="button" class="hub-nav-btn" data-sub="links">
-                <span class="nav-icon">🔗</span> Links de referência
+              <button type="button" class="hub-nav-btn" data-sub="links" title="Links de referência">
+                <span class="nav-icon">🔗</span> <span class="nav-text">Links de referência</span>
               </button>
-              <button type="button" class="hub-nav-btn" data-sub="withdrawals">
-                <span class="nav-icon">💰</span> Histórico de retiradas
+              <button type="button" class="hub-nav-btn" data-sub="withdrawals" title="Histórico de retiradas">
+                <span class="nav-icon">💰</span> <span class="nav-text">Histórico de retiradas</span>
               </button>
-              <button type="button" class="hub-nav-btn" data-sub="subs">
-                <span class="nav-icon">👥</span> Meus revendedores
+              <button type="button" class="hub-nav-btn" data-sub="subs" title="Meus revendedores">
+                <span class="nav-icon">👥</span> <span class="nav-text">Meus revendedores</span>
               </button>
               <!-- Exclusivo Administrador Geral -->
-              <button type="button" class="hub-nav-btn master-only" id="hub-nav-partners" data-sub="partnerships" style="display: none;">
-                <span class="nav-icon">🤝</span> Códigos de Parceria
+              <button type="button" class="hub-nav-btn master-only" id="hub-nav-partners" data-sub="partnerships" style="display: none;" title="Códigos de Parceria">
+                <span class="nav-icon">🤝</span> <span class="nav-text">Códigos de Parceria</span>
               </button>
               <!-- Voltar ao Portal do Usuário -->
-              <button type="button" class="hub-nav-btn btn-hub-return-portal" id="hub-nav-back-portal" onclick="switchTab('home')">
-                <span class="nav-icon">🏠</span> Voltar ao Portal
+              <button type="button" class="hub-nav-btn btn-hub-return-portal" id="hub-nav-back-portal" onclick="switchTab('home')" title="Voltar ao Portal">
+                <span class="nav-icon">🏠</span> <span class="nav-text">Voltar ao Portal</span>
               </button>
             </nav>
 
             <div class="hub-sidebar-footer">
               <p class="support-text">Para suporte clique no botão a...</p>
-              <a href="mailto:joaovitordc1010@gmail.com" class="support-mail-btn">
-                <span>✉️</span> joaovitordc1010@gmail.com
+              <a href="mailto:joaovitordc1010@gmail.com" class="support-mail-btn" title="joaovitordc1010@gmail.com">
+                <span>✉️</span> <span class="support-mail-text">joaovitordc1010@gmail.com</span>
               </a>
               <span class="version-tag">Referência/Revendedor v1.0.0</span>
             </div>
           </aside>
-          <div id="hub-sidebar-backdrop" class="hub-sidebar-backdrop"></div>
 
           <!-- Conteúdo Principal das Sub-Abas -->
           <main class="hub-main-stage">
@@ -869,6 +868,9 @@
 
           </main>
         </div>
+
+        <!-- Backdrop Mobile para gaveta lateral -->
+        <div id="hub-sidebar-backdrop" class="hub-sidebar-backdrop"></div>
 
       </div>
 

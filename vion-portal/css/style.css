@@ -2766,25 +2766,141 @@ body.is-reseller-mode .hub-body-grid {
   display: grid !important;
   grid-template-columns: 260px 1fr !important;
   overflow: hidden !important;
-  transition: grid-template-columns 0.25s ease !important;
+  transition: grid-template-columns 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Colapso suave no desktop quando o usuário clica no menu (100% de largura para o conteúdo) */
-body.is-reseller-mode .hub-body-grid.sidebar-collapsed {
-  grid-template-columns: 0px 1fr !important;
-}
-
-body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar {
-  display: none !important;
-}
-
-/* Sidebar no Desktop */
+/* Sidebar no Desktop - Modo Aberto / Normal (260px) */
 body.is-reseller-mode .hub-sidebar {
   height: 100% !important;
   width: 260px !important;
   border-radius: 0 !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
   background: #000000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: 20px 0 !important;
+  box-sizing: border-box !important;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease !important;
+}
+
+body.is-reseller-mode .hub-sidebar .hub-nav-menu {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 0 10px !important;
+  transition: all 0.2s ease !important;
+}
+
+body.is-reseller-mode .hub-sidebar .hub-nav-btn {
+  width: 100% !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+
+/* ===================================================================
+   SLIM ICON-RAIL TOGGLE (Quando o usuário clica no hambúrguer ☰)
+   Comportamento 100% idêntico ao Super Play (Imagem 3)
+   =================================================================== */
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed {
+  grid-template-columns: 68px 1fr !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar {
+  width: 68px !important;
+  min-width: 68px !important;
+  max-width: 68px !important;
+  padding: 16px 0 !important;
+  align-items: center !important;
+  overflow-x: hidden !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-nav-menu {
+  padding: 0 !important;
+  width: 100% !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-nav-btn {
+  width: 44px !important;
+  height: 44px !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+  text-align: center !important;
+  gap: 0 !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-nav-btn .nav-text {
+  display: none !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-nav-btn .nav-icon {
+  font-size: 20px !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-nav-btn.active {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Rodapé colapsado */
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar-footer {
+  padding: 12px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar-footer .support-text {
+  display: none !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar-footer .support-mail-btn {
+  padding: 0 !important;
+  width: 38px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  margin: 0 auto !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar-footer .support-mail-text {
+  display: none !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar-footer .version-tag {
+  font-size: 9px !important;
+  max-width: 58px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  margin: 4px auto 0 !important;
+  display: block !important;
+  color: #64748b !important;
 }
 
 /* Conteúdo Principal (Main Stage) - Nunca esmaga */
