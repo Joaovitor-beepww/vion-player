@@ -844,6 +844,9 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 14px;">
+          <button id="btn-check-update" class="pill-btn focusable" style="border-color: #38bdf8; color: #38bdf8; justify-content: center; width: 100%;" tabindex="0">
+            🔄 Verificar Atualizações do App (v1.1.9)
+          </button>
           <button id="btn-goto-login" class="pill-btn focusable" style="border-color: var(--primary-yellow); color: var(--primary-yellow); justify-content: center; width: 100%;" tabindex="0">
             🔑 Fazer Login / Conectar Provedor
           </button>
@@ -960,6 +963,52 @@
       <div class="tv-dialog-actions">
         <button id="btn-dialog-cancel" class="pill-btn focusable" tabindex="0">Cancelar</button>
         <button id="btn-dialog-confirm" class="pill-btn focusable" style="background: var(--danger); border-color: var(--danger);" tabindex="0">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Exclusivo de Atualização Automática da Smart TV (10-Foot UI) -->
+  <div id="modal-app-update" class="tv-dialog-overlay">
+    <div class="tv-update-card">
+      <div class="update-header">
+        <div class="update-logo-wrap">
+          <img src="logo.png" alt="Vion Player" class="update-logo-img">
+        </div>
+        <div class="update-badge-pill">
+          <span>🚀 NOVA VERSÃO DISPONÍVEL</span>
+        </div>
+      </div>
+
+      <div class="update-body">
+        <h2 id="update-new-version-title" class="update-title">Vion Player v1.1.9</h2>
+        <div class="update-version-diff">
+          <span class="curr-ver">Versão atual: <strong id="update-curr-ver">1.1.8</strong></span>
+          <span class="ver-arrow">➔</span>
+          <span class="new-ver">Nova versão: <strong id="update-target-ver">1.1.9</strong></span>
+        </div>
+        <div class="update-notes-box">
+          <span class="notes-label">Novidades desta versão:</span>
+          <p id="update-release-notes" class="notes-text">Nova tela inicial de luxo, QR Code de pareamento dinâmico e melhorias de desempenho.</p>
+        </div>
+
+        <!-- Barra de Progresso do Download (Ativada durante o download) -->
+        <div id="update-progress-section" class="update-progress-wrap" style="display: none;">
+          <p id="update-status-msg" class="update-status-msg">Baixando atualização... [5%]</p>
+          <div class="update-progress-track">
+            <div id="update-progress-fill" class="update-progress-fill" style="width: 5%;"></div>
+          </div>
+          <span id="update-percent-label" class="update-percent-label">5%</span>
+        </div>
+      </div>
+
+      <!-- Botões de Ação para Controle Remoto -->
+      <div id="update-actions-section" class="update-actions">
+        <button type="button" id="btn-confirm-update" class="update-btn-primary focusable" tabindex="0">
+          <span>🚀</span> <span>ATUALIZAR AGORA</span>
+        </button>
+        <button type="button" id="btn-dismiss-update" class="update-btn-secondary focusable" tabindex="0">
+          <span>Lembrar Mais Tarde</span>
+        </button>
       </div>
     </div>
   </div>

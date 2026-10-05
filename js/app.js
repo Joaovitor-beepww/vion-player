@@ -960,6 +960,11 @@ const App = {
       });
     });
 
+    // Verificar Atualizações manualmente na tela de Configurações
+    document.getElementById('btn-check-update')?.addEventListener('click', () => {
+      this.checkAndroidAppUpdate(true);
+    });
+
     // Diálogo Customizado
     document.getElementById('btn-dialog-cancel')?.addEventListener('click', () => {
       this.closeDialog();
@@ -2477,6 +2482,16 @@ const App = {
       return;
     }
 
+    // 1b. Fecha modal de atualização do app se estiver aberto (e não estiver baixando)
+    const updateModal = document.getElementById('modal-app-update');
+    if (updateModal && updateModal.classList.contains('active')) {
+      const progressSec = document.getElementById('update-progress-section');
+      if (!progressSec || progressSec.style.display === 'none') {
+        updateModal.classList.remove('active');
+        return;
+      }
+    }
+
     // 2. Fecha modal de filme ou série se estiver aberto
     const movieModal = document.getElementById('modal-movie-details');
     if (movieModal && movieModal.classList.contains('active')) {
@@ -2900,7 +2915,13 @@ const App = {
   // ===================================================================
   async checkAndroidAppUpdate(isManual = false) {
     if (!window.AndroidDevice || typeof window.AndroidDevice.downloadAndInstallUpdate !== 'function') {
-      if (isManual) this.showToast('Esta função está disponível no aplicativo Android TV.');
+      if (isManual) {
+        this.showUpdateDialog({
+          versionName: '1.1.9',
+          releaseNotes: 'Modo de teste: Nova tela inicial de luxo, QR Code de pareamento dinâmico e instalador automático de atualizações.',
+          apkUrl: 'https://vion.gestorpro.app.br/apk'
+        });
+      }
       return;
     }
 
@@ -2924,63 +2945,95 @@ const App = {
   },
 
   showUpdateDialog(data) {
-    const title = `🚀 Nova Versão Disponível (${data.versionName || 'Atualização'})`;
-    const desc = (data.releaseNotes || 'Uma nova versão do Vion Player está disponível com melhorias de velocidade e estabilidade.') + '\n\nDeseja atualizar agora diretamente pela TV?';
+    const modal = document.getElementById('modal-app-update');
+    if (!modal) return;
 
-    this.openDialog(title, desc, () => {
-      this.startAppUpdateDownload(data.apkUrl);
-    });
-  },
+    const currentVer = typeof window.AndroidDevice?.getAppVersionName === 'function'
+      ? window.AndroidDevice.getAppVersionName()
+      : '1.1.8';
 
-  startAppUpdateDownload(apkUrl) {
-    this.showUpdateModal();
-    if (window.AndroidDevice && typeof window.AndroidDevice.downloadAndInstallUpdate === 'function') {
-      window.AndroidDevice.downloadAndInstallUpdate(apkUrl);
+    const titleEl = document.getElementById('update-new-version-title');
+    const currEl = document.getElementById('update-curr-ver');
+    const targetEl = document.getElementById('update-target-ver');
+    const notesEl = document.getElementById('update-release-notes');
+    const btnConfirm = document.getElementById('btn-confirm-update');
+    const btnDismiss = document.getElementById('btn-dismiss-update');
+    const progressSec = document.getElementById('update-progress-section');
+    const actionsSec = document.getElementById('update-actions-section');
+
+    if (titleEl) titleEl.textContent = `Vion Player v${data.versionName || '1.1.9'}`;
+    if (currEl) currEl.textContent = `v${currentVer}`;
+    if (targetEl) targetEl.textContent = `v${data.versionName || '1.1.9'}`;
+    if (notesEl && data.releaseNotes) notesEl.textContent = data.releaseNotes;
+
+    if (progressSec) progressSec.style.display = 'none';
+    if (actionsSec) actionsSec.style.display = 'flex';
+
+    modal.classList.add('active');
+
+    // Foco D-Pad no botão de Atualizar
+    if (btnConfirm) {
+      if (typeof RemoteControl !== 'undefined' && RemoteControl.setFocus) {
+        RemoteControl.setFocus(btnConfirm);
+      } else {
+        btnConfirm.focus();
+      }
+      btnConfirm.onclick = () => {
+        this.startAppUpdateDownload(data.apkUrl || 'https://vion.gestorpro.app.br/apk');
+      };
+    }
+
+    if (btnDismiss) {
+      btnDismiss.onclick = () => {
+        modal.classList.remove('active');
+      };
     }
   },
 
-  showUpdateModal() {
-    let modal = document.getElementById('tv-update-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'tv-update-modal';
-      modal.className = 'tv-dialog-overlay active';
-      modal.innerHTML = `
-        <div class="tv-dialog-box" style="max-width: 500px; text-align: center;">
-          <div style="font-size: 42px; margin-bottom: 12px;">⬇️</div>
-          <h3 id="update-modal-title" style="color: var(--primary-yellow); font-size: 22px; margin-bottom: 10px;">Baixando Atualização...</h3>
-          <p id="update-modal-desc" style="font-size: 15px; color: #cbd5e1; margin-bottom: 20px;">Preparando o download da nova versão...</p>
-          <div style="background: rgba(255,255,255,0.1); border-radius: 999px; height: 12px; width: 100%; overflow: hidden; margin-bottom: 14px;">
-            <div id="update-progress-bar" style="background: var(--grad-gold); height: 100%; width: 5%; transition: width 0.3s ease;"></div>
-          </div>
-          <span id="update-progress-percent" style="font-size: 16px; font-weight: 800; color: #fff;">5%</span>
-        </div>
-      `;
-      document.body.appendChild(modal);
+  startAppUpdateDownload(apkUrl) {
+    const progressSec = document.getElementById('update-progress-section');
+    const actionsSec = document.getElementById('update-actions-section');
+    if (progressSec) progressSec.style.display = 'block';
+    if (actionsSec) actionsSec.style.display = 'none';
+
+    if (window.AndroidDevice && typeof window.AndroidDevice.downloadAndInstallUpdate === 'function') {
+      window.AndroidDevice.downloadAndInstallUpdate(apkUrl);
     } else {
-      modal.classList.add('active');
+      // Demonstração no navegador / teste
+      let fakePct = 5;
+      const fakeTimer = setInterval(() => {
+        fakePct += 15;
+        if (fakePct >= 100) {
+          clearInterval(fakeTimer);
+          this.onUpdateProgress(100, 'Download concluído! Abrindo instalador...');
+        } else {
+          this.onUpdateProgress(fakePct, `Baixando atualização... [${fakePct}%]`);
+        }
+      }, 350);
     }
   },
 
   onUpdateProgress(percent, message) {
-    const bar = document.getElementById('update-progress-bar');
-    const txt = document.getElementById('update-progress-percent');
-    const desc = document.getElementById('update-modal-desc');
-    if (bar) bar.style.width = Math.min(100, Math.max(0, percent)) + '%';
-    if (txt) txt.textContent = percent + '%';
-    if (desc && message) desc.textContent = message;
-    if (percent >= 100) {
-      const title = document.getElementById('update-modal-title');
-      if (title) title.textContent = 'Instalando Atualização...';
+    const fill = document.getElementById('update-progress-fill');
+    const statusMsg = document.getElementById('update-status-msg');
+    const percentLabel = document.getElementById('update-percent-label');
+
+    const cleanPct = Math.min(100, Math.max(0, percent));
+    if (fill) fill.style.width = cleanPct + '%';
+    if (percentLabel) percentLabel.textContent = cleanPct + '%';
+    if (statusMsg && message) statusMsg.textContent = message;
+
+    if (cleanPct >= 100) {
+      if (statusMsg) statusMsg.textContent = '🎉 Download concluído! Iniciando instalação...';
       setTimeout(() => {
-        const modal = document.getElementById('tv-update-modal');
+        const modal = document.getElementById('modal-app-update');
         if (modal) modal.classList.remove('active');
-      }, 3000);
+      }, 4000);
     }
   },
 
   onUpdateError(error) {
-    const modal = document.getElementById('tv-update-modal');
+    const modal = document.getElementById('modal-app-update');
     if (modal) modal.classList.remove('active');
     this.showToast('⚠️ ' + error);
   }
