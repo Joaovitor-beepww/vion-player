@@ -2,7 +2,7 @@
 <widget xmlns="http://www.w3.org/ns/widgets" 
         xmlns:tizen="http://tizen.org/ns/widgets" 
         id="http://vionplayer.app/tizen" 
-        version="1.0.0" 
+        version="1.1.8" 
         viewmodes="maximized">
     <tizen:application id="vionplayer.VionPlayer" package="vionplayer" exec="index.html" screen-orientation="landscape"/>
     <content src="index.html"/>
