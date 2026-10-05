@@ -824,18 +824,10 @@ function initCinemaLogin() {
   const passInput = document.getElementById('cinema-pass-input');
   const alertBox = document.getElementById('cinema-login-alert');
   const linkToReg = document.getElementById('link-goto-register-from-login');
-  const btnQuickAdmin = document.getElementById('btn-cinema-admin-quick');
 
   linkToReg?.addEventListener('click', (e) => {
     e.preventDefault();
     showResellerView('register');
-  });
-
-  // Acesso rápido como Administrador Geral
-  btnQuickAdmin?.addEventListener('click', () => {
-    if (userInput) userInput.value = MASTER_ADMIN_EMAIL;
-    if (passInput) passInput.value = 'admin123';
-    form?.dispatchEvent(new Event('submit'));
   });
 
   form?.addEventListener('submit', async (e) => {
@@ -844,13 +836,11 @@ function initCinemaLogin() {
     const pass = (passInput?.value || '').trim();
 
     if (!user || !pass) {
-      showAlert(alertBox, 'Informe usuário e senha.', 'error');
+      showAlert(alertBox, 'Informe seu e-mail e senha cadastrados.', 'error');
       return;
     }
 
     showAlert(alertBox, '🔄 Autenticando revendedor...', 'info');
-
-    const isMaster = (user.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase());
 
     try {
       const res = await fetch('/api/reseller/login', {
@@ -859,24 +849,32 @@ function initCinemaLogin() {
         body: JSON.stringify({ username: user, password: pass })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.reseller) saveResellerSession(data.reseller);
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        showAlert(alertBox, data?.error || 'E-mail ou senha incorretos.', 'error');
+        return;
       }
+
+      if (data.reseller) {
+        saveResellerSession(data.reseller);
+      }
+
+      const isMaster = !!data.isMaster;
+      localStorage.setItem('vion_reseller_auth', 'true');
+      localStorage.setItem('vion_reseller_user', user);
+      localStorage.setItem('vion_is_master_admin', isMaster ? 'true' : 'false');
+
+      showAlert(alertBox, isMaster ? '✔ Bem-vindo, Administrador Geral!' : '✔ Login autorizado!', 'success');
+
+      setTimeout(() => {
+        if (alertBox) alertBox.style.display = 'none';
+        showResellerView('dashboard');
+      }, 500);
+
     } catch(err) {
-      console.warn('Auth local fallback:', err);
+      showAlert(alertBox, 'Erro ao conectar ao servidor de login. Verifique sua conexão.', 'error');
     }
-
-    localStorage.setItem('vion_reseller_auth', 'true');
-    localStorage.setItem('vion_reseller_user', user);
-    localStorage.setItem('vion_is_master_admin', isMaster ? 'true' : 'false');
-
-    showAlert(alertBox, isMaster ? '✔ Bem-vindo, Administrador Geral!' : '✔ Login autorizado!', 'success');
-
-    setTimeout(() => {
-      if (alertBox) alertBox.style.display = 'none';
-      showResellerView('dashboard');
-    }, 500);
   });
 }
 
