@@ -149,6 +149,9 @@ const App = {
         clearTimeout(timer);
         if (res.ok) {
           const data = await res.json();
+          if (data && data.device) {
+            this.handleDeviceSyncData(data.device);
+          }
           if (data && Array.isArray(data.playlists) && data.playlists.length > 0) {
             localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify(data.playlists));
             localStorage.setItem('vion_has_playlist', 'true');
@@ -209,7 +212,11 @@ const App = {
       this.updateDashboardCounters();
       this.setSplashProgress(100, 'Bem-vindo ao Vion Player!', 'Pronto');
       await new Promise(r => setTimeout(r, 350));
-      this.goToScreen('home');
+      if (this.isDeviceExpired()) {
+        this.goToScreen('expired');
+      } else {
+        this.goToScreen('home');
+      }
 
       // Em segundo plano silencioso, verifica se houve alteração de lista no portal
       setTimeout(() => this.checkPortalUpdatesSilently(), 4000);
@@ -240,8 +247,12 @@ const App = {
     // 3. Somente se não houver cache nem lista vinculada no portal, vai para login
     this.setSplashProgress(100, 'Nenhuma playlist vinculada.', 'Redirecionando...');
     await new Promise(r => setTimeout(r, 600));
-    this.goToScreen('reseller-login');
-    this.startPortalAutoPolling();
+    if (this.isDeviceExpired()) {
+      this.goToScreen('expired');
+    } else {
+      this.goToScreen('reseller-login');
+      this.startPortalAutoPolling();
+    }
   },
 
   async checkPortalUpdatesSilently() {
@@ -356,18 +367,137 @@ const App = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mac, key })
+        }).then(r => r.json()).then(data => {
+          if (data && data.device) this.handleDeviceSyncData(data.device);
         }).catch(() => {});
       } catch (e) {}
     }
   },
 
+  handleDeviceSyncData(device) {
+    if (!device) return;
+    const isLicenseActive = !!(device.active || device.activated);
+    const plan = device.plan || (device.expiresAt ? 'anual' : 'vitalicio');
+    const expiry = device.expiryDate || device.expiresAt || null;
+
+    localStorage.setItem('vion_license_active', isLicenseActive ? 'true' : 'false');
+    localStorage.setItem('vion_license_plan', plan);
+    if (expiry) localStorage.setItem('vion_license_expiry', expiry.toString());
+    if (device.registeredAt) localStorage.setItem('vion_registered_at', device.registeredAt.toString());
+
+    this.updateTrialDisplay();
+  },
+
+  isDeviceExpired() {
+    const isLicenseActive = localStorage.getItem('vion_license_active') === 'true';
+    if (isLicenseActive) {
+      const plan = localStorage.getItem('vion_license_plan');
+      if (plan === 'vitalicio' || plan === 'lifetime') return false;
+      const expiry = parseInt(localStorage.getItem('vion_license_expiry'), 10);
+      if (expiry && !isNaN(expiry) && Date.now() > expiry) return true;
+      return false;
+    }
+
+    const trial = this.getTrialInfo();
+    return !!trial.expired;
+  },
+
+  async verifyLicenseNow(showToasts = true) {
+    const mac = localStorage.getItem('vion_mac_address');
+    if (!mac) return false;
+    if (showToasts) this.showToast('🔄 Consultando status da licença no servidor...');
+    const endpoints = [
+      `https://vion.gestorpro.app.br/api/device?mac=${encodeURIComponent(mac)}`,
+      `/api/device?mac=${encodeURIComponent(mac)}`,
+      `http://192.168.1.197:3000/api/device?mac=${encodeURIComponent(mac)}`,
+      `http://localhost:3000/api/device?mac=${encodeURIComponent(mac)}`
+    ];
+
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.device) {
+            this.handleDeviceSyncData(data.device);
+            if (!this.isDeviceExpired()) {
+              if (this._expiredPollTimer) clearInterval(this._expiredPollTimer);
+              this.showToast('🎉 Parabéns! Aparelho ativado com sucesso!');
+              this.goToScreen('home');
+              return true;
+            }
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (showToasts) {
+      this.showToast('⚠️ Licença ainda não ativada. Conclua o pagamento em vion.gestorpro.app.br');
+    }
+    return false;
+  },
+
+  startExpiredScreenPolling() {
+    if (this._expiredPollTimer) clearInterval(this._expiredPollTimer);
+    this._expiredPollTimer = setInterval(async () => {
+      if (this.currentScreen !== 'expired') {
+        clearInterval(this._expiredPollTimer);
+        return;
+      }
+      await this.verifyLicenseNow(false);
+    }, 3500);
+  },
+
   getTrialInfo() {
+    const isLicenseActive = localStorage.getItem('vion_license_active') === 'true';
+    if (isLicenseActive) {
+      const plan = localStorage.getItem('vion_license_plan');
+      if (plan === 'vitalicio' || plan === 'lifetime') {
+        return {
+          expired: false,
+          days: 99999,
+          hours: 0,
+          minutes: 0,
+          dateFormatted: 'Vitalícia',
+          text: '⭐ Licença Vitalícia Ativa'
+        };
+      }
+      const expiry = parseInt(localStorage.getItem('vion_license_expiry'), 10);
+      if (expiry && !isNaN(expiry)) {
+        const expDate = new Date(expiry);
+        const pad = (n) => String(n).padStart(2, '0');
+        const dateFormatted = `${pad(expDate.getDate())}.${pad(expDate.getMonth() + 1)}.${expDate.getFullYear()}`;
+        const remainingMs = expiry - Date.now();
+        if (remainingMs <= 0) {
+          return {
+            expired: true,
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            dateFormatted,
+            text: 'Licença Anual Expirada • Renovar'
+          };
+        }
+        return {
+          expired: false,
+          days: Math.floor(remainingMs / (24 * 60 * 60 * 1000)),
+          hours: 0,
+          minutes: 0,
+          dateFormatted,
+          text: `Licença Anual (até ${dateFormatted})`
+        };
+      }
+    }
+
     const mac = localStorage.getItem('vion_mac_address') || 'default';
     const trialKey = `vion_trial_expire_${mac}`;
     let expireTimestamp = parseInt(localStorage.getItem(trialKey), 10);
 
-    // Se ainda não tiver data gravada para este MAC/aparelho, inicia o teste de 7 dias fixo a partir de agora
-    if (!expireTimestamp || isNaN(expireTimestamp)) {
+    const registeredAt = parseInt(localStorage.getItem('vion_registered_at'), 10);
+    if (registeredAt && !isNaN(registeredAt)) {
+      expireTimestamp = registeredAt + (7 * 24 * 60 * 60 * 1000);
+      localStorage.setItem(trialKey, expireTimestamp.toString());
+    } else if (!expireTimestamp || isNaN(expireTimestamp)) {
       expireTimestamp = Date.now() + (7 * 24 * 60 * 60 * 1000);
       localStorage.setItem(trialKey, expireTimestamp.toString());
     }
@@ -388,7 +518,7 @@ const App = {
         hours: 0,
         minutes: 0,
         dateFormatted,
-        text: 'Expirado • Ativar Licença'
+        text: 'Teste Expirado • Ativar Licença'
       };
     }
 
@@ -413,7 +543,7 @@ const App = {
       hours: totalHours,
       minutes: totalMinutes,
       dateFormatted,
-      text: `${dateFormatted} (${countdownText})`
+      text: `Teste Grátis: ${countdownText}`
     };
   },
 
@@ -429,6 +559,13 @@ const App = {
   updateDeviceDisplay(mac, key) {
     document.querySelectorAll('.val-mac-address').forEach(el => el.textContent = mac);
     document.querySelectorAll('.val-device-key').forEach(el => el.textContent = key);
+    if (mac) {
+      const qrImg = document.querySelector('.expired-qr-code-img');
+      if (qrImg) {
+        const portalUrl = `https://vion.gestorpro.app.br/?mac=${encodeURIComponent(mac)}#activation`;
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(portalUrl)}`;
+      }
+    }
     this.updateTrialDisplay();
   },
 
@@ -621,7 +758,32 @@ const App = {
     });
 
     document.getElementById('btn-back-from-settings')?.addEventListener('click', () => {
-      this.goToScreen('home');
+      if (this.isDeviceExpired()) {
+        this.goToScreen('expired');
+      } else {
+        this.goToScreen('home');
+      }
+    });
+
+    // Botões da Tela de Licença Expirada (#screen-expired)
+    document.getElementById('btn-expired-check')?.addEventListener('click', () => {
+      this.verifyLicenseNow(true);
+    });
+
+    document.getElementById('btn-expired-settings')?.addEventListener('click', () => {
+      this.goToScreen('settings');
+    });
+
+    document.getElementById('btn-expired-exit')?.addEventListener('click', () => {
+      this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
+        if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
+          AndroidDevice.exitApp();
+          return;
+        }
+        if (window.tizen) { try { tizen.application.getCurrentApplication().exit(); } catch(e) {} return; }
+        if (window.webOS) { try { window.close(); } catch(e) {} return; }
+        window.close();
+      });
     });
 
     document.getElementById('btn-reload-playlists-tv')?.addEventListener('click', () => {
@@ -1024,7 +1186,11 @@ const App = {
 
         await new Promise(r => setTimeout(r, 600));
         this.hideSyncProgress();
-        this.goToScreen('home');
+        if (this.isDeviceExpired()) {
+          this.goToScreen('expired');
+        } else {
+          this.goToScreen('home');
+        }
 
         return parsed;
       })
@@ -1123,6 +1289,11 @@ const App = {
   // NAVEGAÇÃO E ABERTURA DE SEÇÕES (LIVE TV vs FILMES vs SÉRIES)
   // ===================================================================
   openSection(sectionType) {
+    if (this.isDeviceExpired()) {
+      this.goToScreen('expired');
+      return;
+    }
+
     if (!this.playlistData || !this.playlistData.channels || this.playlistData.channels.length === 0) {
       this.showToast('Nenhuma lista ativa. Adicione em Playlists ou conecte um provedor.');
       this.openPlaylistsManager();
@@ -2198,6 +2369,15 @@ const App = {
     }
     this.currentScreen = screenId;
 
+    if (screenId === 'expired') {
+      this.startExpiredScreenPolling();
+    } else {
+      if (this._expiredPollTimer) {
+        clearInterval(this._expiredPollTimer);
+        this._expiredPollTimer = null;
+      }
+    }
+
     // Economia de CPU e GPU na Smart TV: Pausa o slideshow de 1080p quando fora da tela Home
     if (screenId === 'home') {
       if (!this.backdropInterval) {
@@ -2298,13 +2478,31 @@ const App = {
       return;
     }
 
-    // 7. Se estiver em playlists, configurações ou login, volta para o início
-    if (this.currentScreen === 'playlists' || this.currentScreen === 'settings' || this.currentScreen === 'reseller-login') {
-      this.goToScreen('home');
+    // 7. Se estiver na tela de bloqueio por expiração, pede confirmação para sair
+    if (this.currentScreen === 'expired') {
+      this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
+        if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
+          AndroidDevice.exitApp();
+          return;
+        }
+        if (window.tizen) { try { tizen.application.getCurrentApplication().exit(); } catch(e) {} return; }
+        if (window.webOS) { try { window.close(); } catch(e) {} return; }
+        window.close();
+      });
       return;
     }
 
-    // 8. Se estiver na home, pede confirmação para sair
+    // 8. Se estiver em playlists, configurações ou login, volta para o início (ou expired se expirado)
+    if (this.currentScreen === 'playlists' || this.currentScreen === 'settings' || this.currentScreen === 'reseller-login') {
+      if (this.isDeviceExpired()) {
+        this.goToScreen('expired');
+      } else {
+        this.goToScreen('home');
+      }
+      return;
+    }
+
+    // 9. Se estiver na home, pede confirmação para sair
     if (this.currentScreen === 'home') {
       this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
         if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {

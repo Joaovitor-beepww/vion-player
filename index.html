@@ -756,6 +756,97 @@
   </div>
 
   <!-- ===================================================================
+       TELA 9: BLOQUEIO DE LICENÇA / PERÍODO DE TESTE ENCERRADO (TV 10-FOOT)
+       =================================================================== -->
+  <div id="screen-expired" class="screen">
+    <div class="expired-screen-wrap">
+      
+      <!-- Topo com Logo e Indicador de Bloqueio -->
+      <div class="expired-top-header">
+        <div class="expired-brand-box">
+          <img src="logo.png" alt="Vion Player" class="expired-brand-logo">
+          <div class="expired-brand-text">
+            <span class="expired-brand-vion">VION</span>
+            <span class="expired-brand-player">PLAYER</span>
+          </div>
+        </div>
+        <div class="expired-badge-pill">
+          <span class="expired-lock-icon">🔒</span>
+          <span>PERÍODO DE TESTE ENCERRADO</span>
+        </div>
+      </div>
+
+      <!-- Card Principal Glassmorphic -->
+      <div class="expired-card-content">
+        
+        <div class="expired-card-left">
+          <h2 class="expired-main-title">Ative sua Licença para Continuar</h2>
+          <p class="expired-main-desc">
+            Seus 7 dias de avaliação gratuita do Vion Player chegaram ao fim. Para continuar assistindo todos os canais ao vivo, filmes e séries em alta definição na sua Smart TV, ative sua licença através do portal oficial:
+          </p>
+
+          <div class="expired-device-box">
+            <div class="expired-dev-col">
+              <span class="expired-dev-label">ENDEREÇO MAC DA TV:</span>
+              <strong class="expired-dev-mac val-mac-address">00:00:00:00:00:00</strong>
+            </div>
+            <div class="expired-dev-divider"></div>
+            <div class="expired-dev-col">
+              <span class="expired-dev-label">DEVICE KEY:</span>
+              <strong class="expired-dev-key val-device-key">----</strong>
+            </div>
+          </div>
+
+          <div class="expired-plans-summary">
+            <div class="expired-plan-chip">
+              <span class="chip-badge">12 MESES</span>
+              <span class="chip-name">Licença Anual</span>
+              <strong class="chip-price">R$ 20,00</strong>
+            </div>
+            <div class="expired-plan-chip featured">
+              <span class="chip-badge gold">MAIS VANTAJOSO</span>
+              <span class="chip-name">Licença Vitalícia</span>
+              <strong class="chip-price">R$ 30,00</strong>
+            </div>
+          </div>
+
+          <div class="expired-instructions-row">
+            <span>Acesse pelo celular ou computador:</span>
+            <strong class="expired-portal-url">vion.gestorpro.app.br</strong>
+            <span class="expired-pix-tag">⚡ Liberação Imediata via PIX</span>
+          </div>
+
+          <!-- Botões de Ação para o Controle Remoto -->
+          <div class="expired-actions-row">
+            <button type="button" id="btn-expired-check" class="pill-btn focusable expired-btn-primary" tabindex="0">
+              <span>🔄</span> Verificar Ativação Agora
+            </button>
+            <button type="button" id="btn-expired-settings" class="pill-btn focusable" tabindex="0">
+              <span>⚙️</span> Configurações
+            </button>
+            <button type="button" id="btn-expired-exit" class="pill-btn focusable btn-danger-sub" tabindex="0">
+              <span>🚪</span> Sair
+            </button>
+          </div>
+        </div>
+
+        <div class="expired-card-right">
+          <div class="expired-qr-frame">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https%3A%2F%2Fvion.gestorpro.app.br%2F%23activation" alt="QR Code Ativação" class="expired-qr-code-img">
+            <p class="expired-qr-hint">Aponte a câmera do celular para ativar agora via PIX</p>
+          </div>
+          <div class="expired-auto-check-hint">
+            <span class="pulse-indicator-small"></span>
+            <span>Aguardando pagamento... A TV desbloqueia automaticamente.</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================================================================
        MODAL DE CONFIRMAÇÃO DE SAÍDA (CUSTOMIZADO PARA TV)
        =================================================================== -->
   <div id="modal-tv-dialog" class="tv-dialog-overlay">
