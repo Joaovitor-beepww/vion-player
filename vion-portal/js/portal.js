@@ -68,6 +68,15 @@ function initNavigation() {
       }
     });
 
+    // Sincroniza links do menu mobile
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+      if (link.getAttribute('data-tab') === targetTab) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
     sections.forEach(sec => {
       if (sec.id === `section-${targetTab}`) {
         sec.classList.add('active');
@@ -75,6 +84,13 @@ function initNavigation() {
         sec.classList.remove('active');
       }
     });
+
+    // Fecha menu gaveta mobile se estiver aberto
+    const mobileDrawer = document.getElementById('mobile-nav-drawer');
+    const mobileOverlay = document.getElementById('mobile-nav-overlay');
+    mobileDrawer?.classList.remove('open');
+    mobileOverlay?.classList.remove('open');
+    document.body.classList.remove('mobile-menu-open');
 
     window.location.hash = targetTab;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -85,6 +101,37 @@ function initNavigation() {
       e.preventDefault();
       const tab = link.getAttribute('data-tab');
       switchTab(tab);
+    });
+  });
+
+  // Controle do Menu Gaveta Mobile
+  const mobileDrawer = document.getElementById('mobile-nav-drawer');
+  const mobileOverlay = document.getElementById('mobile-nav-overlay');
+  const mobileToggle = document.getElementById('btn-mobile-toggle');
+  const mobileClose = document.getElementById('btn-mobile-close');
+
+  const closeMobileMenu = () => {
+    mobileDrawer?.classList.remove('open');
+    mobileOverlay?.classList.remove('open');
+    document.body.classList.remove('mobile-menu-open');
+  };
+
+  const openMobileMenu = () => {
+    mobileDrawer?.classList.add('open');
+    mobileOverlay?.classList.add('open');
+    document.body.classList.add('mobile-menu-open');
+  };
+
+  mobileToggle?.addEventListener('click', openMobileMenu);
+  mobileClose?.addEventListener('click', closeMobileMenu);
+  mobileOverlay?.addEventListener('click', closeMobileMenu);
+
+  document.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tab = link.getAttribute('data-tab');
+      if (tab) switchTab(tab);
+      closeMobileMenu();
     });
   });
 

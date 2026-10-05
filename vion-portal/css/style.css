@@ -3178,3 +3178,510 @@ body.is-reseller-mode .hub-main-stage {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
+/* ===================================================================
+   MENU GAVETA MOBILE (DRAWER) & BOTÃO HAMBURGER
+   =================================================================== */
+.btn-mobile-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 9px;
+  z-index: 105;
+  transition: all 0.2s ease;
+}
+
+.btn-mobile-toggle:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.hamburger-bar {
+  width: 100%;
+  height: 2.5px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 290px;
+  max-width: 85vw;
+  height: 100vh;
+  background: rgba(10, 13, 20, 0.98);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-left: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8);
+  z-index: 2100;
+  transform: translateX(105%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  box-sizing: border-box;
+}
+
+.mobile-nav-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 20px;
+}
+
+.btn-mobile-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 26px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.btn-mobile-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.mobile-nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-link span {
+  font-size: 18px;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.08));
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.mobile-nav-link.highlight {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.mobile-drawer-footer {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-lang-select {
+  width: 100% !important;
+  background: #0f172a !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+  border-radius: 10px !important;
+}
+
+.mobile-nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-nav-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.mobile-menu-open {
+  overflow: hidden !important;
+}
+
+/* ===================================================================
+   RESPONSIVIDADE COMPLETA PARA CELULAR & TABLET (MOBILE OVERHAUL)
+   =================================================================== */
+@media (max-width: 868px) {
+  /* Prevenção de quebra e rolagem horizontal */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  /* 1. Header & Barra Superior */
+  .announcement-bar {
+    padding: 7px 12px !important;
+    font-size: 11.5px !important;
+    text-align: center !important;
+    gap: 6px !important;
+  }
+  .announcement-bar svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .navbar {
+    padding: 10px 16px !important;
+    height: 60px !important;
+  }
+
+  .brand-logo {
+    gap: 10px !important;
+  }
+  .brand-logo-img {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+  }
+  .brand-text {
+    font-size: 18px !important;
+  }
+
+  /* Oculta os menus desktop horizontais */
+  .nav-links,
+  .nav-right {
+    display: none !important;
+  }
+
+  /* Exibe o botão Hamburger */
+  .btn-mobile-toggle {
+    display: flex !important;
+  }
+
+  /* 2. Layout Principal */
+  .main-wrapper {
+    padding: 18px 14px !important;
+  }
+
+  /* 3. Hero Section (Home) */
+  .hero-content {
+    padding: 8px 0 !important;
+    max-width: 100% !important;
+  }
+  .hero-logo-wrap {
+    margin-bottom: 14px !important;
+  }
+  .hero-logo-img {
+    width: 85px !important;
+    height: 85px !important;
+    border-radius: 18px !important;
+    margin-bottom: 10px !important;
+  }
+  .hero-title {
+    font-size: 25px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 12px !important;
+    letter-spacing: -0.3px !important;
+    padding: 0 4px !important;
+  }
+  .hero-subtitle {
+    font-size: 14.5px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 10px !important;
+    padding: 0 6px !important;
+  }
+  .hero-desc {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    margin-bottom: 22px !important;
+    padding: 0 6px !important;
+  }
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 340px !important;
+    margin: 0 auto !important;
+    gap: 10px !important;
+  }
+  .hero-buttons .btn {
+    width: 100% !important;
+    padding: 14px 18px !important;
+    font-size: 14.5px !important;
+    border-radius: 12px !important;
+  }
+  .hero-platforms {
+    margin-top: 26px !important;
+    padding-top: 18px !important;
+  }
+  .platforms-label {
+    font-size: 10.5px !important;
+    margin-bottom: 10px !important;
+  }
+  .platform-chips {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 340px !important;
+    margin: 0 auto !important;
+  }
+  .platform-chip {
+    padding: 7px 10px !important;
+    font-size: 11.5px !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+  .platform-chip svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* 4. Login & Enviar Playlist */
+  .login-card {
+    padding: 24px 16px !important;
+    max-width: 100% !important;
+    border-radius: 16px !important;
+    margin: 10px auto !important;
+  }
+  .login-card h2 {
+    font-size: 22px !important;
+    margin-bottom: 20px !important;
+  }
+  .form-group input {
+    font-size: 15px !important;
+    padding: 12px 14px !important;
+  }
+
+  /* 5. Gerenciar Playlists */
+  .manage-card {
+    padding: 20px 14px !important;
+    border-radius: 16px !important;
+    max-width: 100% !important;
+  }
+  .manage-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .manage-header h2 {
+    font-size: 20px !important;
+  }
+  .playlist-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  .playlist-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+
+  /* 6. Preços e Ativação */
+  .portal-card {
+    padding: 22px 14px !important;
+    border-radius: 16px !important;
+    max-width: 100% !important;
+  }
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .pricing-card {
+    padding: 22px 18px !important;
+    border-radius: 16px !important;
+  }
+  .pricing-card.featured {
+    transform: none !important;
+  }
+
+  /* 7. Área do Revendedor - Cadastro de Parceiro */
+  .partner-flow-box {
+    padding: 22px 14px !important;
+    border-radius: 16px !important;
+    max-width: 100% !important;
+    margin: 10px auto !important;
+  }
+  .partner-header-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .partner-form-title {
+    font-size: 19px !important;
+    text-align: center !important;
+  }
+  .step-wizard-indicator {
+    margin: 16px auto !important;
+  }
+  .partner-underline-group input {
+    font-size: 14.5px !important;
+    padding: 10px 8px !important;
+  }
+  .partner-reg-footer {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .partner-reg-footer .btn-partner-pill {
+    width: 100% !important;
+    padding: 14px !important;
+    font-size: 15px !important;
+  }
+
+  /* 8. Área do Revendedor - Login Cinema */
+  .cinema-login-wrap {
+    padding: 14px 10px !important;
+    min-height: auto !important;
+    justify-content: center !important;
+  }
+  .cinema-login-card,
+  body.is-reseller-mode .cinema-login-card {
+    padding: 26px 16px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+  }
+  .cinema-card-logo {
+    margin-bottom: 18px !important;
+  }
+  .cinema-card-logo .cinema-logo-img {
+    width: 65px !important;
+    height: 65px !important;
+  }
+  .cinema-input-box input {
+    font-size: 14.5px !important;
+    padding: 12px 12px 12px 42px !important;
+  }
+  .btn-cinema-login,
+  .btn-cinema-admin {
+    width: 100% !important;
+    padding: 14px !important;
+    font-size: 14.5px !important;
+  }
+
+  /* 9. Área do Revendedor - Painel Hub */
+  .reseller-hub-layout {
+    padding: 0 !important;
+  }
+  .hub-topbar {
+    padding: 10px 12px !important;
+    height: auto !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  .hub-topbar-left {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .hub-topbar-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .hub-brand-title {
+    font-size: 16px !important;
+  }
+  .hub-body-grid,
+  body.is-reseller-mode .hub-body-grid {
+    grid-template-columns: 1fr !important;
+    padding: 14px 10px !important;
+    gap: 16px !important;
+  }
+  .hub-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .hub-stat-card {
+    padding: 16px !important;
+  }
+  .hub-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .hub-card-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .hub-card-actions .btn,
+  .hub-card-actions button {
+    width: 100% !important;
+  }
+  .hub-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 16px !important;
+    border-radius: 10px !important;
+  }
+  .hub-table-wrapper table {
+    min-width: 520px !important;
+    font-size: 12.5px !important;
+  }
+
+  /* 10. Modais e Popups */
+  .modal-box {
+    width: 94% !important;
+    max-width: 94% !important;
+    padding: 20px 14px !important;
+    max-height: 88vh !important;
+    border-radius: 16px !important;
+  }
+  .pix-qr-image {
+    width: 160px !important;
+    height: 160px !important;
+  }
+
+  /* 11. Rodapé */
+  .portal-footer {
+    padding: 26px 14px !important;
+  }
+  .footer-links {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: center !important;
+  }
+}
+

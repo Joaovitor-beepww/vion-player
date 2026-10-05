@@ -59,7 +59,37 @@
         <option value="es">🇪🇸 Español</option>
       </select>
     </div>
+
+    <!-- Botão Hamburger Mobile -->
+    <button type="button" id="btn-mobile-toggle" class="btn-mobile-toggle" aria-label="Abrir Menu">
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
   </header>
+
+  <!-- Menu Gaveta Mobile (Drawer) -->
+  <div id="mobile-nav-drawer" class="mobile-nav-drawer">
+    <div class="mobile-drawer-header">
+      <div class="brand-text">VION <span>PLAYER</span></div>
+      <button type="button" id="btn-mobile-close" class="btn-mobile-close" aria-label="Fechar Menu">&times;</button>
+    </div>
+    <ul class="mobile-nav-links">
+      <li><a class="mobile-nav-link active" data-tab="home" href="#home"><span>🏠</span> Início (Home)</a></li>
+      <li><a class="mobile-nav-link" data-tab="login" href="#login"><span>📤</span> Enviar Playlist</a></li>
+      <li><a class="mobile-nav-link highlight" data-tab="activation" href="#activation"><span>💎</span> Preços & Ativação</a></li>
+      <li><a class="mobile-nav-link" data-tab="reseller" href="#reseller"><span>🤝</span> Seja um Revendedor</a></li>
+      <li><a class="mobile-nav-link" data-tab="login" href="#login" id="mobile-btn-login"><span>🔑</span> Entrar na TV</a></li>
+    </ul>
+    <div class="mobile-drawer-footer">
+      <select class="lang-select mobile-lang-select">
+        <option value="pt" selected>🇧🇷 Português</option>
+        <option value="en">🇺🇸 English</option>
+        <option value="es">🇪🇸 Español</option>
+      </select>
+    </div>
+  </div>
+  <div id="mobile-nav-overlay" class="mobile-nav-overlay"></div>
 
   <!-- Conteúdo Principal -->
   <main class="main-wrapper">
