@@ -512,6 +512,7 @@
               <span class="version-tag">Referência/Revendedor v1.0.0</span>
             </div>
           </aside>
+          <div id="hub-sidebar-backdrop" class="hub-sidebar-backdrop"></div>
 
           <!-- Conteúdo Principal das Sub-Abas -->
           <main class="hub-main-stage">
@@ -825,10 +826,10 @@
 
               <!-- Card de Cadastro de Novo Código -->
               <div class="hub-admin-card" style="margin-bottom: 24px; padding: 22px;">
-                <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <div style="font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                   <span>➕</span> Cadastrar Novo Código de Parceria
                 </div>
-                <form id="portal-form-create-partner" style="display: grid; grid-template-columns: 200px 1.4fr 1.4fr auto; gap: 14px; align-items: flex-end;">
+                <form id="portal-form-create-partner" class="partner-create-grid">
                   <div class="form-group" style="margin-bottom: 0;">
                     <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block;">CÓDIGO (SIGLA)</label>
                     <input type="text" id="portal-partner-code" placeholder="Ex: TOURO" required style="text-transform: uppercase;">

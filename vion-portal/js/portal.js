@@ -879,19 +879,40 @@ function initHubDashboard() {
     refreshHubDashboard();
   });
 
-  // Toggle de Sidebar no mobile
+  // Toggle do Menu Lateral (Hambúrguer ☰) sem quebrar o layout
+  function openMobileSidebar() {
+    sidebar?.classList.add('mobile-open');
+    const backdrop = document.getElementById('hub-sidebar-backdrop');
+    if (backdrop) backdrop.classList.add('active');
+  }
+
+  function closeMobileSidebar() {
+    sidebar?.classList.remove('mobile-open');
+    const backdrop = document.getElementById('hub-sidebar-backdrop');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+
   btnHamburger?.addEventListener('click', () => {
-    if (sidebar) {
-      sidebar.style.display = (sidebar.style.display === 'none' || !sidebar.style.display) ? 'flex' : 'none';
+    const isMobile = window.innerWidth <= 860;
+    if (isMobile) {
+      const isOpen = sidebar?.classList.contains('mobile-open');
+      if (isOpen) closeMobileSidebar();
+      else openMobileSidebar();
+    } else {
+      const grid = document.querySelector('.hub-body-grid');
+      grid?.classList.toggle('sidebar-collapsed');
     }
   });
+
+  document.getElementById('hub-sidebar-backdrop')?.addEventListener('click', closeMobileSidebar);
 
   // Navegação entre sub-abas da Sidebar
   const navBtns = document.querySelectorAll('.hub-nav-btn');
   navBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const sub = btn.getAttribute('data-sub');
-      switchHubSubView(sub);
+      if (sub) switchHubSubView(sub);
+      if (window.innerWidth <= 860) closeMobileSidebar();
     });
   });
 

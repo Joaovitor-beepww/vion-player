@@ -2749,6 +2749,15 @@ body.is-reseller-mode .hub-topbar {
   padding: 14px 32px !important;
 }
 
+/* Topbar do Hub */
+body.is-reseller-mode .hub-topbar {
+  width: 100vw !important;
+  border-radius: 0 !important;
+  flex-shrink: 0 !important;
+  padding: 14px 28px !important;
+}
+
+/* Grid do Hub (Desktop) */
 body.is-reseller-mode .hub-body-grid {
   flex: 1 !important;
   height: calc(100vh - 61px) !important;
@@ -2757,20 +2766,153 @@ body.is-reseller-mode .hub-body-grid {
   display: grid !important;
   grid-template-columns: 260px 1fr !important;
   overflow: hidden !important;
+  transition: grid-template-columns 0.25s ease !important;
 }
 
+/* Colapso suave no desktop quando o usuário clica no menu (100% de largura para o conteúdo) */
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed {
+  grid-template-columns: 0px 1fr !important;
+}
+
+body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar {
+  display: none !important;
+}
+
+/* Sidebar no Desktop */
 body.is-reseller-mode .hub-sidebar {
   height: 100% !important;
+  width: 260px !important;
   border-radius: 0 !important;
   overflow-y: auto !important;
   background: #000000 !important;
 }
 
+/* Conteúdo Principal (Main Stage) - Nunca esmaga */
 body.is-reseller-mode .hub-main-stage {
   height: 100% !important;
   overflow-y: auto !important;
   padding: 28px 40px 80px 40px !important;
   background: #f4f4f7 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Backdrop escuro da gaveta mobile */
+.hub-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1040;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.hub-sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Formulário de Cadastro de Códigos Responsivo */
+.partner-create-grid {
+  display: grid;
+  grid-template-columns: 200px 1.4fr 1.4fr auto;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.hub-admin-card input {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1.5px solid #cbd5e1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hub-admin-card input:focus {
+  border-color: #f59e0b;
+  outline: none;
+  background: #ffffff;
+}
+
+/* ===================================================================
+   RESPONSIVIDADE PARA DISPOSITIVOS MÓVEIS / TELAS ESTREITAS (<= 860px)
+   =================================================================== */
+@media (max-width: 860px) {
+  body.is-reseller-mode .hub-body-grid {
+    grid-template-columns: 1fr !important;
+    position: relative !important;
+  }
+
+  /* No mobile, a sidebar é uma gaveta deslizante (Drawer) que não esmaga o layout */
+  body.is-reseller-mode .hub-sidebar {
+    position: fixed !important;
+    top: 57px !important;
+    left: -290px !important;
+    width: 270px !important;
+    height: calc(100vh - 57px) !important;
+    z-index: 1050 !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.7) !important;
+    display: flex !important;
+  }
+
+  body.is-reseller-mode .hub-sidebar.mobile-open {
+    left: 0 !important;
+  }
+
+  body.is-reseller-mode .hub-main-stage {
+    padding: 18px 14px 80px 14px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .hub-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .hub-title-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .btn-hub-action-gold {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .partner-create-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .partner-create-grid button {
+    width: 100% !important;
+    margin-top: 6px !important;
+  }
+
+  .hub-topbar {
+    padding: 10px 16px !important;
+  }
+
+  .hub-search-bar-row {
+    flex-direction: column !important;
+  }
+
+  .hub-table-wrapper {
+    overflow-x: auto !important;
+    width: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
 }
 
 /* Botão Elegante Voltar ao Portal */
