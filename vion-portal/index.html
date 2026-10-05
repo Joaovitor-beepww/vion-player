@@ -512,6 +512,15 @@
           
           <!-- Sidebar Lateral Preta (Imagem 4 & Imagem 3 colapsada) -->
           <aside id="hub-sidebar" class="hub-sidebar">
+            <!-- Cabeçalho exclusivo para a gaveta mobile -->
+            <div class="hub-drawer-mobile-header">
+              <div class="hub-drawer-brand">
+                <img src="/portal/img/logo.png" alt="Vion Player" class="hub-drawer-logo">
+                <span class="hub-drawer-brand-title">VION <span>PLAYER</span></span>
+              </div>
+              <button type="button" id="btn-close-mobile-drawer" class="hub-drawer-close-btn" aria-label="Fechar menu" title="Fechar menu">✕</button>
+            </div>
+
             <nav class="hub-nav-menu">
               <button type="button" class="hub-nav-btn active" data-sub="dashboard" title="Painel">
                 <span class="nav-icon">📊</span> <span class="nav-text">Painel</span>
@@ -536,11 +545,11 @@
             </nav>
 
             <div class="hub-sidebar-footer">
-              <p class="support-text">Para suporte clique no botão a...</p>
+              <p class="support-text">Suporte & Atendimento</p>
               <a href="mailto:joaovitordc1010@gmail.com" class="support-mail-btn" title="joaovitordc1010@gmail.com">
-                <span>✉️</span> <span class="support-mail-text">joaovitordc1010@gmail.com</span>
+                <span>✉️</span> <span class="support-mail-text">Falar com Suporte</span>
               </a>
-              <span class="version-tag">Painel do Revendedor v1.0.0</span>
+              <span class="version-tag">Painel do Revendedor • v1.0.0</span>
             </div>
           </aside>
 
@@ -840,11 +849,11 @@
                     </div>
                   </div>
 
-                  <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button type="submit" class="btn btn-gold" id="btn-save-notify-settings" style="height: 42px; padding: 0 22px; font-weight: 700;">
+                  <div class="hub-form-btn-group">
+                    <button type="submit" class="btn btn-gold" id="btn-save-notify-settings">
                       <span>💾</span> Salvar Configurações de Notificação
                     </button>
-                    <button type="button" class="btn btn-secondary" id="btn-test-notify" style="height: 42px; padding: 0 20px; font-weight: 700;">
+                    <button type="button" class="btn btn-secondary" id="btn-test-notify">
                       <span>📲</span> Enviar Notificação de Teste
                     </button>
                   </div>

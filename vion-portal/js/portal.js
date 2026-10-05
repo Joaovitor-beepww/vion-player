@@ -1014,6 +1014,7 @@ function initHubDashboard() {
   });
 
   document.getElementById('hub-sidebar-backdrop')?.addEventListener('click', closeMobileSidebar);
+  document.getElementById('btn-close-mobile-drawer')?.addEventListener('click', closeMobileSidebar);
 
   // Navegação entre sub-abas da Sidebar
   const navBtns = document.querySelectorAll('.hub-nav-btn');

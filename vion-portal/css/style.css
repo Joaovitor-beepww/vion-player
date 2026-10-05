@@ -2970,9 +2970,9 @@ body.is-reseller-mode .hub-main-stage {
 .hub-sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
-  z-index: 1040;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 1999;
   display: none;
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -2980,6 +2980,17 @@ body.is-reseller-mode .hub-main-stage {
 .hub-sidebar-backdrop.active {
   display: block;
   opacity: 1;
+}
+
+.hub-drawer-mobile-header {
+  display: none;
+}
+
+.hub-form-btn-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 /* Formulário de Cadastro de Códigos Responsivo */
@@ -3016,17 +3027,23 @@ body.is-reseller-mode .hub-main-stage {
     position: relative !important;
   }
 
-  /* No mobile, a sidebar é uma gaveta deslizante (Drawer) que não esmaga o layout */
+  /* No mobile, a sidebar é uma gaveta deslizante elegante (Drawer) */
   body.is-reseller-mode .hub-sidebar {
     position: fixed !important;
-    top: 57px !important;
-    left: -290px !important;
-    width: 270px !important;
-    height: calc(100vh - 57px) !important;
-    z-index: 1050 !important;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.7) !important;
+    top: 0 !important;
+    left: -330px !important;
+    width: min(300px, 84vw) !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    z-index: 2000 !important;
+    background: linear-gradient(180deg, #0e1628 0%, #080d1a 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 16px 0 45px rgba(0, 0, 0, 0.8) !important;
     display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding: 0 !important;
   }
 
   body.is-reseller-mode .hub-sidebar.mobile-open {
@@ -3068,9 +3085,7 @@ body.is-reseller-mode .hub-main-stage {
     margin-top: 6px !important;
   }
 
-  .hub-topbar {
-    padding: 10px 16px !important;
-  }
+  /* Topbar principal tratada no bloco responsivo abaixo */
 
   .hub-search-bar-row {
     flex-direction: column !important;
@@ -3600,65 +3615,435 @@ body.mobile-menu-open {
     font-size: 14.5px !important;
   }
 
-  /* 9. Área do Revendedor - Painel Hub */
+  /* 9. Área do Revendedor - Painel Hub Mobile */
   .reseller-hub-layout {
     padding: 0 !important;
   }
-  .hub-topbar {
-    padding: 10px 12px !important;
-    height: auto !important;
-    flex-wrap: wrap !important;
+
+  /* Gaveta lateral (Drawer) no celular */
+  body.is-reseller-mode .hub-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -330px !important;
+    width: min(300px, 84vw) !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    z-index: 2000 !important;
+    background: linear-gradient(180deg, #0e1628 0%, #080d1a 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 16px 0 45px rgba(0, 0, 0, 0.8) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding: 0 !important;
+  }
+
+  body.is-reseller-mode .hub-sidebar.mobile-open {
+    left: 0 !important;
+  }
+
+  .hub-drawer-mobile-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 16px 18px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+  }
+
+  .hub-drawer-brand {
+    display: flex !important;
+    align-items: center !important;
     gap: 10px !important;
   }
-  .hub-topbar-left {
-    width: 100% !important;
-    justify-content: space-between !important;
+
+  .hub-drawer-logo {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
   }
-  .hub-topbar-right {
+
+  .hub-drawer-brand-title {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .hub-drawer-brand-title span {
+    color: #f59e0b !important;
+  }
+
+  .hub-drawer-close-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .hub-drawer-close-btn:active {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: #ef4444 !important;
+  }
+
+  body.is-reseller-mode .hub-sidebar .hub-nav-menu {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 14px 12px !important;
+    gap: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  body.is-reseller-mode .hub-sidebar .hub-nav-btn {
     width: 100% !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    font-size: 14.5px !important;
+    font-weight: 600 !important;
+    color: #cbd5e1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    transition: all 0.2s ease !important;
+  }
+
+  body.is-reseller-mode .hub-sidebar .hub-nav-btn.active {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  body.is-reseller-mode .hub-sidebar .hub-nav-btn.btn-hub-return-portal {
+    margin-top: 10px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding-top: 14px !important;
+    color: #f59e0b !important;
+  }
+
+  .hub-sidebar-footer,
+  body.is-reseller-mode .hub-sidebar .hub-sidebar-footer {
+    padding: 16px 18px max(24px, env(safe-area-inset-bottom, 24px)) 18px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .hub-sidebar-footer .support-text {
+    display: block !important;
+    color: #94a3b8 !important;
+    font-size: 11.5px !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
+  .hub-sidebar-footer .support-mail-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    color: #f8fafc !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+  }
+
+  .hub-sidebar-footer .support-mail-text {
+    display: inline !important;
+  }
+
+  .hub-sidebar-footer .version-tag {
+    display: block !important;
+    color: #64748b !important;
+    font-size: 10.5px !important;
+    text-align: center !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+
+  /* Topbar no celular: 2 linhas organizadas, sem aperto */
+  .hub-topbar {
+    padding: 8px 14px 10px 14px !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .hub-topbar-left {
+    display: flex !important;
+    align-items: center !important;
     justify-content: space-between !important;
-    flex-wrap: wrap !important;
+    width: 100% !important;
+  }
+
+  .hub-hamburger-btn {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 20px !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    color: #0f172a !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+  }
+
+  .hub-brand {
+    display: flex !important;
+    align-items: center !important;
     gap: 8px !important;
   }
+
+  .hub-brand-logo {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
   .hub-brand-title {
     font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    letter-spacing: 0.5px !important;
   }
+
+  .hub-brand-title span {
+    color: #f59e0b !important;
+  }
+
+  .hub-topbar-right {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0 !important;
+    padding-top: 2px !important;
+  }
+
+  /* Oculta bandeira e carteira avulsas na linha 2 mobile para evitar aperto */
+  .hub-topbar-right > .hub-flag-badge,
+  .hub-topbar-right > .hub-wallet-icon,
+  .hub-topbar-right > .hub-divider {
+    display: none !important;
+  }
+
+  /* Capsule unificada de Perfil e Saldo no mobile */
+  .hub-user-pill-wrap {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 30px !important;
+    padding: 4px 10px 4px 5px !important;
+    gap: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  }
+
+  .hub-avatar-circle {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+    background: #e2e8f0 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .hub-user-name {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 130px !important;
+  }
+
+  .hub-user-pill-wrap > .hub-divider {
+    display: block !important;
+    height: 16px !important;
+    background: #cbd5e1 !important;
+    margin: 0 4px !important;
+  }
+
+  .hub-top-credits {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #92400e !important;
+    background: #fef3c7 !important;
+    border: 1px solid #fde68a !important;
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .hub-refresh-icon-btn {
+    font-size: 13px !important;
+    padding: 1px !important;
+  }
+
+  .hub-dropdown-menu {
+    right: 14px !important;
+    top: calc(100% + 6px) !important;
+    width: calc(100vw - 28px) !important;
+    max-width: 320px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Body Grid e Stages */
   .hub-body-grid,
   body.is-reseller-mode .hub-body-grid {
     grid-template-columns: 1fr !important;
-    padding: 14px 10px !important;
+    padding: 12px 10px !important;
     gap: 16px !important;
   }
+
   .hub-stats-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
+
   .hub-stat-card {
     padding: 16px !important;
   }
+
   .hub-card-header {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 12px !important;
   }
+
   .hub-card-actions {
     width: 100% !important;
     flex-direction: column !important;
     gap: 8px !important;
   }
+
   .hub-card-actions .btn,
   .hub-card-actions button {
     width: 100% !important;
   }
+
+  /* Cards de Administração (Mercado Pago, Notificações, etc.) */
+  .hub-admin-card {
+    padding: 16px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .hub-form-btn-group {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+    margin-top: 4px !important;
+  }
+
+  #btn-save-notify-settings,
+  #btn-test-notify,
+  #btn-save-mp-settings {
+    width: 100% !important;
+    min-height: 48px !important;
+    height: auto !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+  }
+
+  #portal-form-mp-settings {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  #portal-form-mp-settings .form-group {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Tabelas Responsivas com Rolagem Suave */
   .hub-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     margin-bottom: 16px !important;
     border-radius: 10px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
   }
-  .hub-table-wrapper table {
-    min-width: 520px !important;
+
+  .hub-table-wrapper table,
+  .hub-table {
+    min-width: 660px !important;
+    width: 100% !important;
     font-size: 12.5px !important;
+    border-collapse: collapse !important;
+  }
+
+  .hub-table th {
+    white-space: nowrap !important;
+    padding: 12px 14px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    background: #f8fafc !important;
+  }
+
+  .hub-table td {
+    white-space: nowrap !important;
+    padding: 12px 14px !important;
+    font-size: 13px !important;
   }
 
   /* 10. Modais e Popups */
