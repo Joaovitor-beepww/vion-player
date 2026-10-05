@@ -697,9 +697,23 @@ function initPartnerRegistration() {
     });
   });
 
-  // Alteração de bandeira do DDI
+  // Alteração de bandeira do DDI e máscara do Telefone
   const phoneCodeSelect = document.getElementById('reg-phone-code');
   const phoneFlagIcon = document.getElementById('phone-flag-icon');
+  const phoneInput = document.getElementById('reg-phone-number');
+
+  function updatePhonePlaceholder() {
+    const val = phoneCodeSelect?.value || '+55';
+    if (phoneInput) {
+      if (val === '+55') phoneInput.placeholder = '(11) 99999-9999';
+      else if (val === '+1') phoneInput.placeholder = '(555) 000-0000';
+      else if (val === '+351') phoneInput.placeholder = '912 345 678';
+      else if (val === '+34') phoneInput.placeholder = '612 345 678';
+      else if (val === '+54') phoneInput.placeholder = '11 1234-5678';
+      else phoneInput.placeholder = 'Número de telefone';
+    }
+  }
+
   phoneCodeSelect?.addEventListener('change', () => {
     const val = phoneCodeSelect.value;
     if (val === '+55') phoneFlagIcon.textContent = '🇧🇷';
@@ -707,7 +721,27 @@ function initPartnerRegistration() {
     else if (val === '+351') phoneFlagIcon.textContent = '🇵🇹';
     else if (val === '+34') phoneFlagIcon.textContent = '🇪🇸';
     else if (val === '+54') phoneFlagIcon.textContent = '🇦🇷';
+    updatePhonePlaceholder();
   });
+
+  // Máscara automática de telefone para o Brasil
+  phoneInput?.addEventListener('input', (e) => {
+    const val = phoneCodeSelect?.value || '+55';
+    if (val === '+55') {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 11) v = v.slice(0, 11);
+      if (v.length > 6) {
+        v = `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`;
+      } else if (v.length > 2) {
+        v = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+      } else if (v.length > 0) {
+        v = `(${v}`;
+      }
+      e.target.value = v;
+    }
+  });
+
+  updatePhonePlaceholder();
 
   // AVANÇAR: ETAPA 1 -> ETAPA 2 (Imagem 1 -> Imagem 2)
   step1Form?.addEventListener('submit', async (e) => {
@@ -777,14 +811,32 @@ function initPartnerRegistration() {
     const address = document.getElementById('reg-address')?.value.trim();
     const phoneCode = document.getElementById('reg-phone-code')?.value || '+55';
     const phoneNumber = document.getElementById('reg-phone-number')?.value.trim();
-    const fullPhone = `${phoneCode} ${phoneNumber}`;
-
-    const terms = document.getElementById('check-partner-terms')?.checked;
+    const cleanDigits = phoneNumber.replace(/\D/g, '');
 
     if (!address || !phoneNumber) {
       showAlert(alertStep2, 'Por favor, informe seu endereço e telefone.', 'error');
       return;
     }
+
+    // Validação estrita de número de telefone/WhatsApp
+    if (phoneCode === '+55') {
+      if (cleanDigits.length < 10 || cleanDigits.length > 11) {
+        showAlert(alertStep2, '⚠️ Por favor, informe um número de celular/WhatsApp válido com DDD (Ex: (11) 99999-9999).', 'error');
+        return;
+      }
+      const ddd = parseInt(cleanDigits.slice(0, 2), 10);
+      if (ddd < 11 || ddd > 99) {
+        showAlert(alertStep2, '⚠️ DDD inválido. Informe um código de área brasileiro válido (Ex: 11, 21, 31, etc.).', 'error');
+        return;
+      }
+    } else {
+      if (cleanDigits.length < 7 || cleanDigits.length > 15) {
+        showAlert(alertStep2, '⚠️ Por favor, informe um número de telefone internacional válido.', 'error');
+        return;
+      }
+    }
+
+    const fullPhone = `${phoneCode} ${phoneNumber}`;
 
     if (!terms) {
       showAlert(alertStep2, 'Você deve concordar com os termos de privacidade e uso.', 'error');
@@ -1056,6 +1108,8 @@ function switchHubSubView(targetSub) {
       return;
     }
     renderPortalPartnerships();
+    if (typeof window.loadNotifySettings === 'function') window.loadNotifySettings();
+    if (typeof window.loadMpStatus === 'function') window.loadMpStatus();
   }
 }
 
@@ -2328,6 +2382,7 @@ function initMpAdminSettings() {
     } catch(e) {}
   }
 
+  window.loadMpStatus = loadMpStatus;
   loadMpStatus();
 
   form?.addEventListener('submit', async (e) => {
@@ -2456,26 +2511,72 @@ function initNotificationSettings() {
   const cmbKeyInput = document.getElementById('portal-cmb-apikey');
   const btnTest = document.getElementById('btn-test-notify');
 
-  async function loadNotifySettings() {
+  // 1. Restaura imediatamente do localStorage para que os campos NUNCA apareçam em branco
+  function restoreLocalNotifyCache() {
     try {
-      const res = await fetch('/api/admin/settings');
+      const local = JSON.parse(localStorage.getItem('vion_notify_settings') || '{}');
+      if (local.telegramBotToken && tgTokenInput && !tgTokenInput.value) tgTokenInput.value = local.telegramBotToken;
+      if (local.telegramChatId && tgChatIdInput && !tgChatIdInput.value) tgChatIdInput.value = local.telegramChatId;
+      if (local.callMeBotPhone && cmbPhoneInput && !cmbPhoneInput.value) cmbPhoneInput.value = local.callMeBotPhone;
+      if (local.callMeBotApiKey && cmbKeyInput && !cmbKeyInput.value) cmbKeyInput.value = local.callMeBotApiKey;
+    } catch(e) {}
+  }
+
+  async function loadNotifySettings() {
+    restoreLocalNotifyCache();
+
+    try {
+      const res = await fetch(`/api/admin/settings?adminEmail=${encodeURIComponent(MASTER_ADMIN_EMAIL)}`, {
+        headers: { 'x-admin-email': MASTER_ADMIN_EMAIL }
+      });
       const data = await res.json();
       if (data.success) {
+        if (data.telegramBotToken && tgTokenInput) tgTokenInput.value = data.telegramBotToken;
         if (data.telegramChatId && tgChatIdInput) tgChatIdInput.value = data.telegramChatId;
         if (data.callMeBotPhone && cmbPhoneInput) cmbPhoneInput.value = data.callMeBotPhone;
-        if (data.telegramConfigured && tgTokenInput) tgTokenInput.placeholder = 'Token configurado (' + (data.maskedTgToken || 'OK') + ')';
-        if (data.callMeBotConfigured && cmbKeyInput) cmbKeyInput.placeholder = 'Chave configurada (******)';
+        if (data.callMeBotApiKey && cmbKeyInput) cmbKeyInput.value = data.callMeBotApiKey;
+
+        // Se ainda não tiver valor mas estiver configurado no servidor, preenche o placeholder
+        if (data.telegramConfigured && tgTokenInput && !tgTokenInput.value) {
+          tgTokenInput.placeholder = 'Token configurado (' + (data.maskedTgToken || 'OK') + ')';
+        }
+        if (data.callMeBotConfigured && cmbKeyInput && !cmbKeyInput.value) {
+          cmbKeyInput.placeholder = 'Chave configurada (******)';
+        }
+
+        // Atualiza cache local permanente
+        const currentCache = {
+          telegramBotToken: tgTokenInput?.value || data.telegramBotToken || '',
+          telegramChatId: tgChatIdInput?.value || data.telegramChatId || '',
+          callMeBotPhone: cmbPhoneInput?.value || data.callMeBotPhone || '',
+          callMeBotApiKey: cmbKeyInput?.value || data.callMeBotApiKey || ''
+        };
+        localStorage.setItem('vion_notify_settings', JSON.stringify(currentCache));
+
+        // Resgate automático: se o backend estiver sem token mas o cliente tiver em cache, envia ao backend
+        if (currentCache.telegramBotToken && currentCache.telegramChatId && !data.telegramConfigured) {
+          fetch('/api/admin/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-email': MASTER_ADMIN_EMAIL },
+            body: JSON.stringify({
+              adminEmail: MASTER_ADMIN_EMAIL,
+              ...currentCache
+            })
+          }).catch(() => {});
+        }
 
         if (badge) {
-          if (data.telegramConfigured && data.callMeBotConfigured) {
+          const hasTg = !!((tgTokenInput && tgTokenInput.value) || data.telegramConfigured);
+          const hasCmb = !!((cmbPhoneInput && cmbPhoneInput.value && cmbKeyInput && cmbKeyInput.value) || data.callMeBotConfigured);
+          if (hasTg && hasCmb) {
             badge.style.background = '#dcfce7';
             badge.style.color = '#15803d';
             badge.textContent = '🟢 Ativo (Telegram & WhatsApp)';
-          } else if (data.telegramConfigured) {
+          } else if (hasTg) {
             badge.style.background = '#dcfce7';
             badge.style.color = '#15803d';
             badge.textContent = '🟢 Ativo (Telegram Bot)';
-          } else if (data.callMeBotConfigured) {
+          } else if (hasCmb) {
             badge.style.background = '#dcfce7';
             badge.style.color = '#15803d';
             badge.textContent = '🟢 Ativo (WhatsApp CallMeBot)';
@@ -2491,6 +2592,7 @@ function initNotificationSettings() {
     }
   }
 
+  window.loadNotifySettings = loadNotifySettings;
   loadNotifySettings();
 
   form?.addEventListener('submit', async (e) => {
@@ -2503,21 +2605,34 @@ function initNotificationSettings() {
     if (cmbPhoneInput) payload.callMeBotPhone = cmbPhoneInput.value.trim();
     if (cmbKeyInput && cmbKeyInput.value.trim()) payload.callMeBotApiKey = cmbKeyInput.value.trim();
 
+    // Salva imediatamente no localStorage
+    localStorage.setItem('vion_notify_settings', JSON.stringify(payload));
+
+    const btnSave = document.getElementById('btn-save-notify-settings');
+    const oldBtnHtml = btnSave ? btnSave.innerHTML : '';
+    if (btnSave) btnSave.innerHTML = '<span>⏳</span> Salvando Configurações...';
+
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-email': MASTER_ADMIN_EMAIL },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
-        alert('Configurações de alerta salvas com sucesso!');
+        alert('✔ Configurações salvas com sucesso! O Token e Chat ID foram gravados permanentemente.');
+        if (data.telegramBotToken && tgTokenInput) tgTokenInput.value = data.telegramBotToken;
+        if (data.telegramChatId && tgChatIdInput) tgChatIdInput.value = data.telegramChatId;
+        if (data.callMeBotPhone && cmbPhoneInput) cmbPhoneInput.value = data.callMeBotPhone;
+        if (data.callMeBotApiKey && cmbKeyInput) cmbKeyInput.value = data.callMeBotApiKey;
         loadNotifySettings();
       } else {
         alert('Erro: ' + (data.error || 'Falha ao salvar.'));
       }
     } catch (err) {
       alert('Erro de conexão: ' + err.message);
+    } finally {
+      if (btnSave) btnSave.innerHTML = oldBtnHtml || '<span>💾</span> Salvar Configurações de Notificação';
     }
   });
 
@@ -2526,7 +2641,7 @@ function initNotificationSettings() {
     try {
       const res = await fetch('/api/admin/notify-test', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-email': MASTER_ADMIN_EMAIL },
         body: JSON.stringify({ adminEmail: MASTER_ADMIN_EMAIL })
       });
       const data = await res.json();

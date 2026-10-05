@@ -154,22 +154,31 @@ function savePayments(data) {
   }
 }
 
+let inMemorySettings = null;
+
 function loadSettings() {
   try {
     const raw = fs.readFileSync(DATA_SETTINGS, 'utf8');
     const s = JSON.parse(raw || '{}');
-    if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-      s.mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    if (!inMemorySettings) {
+      inMemorySettings = s;
+    } else {
+      inMemorySettings = { ...s, ...inMemorySettings };
     }
-    return s;
+    if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
+      inMemorySettings.mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    }
+    return { ...inMemorySettings };
   } catch (e) {
+    if (inMemorySettings) return { ...inMemorySettings };
     return { mpAccessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '' };
   }
 }
 
 function saveSettings(data) {
   try {
-    fs.writeFileSync(DATA_SETTINGS, JSON.stringify(data, null, 2), 'utf8');
+    inMemorySettings = { ...(inMemorySettings || {}), ...data };
+    fs.writeFileSync(DATA_SETTINGS, JSON.stringify(inMemorySettings, null, 2), 'utf8');
   } catch (e) {
     console.error('Erro ao salvar configurações:', e);
   }
@@ -588,6 +597,13 @@ const server = http.createServer(async (req, res) => {
             if (!email || !password || !firstName) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ success: false, error: 'Campos obrigatórios ausentes.' }));
+              return;
+            }
+
+            const phoneDigits = phone.replace(/\D/g, '');
+            if (!phone || phoneDigits.length < 8) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Por favor, informe um número de telefone/WhatsApp válido com DDD.' }));
               return;
             }
 
@@ -1164,6 +1180,9 @@ const server = http.createServer(async (req, res) => {
     // 5. Configurações Administrativas (Mercado Pago & Alertas no Celular)
     if (pathname === '/api/admin/settings') {
       if (req.method === 'GET') {
+        const urlObj = new URL(req.url, 'http://localhost');
+        const adminEmail = (urlObj.searchParams.get('adminEmail') || req.headers['x-admin-email'] || '').trim().toLowerCase();
+        const isMaster = (adminEmail === 'joaovitordc1010@gmail.com');
         const settings = loadSettings();
         const token = (settings.mpAccessToken || '').trim();
         const masked = token ? token.substring(0, 10) + '...' + token.slice(-4) : '';
@@ -1179,9 +1198,11 @@ const server = http.createServer(async (req, res) => {
           maskedToken: masked,
           telegramConfigured: !!(settings.telegramBotToken && settings.telegramChatId),
           maskedTgToken: maskedTg,
+          telegramBotToken: isMaster ? (settings.telegramBotToken || '') : '',
           telegramChatId: settings.telegramChatId || '',
           callMeBotConfigured: !!(settings.callMeBotPhone && settings.callMeBotApiKey),
           callMeBotPhone: settings.callMeBotPhone || '',
+          callMeBotApiKey: isMaster ? (settings.callMeBotApiKey || '') : '',
           maskedCmbKey: maskedCmb
         }));
         return;
@@ -1221,9 +1242,19 @@ const server = http.createServer(async (req, res) => {
             }
 
             saveSettings(current);
-            console.log('[Settings] Configurações administrativas atualizadas com sucesso pelo Admin.');
+            console.log('[Settings] Configurações administrativas salvas pelo Admin:', {
+              telegramConfigured: !!(current.telegramBotToken && current.telegramChatId),
+              callMeBotConfigured: !!(current.callMeBotPhone && current.callMeBotApiKey)
+            });
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, message: 'Configurações salvas com sucesso!' }));
+            res.end(JSON.stringify({
+              success: true,
+              message: 'Configurações salvas com sucesso!',
+              telegramBotToken: current.telegramBotToken || '',
+              telegramChatId: current.telegramChatId || '',
+              callMeBotPhone: current.callMeBotPhone || '',
+              callMeBotApiKey: current.callMeBotApiKey || ''
+            }));
           } catch(e) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, error: e.message }));
