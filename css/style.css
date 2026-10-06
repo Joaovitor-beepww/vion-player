@@ -7973,9 +7973,8 @@ html[data-platform="tv"] *,
 
 
 /* ===================================================================
-   OTIMIZAÇÃO E REDUÇÃO DO LAYOUT PARA CELULARES / SMARTPHONES
-   Design compacto, proporcional e arejado para telas pequenas e touch
-   SEM afetar telas de TV / Smart TV (Android TV, Tizen, webOS, Fire TV)
+   OTIMIZAÇÃO E REDUÇÃO DO LAYOUT: EXCLUSIVO DA TELA INICIAL (CELULAR)
+   Canais, Filmes e Séries permanecem 100% intocados e originais!
    =================================================================== */
 
 @media screen and (max-width: 960px), screen and (max-height: 520px) {
@@ -8023,7 +8022,7 @@ html[data-platform="tv"] *,
     gap: 12px !important;
   }
 
-  /* 3. TILES PRINCIPAIS DA HOME (CELULAR - PAISAGEM / PADRÃO) */
+  /* 3. OPÇÕES DA HOME (CELULAR - PAISAGEM / PADRÃO) */
   .home-nav-row {
     display: flex !important;
     flex-direction: row !important;
@@ -8063,6 +8062,31 @@ html[data-platform="tv"] *,
     text-align: center !important;
   }
 
+  /* Cards alternativos da Home (caso existam) */
+  .home-cards-grid {
+    gap: 12px !important;
+    padding: 0 10px !important;
+  }
+  .home-hero-card {
+    min-height: 120px !important;
+    max-height: 150px !important;
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+  }
+  .card-icon-wrap {
+    width: 38px !important;
+    height: 38px !important;
+    margin-bottom: 6px !important;
+  }
+  .card-title {
+    font-size: 15px !important;
+    margin-bottom: 2px !important;
+  }
+  .card-meta-pill {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+  }
+
   /* 4. SUB-BARRA INFERIOR E RODAPÉ (CELULAR) */
   .home-bottom-subbar {
     margin-top: 10px !important;
@@ -8080,413 +8104,12 @@ html[data-platform="tv"] *,
     font-size: 9.5px !important;
     padding: 0 12px !important;
   }
-
-  /* 5. CANAIS AO VIVO (CELULAR) */
-  .tv-color-hint-bar,
-  .live-top-color-actions,
-  #screen-channels .superplay-footer,
-  #screen-vod .superplay-footer {
-    display: none !important;
-  }
-
-  .superplay-live-topbar {
-    height: 38px !important;
-    padding: 0 10px !important;
-  }
-  .live-cat-title {
-    font-size: 13.5px !important;
-  }
-  .live-brand-text {
-    font-size: 12.5px !important;
-  }
-
-  .superplay-live-layout {
-    gap: 8px !important;
-    padding: 0 8px 6px 8px !important;
-    height: calc(100vh - 44px) !important;
-  }
-
-  .live-categories-col {
-    width: 125px !important;
-    min-width: 120px !important;
-    max-width: 130px !important;
-    gap: 4px !important;
-  }
-  .live-cat-pill {
-    min-height: 32px !important;
-    padding: 0 8px !important;
-    font-size: 11px !important;
-    border-radius: 6px !important;
-  }
-  .live-search-box {
-    padding: 4px 6px !important;
-    border-radius: 6px !important;
-  }
-  .live-search-input {
-    font-size: 10.5px !important;
-    height: 26px !important;
-  }
-
-  .live-channels-col {
-    width: 160px !important;
-    min-width: 155px !important;
-    max-width: 165px !important;
-    padding: 4px 4px !important;
-    border-radius: 8px !important;
-  }
-  .live-ch-row {
-    min-height: 36px !important;
-    padding: 4px 6px !important;
-    gap: 6px !important;
-    border-radius: 6px !important;
-  }
-  .live-ch-logo {
-    width: 22px !important;
-    height: 22px !important;
-  }
-  .live-ch-num {
-    font-size: 9.5px !important;
-    min-width: 16px !important;
-  }
-  .live-ch-name {
-    font-size: 11px !important;
-    font-weight: 600 !important;
-  }
-  .live-ch-sub {
-    font-size: 9px !important;
-  }
-
-  .live-preview-col {
-    flex: 1 !important;
-    min-width: 0 !important;
-    gap: 6px !important;
-  }
-  .mini-player-box:not(.fullscreen-mode) {
-    max-width: 100% !important;
-    max-height: 135px !important;
-    min-height: 85px !important;
-    border-radius: 8px !important;
-    aspect-ratio: 16 / 9 !important;
-  }
-  .live-epg-container {
-    padding: 5px 8px !important;
-    border-radius: 8px !important;
-  }
-  .live-epg-header {
-    margin-bottom: 4px !important;
-  }
-  .epg-channel-header h3 {
-    font-size: 11.5px !important;
-  }
-  .epg-row {
-    font-size: 9.5px !important;
-    padding: 2px 0 !important;
-  }
-  .epg-time {
-    font-size: 9px !important;
-    min-width: 55px !important;
-  }
-  .epg-title {
-    font-size: 9.5px !important;
-  }
-  .calendar-pill {
-    min-width: 32px !important;
-    padding: 2px 4px !important;
-    border-radius: 6px !important;
-    font-size: 8.5px !important;
-  }
-  .cal-day {
-    font-size: 11px !important;
-    font-weight: 700 !important;
-  }
-  .cal-wday {
-    font-size: 7.5px !important;
-  }
-
-  /* 6. VOD: FILMES E SÉRIES (CELULAR) */
-  .vod-topbar {
-    height: 38px !important;
-    padding: 0 10px !important;
-  }
-  .vod-sidebar {
-    width: 130px !important;
-    min-width: 125px !important;
-    max-width: 135px !important;
-    padding: 6px 4px !important;
-  }
-  .vod-search-box {
-    padding: 4px 6px !important;
-    margin-bottom: 4px !important;
-    border-radius: 6px !important;
-  }
-  .vod-search-input {
-    font-size: 10.5px !important;
-    height: 26px !important;
-  }
-  .vod-sidebar-item {
-    min-height: 30px !important;
-    padding: 4px 6px !important;
-    border-radius: 6px !important;
-  }
-  .vod-cat-name {
-    font-size: 10.5px !important;
-  }
-  .vod-cat-count {
-    font-size: 9px !important;
-  }
-
-  .vod-content-area {
-    width: calc(100vw - 140px) !important;
-    height: 100vh !important;
-    padding: 8px 10px 14px 6px !important;
-  }
-  .vod-content-header {
-    margin-bottom: 6px !important;
-  }
-  .vod-active-heading {
-    font-size: 14px !important;
-    font-weight: 700 !important;
-  }
-
-  .vod-grid-container {
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important;
-    gap: 8px 6px !important;
-    padding: 4px 4px 40px 4px !important;
-  }
-  .vod-poster-card {
-    gap: 2px !important;
-  }
-  .vod-poster-thumb {
-    border-radius: 6px !important;
-    border-width: 1px !important;
-  }
-  .vod-poster-title {
-    font-size: 9.5px !important;
-    line-height: 1.2 !important;
-    max-height: 23px !important;
-    white-space: normal !important;
-    text-align: center !important;
-  }
-  .vod-poster-ep-badge {
-    font-size: 8px !important;
-    padding: 1px 4px !important;
-    top: 3px !important;
-    right: 3px !important;
-    border-radius: 3px !important;
-  }
-  .vod-poster-prog-wrap {
-    height: 3px !important;
-  }
-
-  /* 7. MODAL DE DETALHES DO FILME (CELULAR) */
-  .movie-details-container {
-    padding: 12px 16px !important;
-    align-items: flex-start !important;
-    overflow-y: auto !important;
-  }
-  .movie-details-content {
-    max-width: 100% !important;
-    gap: 6px !important;
-  }
-  .movie-details-title {
-    font-size: 19px !important;
-    font-weight: 800 !important;
-    line-height: 1.2 !important;
-  }
-  .movie-details-meta-row {
-    gap: 8px !important;
-    font-size: 10.5px !important;
-    flex-wrap: wrap !important;
-  }
-  .movie-details-synopsis {
-    font-size: 11px !important;
-    line-height: 1.35 !important;
-    max-height: 55px !important;
-  }
-  .movie-progress-wrap {
-    margin: 4px 0 6px 0 !important;
-    max-width: 240px !important;
-    gap: 3px !important;
-  }
-  .movie-progress-label {
-    font-size: 10px !important;
-  }
-  .movie-progress-bar-bg {
-    height: 4px !important;
-  }
-  .movie-details-actions {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    max-width: 100% !important;
-    margin-top: 6px !important;
-  }
-  .action-btn-cinema {
-    width: auto !important;
-    padding: 6px 12px !important;
-    font-size: 11px !important;
-    height: 32px !important;
-    border-radius: 6px !important;
-    gap: 5px !important;
-  }
-  .action-btn-cinema .btn-triangle {
-    font-size: 10px !important;
-  }
-  .action-btn-cinema .btn-plus {
-    font-size: 14px !important;
-  }
-
-  /* 8. MODAL DE DETALHES DA SÉRIE (CELULAR) */
-  .series-cinematic-container {
-    width: 96% !important;
-    padding: 8px 10px 20px 10px !important;
-    gap: 8px !important;
-  }
-  .series-topbar {
-    margin-bottom: 2px !important;
-  }
-  .series-back-btn {
-    padding: 3px 8px !important;
-    font-size: 10.5px !important;
-    height: 26px !important;
-  }
-  .series-topbar-cat {
-    font-size: 10.5px !important;
-  }
-  #series-modal-title {
-    font-size: 19px !important;
-    line-height: 1.2 !important;
-  }
-  .series-meta-row {
-    font-size: 10.5px !important;
-    gap: 6px !important;
-  }
-  #series-modal-synopsis {
-    font-size: 11px !important;
-    line-height: 1.35 !important;
-    max-height: 50px !important;
-  }
-  .series-hero-actions {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    max-width: 100% !important;
-    margin-top: 6px !important;
-  }
-  .series-seasons-section {
-    margin-top: 8px !important;
-  }
-  .series-section-title {
-    font-size: 13px !important;
-    margin-bottom: 4px !important;
-  }
-  .series-seasons-tabs {
-    gap: 5px !important;
-    padding-bottom: 4px !important;
-  }
-  .season-tab-btn {
-    padding: 4px 10px !important;
-    font-size: 10.5px !important;
-    border-radius: 6px !important;
-  }
-  .series-episodes-list {
-    gap: 8px !important;
-    padding: 4px 0 10px 0 !important;
-  }
-  .episode-item {
-    width: 135px !important;
-  }
-  .episode-widescreen-thumb {
-    border-radius: 6px !important;
-  }
-  .episode-label-s-e {
-    font-size: 10px !important;
-    margin-top: 3px !important;
-  }
-  .episode-watched-badge {
-    font-size: 8px !important;
-    padding: 1px 4px !important;
-    top: 3px !important;
-    right: 3px !important;
-  }
-  .episode-prog-badge {
-    font-size: 8px !important;
-    padding: 1px 3px !important;
-    top: 3px !important;
-    left: 3px !important;
-  }
-
-  /* 9. TELA DE LOGIN (CELULAR) */
-  .login-lux-container {
-    padding: 8px !important;
-    gap: 10px !important;
-    max-width: 100% !important;
-  }
-  .login-info-column {
-    display: none !important;
-  }
-  .reseller-login-card {
-    max-width: 320px !important;
-    padding: 14px 16px !important;
-    border-radius: 12px !important;
-    margin: 0 auto !important;
-  }
-  .reseller-card-header h2 {
-    font-size: 16px !important;
-  }
-  .reseller-card-header p {
-    font-size: 10px !important;
-  }
-  .reseller-form-group input {
-    height: 32px !important;
-    font-size: 11.5px !important;
-    padding: 4px 8px 4px 26px !important;
-  }
-  .btn-reseller-login {
-    height: 34px !important;
-    font-size: 12px !important;
-    margin-top: 5px !important;
-  }
-  .btn-skip-login {
-    height: 25px !important;
-    font-size: 10px !important;
-  }
-
-  /* 10. DIÁLOGOS DE CONFIRMAÇÃO & TOASTS (CELULAR) */
-  .tv-dialog-box {
-    max-width: 300px !important;
-    padding: 16px 18px !important;
-    border-radius: 12px !important;
-  }
-  .tv-dialog-box h3 {
-    font-size: 15px !important;
-    margin-bottom: 6px !important;
-  }
-  .tv-dialog-box p {
-    font-size: 11.5px !important;
-    margin-bottom: 12px !important;
-  }
-  .tv-dialog-actions .pill-btn {
-    padding: 6px 12px !important;
-    font-size: 11px !important;
-    height: 32px !important;
-  }
-  .toast-notice {
-    font-size: 11.5px !important;
-    padding: 6px 12px !important;
-    bottom: 16px !important;
-    border-radius: 6px !important;
-  }
 }
 
 /* ===================================================================
-   PORTRAIT ESPECÍFICO (CELULAR EM PÉ - LARGURA ATÉ 600PX)
+   TELA INICIAL: PORTRAIT ESPECÍFICO (CELULAR EM PÉ - ATÉ 600PX)
    =================================================================== */
 @media screen and (max-width: 600px) {
-
-  /* Home em pé: grid 2 colunas com o 5º tile centralizado */
   .home-nav-row {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
@@ -8515,93 +8138,4 @@ html[data-platform="tv"] *,
   .home-nav-tile .tile-title {
     font-size: 11.5px !important;
   }
-
-  /* Canais Ao Vivo em pé */
-  .superplay-live-layout {
-    flex-direction: column !important;
-    height: calc(100vh - 44px) !important;
-  }
-  .live-categories-col {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 36px !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    flex-shrink: 0 !important;
-  }
-  .live-cat-pill {
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
-  }
-  .live-search-box {
-    display: none !important;
-  }
-  .live-channels-col {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 1 !important;
-    height: 50% !important;
-  }
-  .live-preview-col {
-    height: 38% !important;
-    flex-shrink: 0 !important;
-  }
-
-  /* Filmes e Séries em pé */
-  .vod-sidebar {
-    width: 90px !important;
-    min-width: 85px !important;
-    max-width: 95px !important;
-    padding: 4px 2px !important;
-  }
-  .vod-content-area {
-    width: calc(100vw - 95px) !important;
-    padding: 6px 4px 12px 4px !important;
-  }
-  .vod-grid-container {
-    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)) !important;
-    gap: 5px 4px !important;
-  }
-}
-
-/* ===================================================================
-   PROTEÇÃO TOTAL E ABSOLUTA DA SMART TV / 10-FOOT UI
-   Garante que dispositivos com flag de TV preservem suas dimensões
-   =================================================================== */
-html.is-tv .home-hub-container,
-html[data-platform="tv"] .home-hub-container {
-  height: calc(100vh - 160px) !important;
-  padding: 0 40px !important;
-}
-
-html.is-tv .home-nav-row,
-html[data-platform="tv"] .home-nav-row {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 22px !important;
-  max-width: 1100px !important;
-}
-
-html.is-tv .home-nav-tile,
-html[data-platform="tv"] .home-nav-tile {
-  min-width: 170px !important;
-  max-width: 200px !important;
-  height: 135px !important;
-}
-
-html.is-tv .home-nav-tile .tile-icon svg,
-html[data-platform="tv"] .home-nav-tile .tile-icon svg {
-  width: 46px !important;
-  height: 46px !important;
-}
-
-html.is-tv .home-nav-tile .tile-title,
-html[data-platform="tv"] .home-nav-tile .tile-title {
-  font-size: 18px !important;
-}
-
-html.is-tv .vod-grid-container,
-html[data-platform="tv"] .vod-grid-container {
-  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
 }
