@@ -6492,25 +6492,28 @@ html.is-tv * {
 /* Grade de Posters Proporcionais - EXATAMENTE 6 CAPAS POR FILEIRA (Preenche 100% da largura) */
 .vod-grid-container {
   display: grid !important;
-  grid-template-columns: repeat(6, 1fr) !important;
-  gap: 14px 12px !important;
-  padding: 8px 18px 50px 10px !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 12px 10px !important;
+  padding: 8px 14px 60px 10px !important;
   width: 100% !important;
+  min-width: 0 !important;
   box-sizing: border-box !important;
 }
 
 .vod-poster-card {
   width: 100% !important;
-  max-width: none !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 5px !important;
+  gap: 4px !important;
   scroll-margin: 30px !important;
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
   background: transparent !important;
+  box-sizing: border-box !important;
 }
 
 .vod-poster-card.focused,
@@ -6523,16 +6526,16 @@ html.is-tv * {
 
 .vod-poster-thumb {
   width: 100% !important;
-  height: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   aspect-ratio: 2 / 3 !important;
-  min-height: 0 !important;
-  max-height: none !important;
   border-radius: 8px !important;
   overflow: hidden !important;
   border: 2px solid transparent !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7) !important;
   background: #0f172a !important;
   position: relative !important;
+  box-sizing: border-box !important;
   transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
@@ -6559,12 +6562,14 @@ html.is-tv * {
   font-weight: 600 !important;
   color: #cbd5e1 !important;
   text-align: center !important;
-  margin-top: 4px !important;
+  margin-top: 3px !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   display: -webkit-box !important;
   -webkit-line-clamp: 2 !important;
   -webkit-box-orient: vertical !important;
+  word-break: break-word !important;
+  white-space: normal !important;
   border: none !important;
   outline: none !important;
   background: transparent !important;
@@ -6922,10 +6927,12 @@ html[data-platform="tv"] *,
 /* Área de Conteúdo da Direita (Imagem 2) */
 .vod-content-area {
   flex: 1 !important;
+  width: calc(100vw - 250px) !important;
+  min-width: 0 !important;
   height: 100vh !important;
   display: flex !important;
   flex-direction: column !important;
-  padding: 24px 36px 36px 36px !important;
+  padding: 20px 28px 30px 24px !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
 }
@@ -6945,11 +6952,12 @@ html[data-platform="tv"] *,
 .vod-grid-container {
   flex: 1 !important;
   display: grid !important;
-  grid-template-columns: repeat(6, 1fr) !important;
-  gap: 14px 12px !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 12px 10px !important;
   overflow-y: auto !important;
-  padding: 8px 18px 80px 10px !important;
+  padding: 6px 12px 80px 6px !important;
   width: 100% !important;
+  min-width: 0 !important;
   box-sizing: border-box !important;
   align-content: start !important;
 }
@@ -6957,22 +6965,24 @@ html[data-platform="tv"] *,
 /* Card de Pôster Individual (Aspecto 2:3 vertical proporcional) */
 .vod-poster-card {
   width: 100% !important;
-  max-width: none !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 5px !important;
+  gap: 4px !important;
   background: transparent !important;
   border: none !important;
   outline: none !important;
   cursor: pointer !important;
+  box-sizing: border-box !important;
   transition: transform 0.15s ease !important;
 }
 
 .vod-poster-thumb {
   width: 100% !important;
-  height: auto !important;
-  max-height: none !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   aspect-ratio: 2 / 3 !important;
   border-radius: 8px !important;
   background: #13151d !important;
@@ -6982,9 +6992,9 @@ html[data-platform="tv"] *,
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  box-sizing: border-box !important;
   transition: all 0.15s ease !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7) !important;
-  min-height: unset !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7) !important;
 }
 
 /* Três pontos "..." centralizados quando a imagem ainda não carregou (Imagem 2) */
@@ -7039,12 +7049,16 @@ html[data-platform="tv"] *,
   font-weight: 600 !important;
   color: #e2e8f0 !important;
   text-align: center !important;
-  margin-top: 4px !important;
+  margin-top: 3px !important;
   width: 100% !important;
   max-width: 100% !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  word-break: break-word !important;
 }
 
 /* Foco no Poster VOD (Borda branca nítida e elevação sem borda amarela) */

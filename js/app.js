@@ -970,7 +970,7 @@ const App = {
     // Rolagem infinita para a grade VOD
     const vodGrid = document.getElementById('vod-grid');
     vodGrid?.addEventListener('scroll', () => {
-      if (vodGrid.scrollTop + vodGrid.clientHeight >= vodGrid.scrollHeight - 150) {
+      if (vodGrid.scrollTop + vodGrid.clientHeight >= vodGrid.scrollHeight - 500) {
         this.renderMoreVodItems();
       }
     });

@@ -493,155 +493,7 @@ class TVVideoPlayer {
       }
     };
 
-    // 1. Tenta HLS otimizado para Smart TV (Web Worker desativado para estabilidade de thread em TV, auto-recuperação)
-    let hasFallbackTriggered = false;
-    const failAndContinue = () => {
-      if (hasFallbackTriggered) return;
-      hasFallbackTriggered = true;
-      if (this.miniHls) {
-        try { this.miniHls.destroy(); } catch (e) {}
-        this.miniHls = null;
-      }
-      if (typeof onFail === 'function') {
-        onFail();
-      } else {
-        this.showMiniLoading(false);
-      }
-    };
-
-    const tryHls = (src, onFail) => {
-      if (window.Hls && Hls.isSupported()) {
-        try {
-          this.miniHls = new Hls({
-            enableWorker: false, // Worker em TV causa crash de memória e latência; inline é 100% fluido
-            lowLatencyMode: false, // Evita buffer starvation em canais HD e FHD
-            backBufferLength: 6, // Poupa memória RAM da Smart TV
-            maxBufferLength: 8,
-            maxMaxBufferLength: 14,
-            maxBufferSize: 16 * 1024 * 1024, // Limite de 16MB de buffer (anti-crash em TV)
-            maxBufferHole: 0.5, // Pula micro-saltos de timestamp sem congelar imagem
-            highBufferWatchdogPeriod: 2,
-            nudgeOffset: 0.2,
-            nudgeMaxRetry: 3,
-            manifestLoadingTimeOut: 2000,
-            manifestLoadingMaxRetry: 1,
-            levelLoadingTimeOut: 2000,
-            levelLoadingMaxRetry: 1,
-            fragLoadingTimeOut: 3000,
-            fragLoadingMaxRetry: 2
-          });
-
-          this.miniHls.loadSource(src);
-          this.miniHls.attachMedia(this.miniVideo);
-
-          const hlsWatchdog = setTimeout(() => {
-            if (this.miniHls && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn('HLS prévia timeout (2.5s) em HD/FHD, acionando fallback rápido');
-              failAndContinue();
-            }
-          }, 2500);
-
-          this.miniHls.on(Hls.Events.MANIFEST_PARSED, () => {
-            startPlay();
-          });
-
-          this.miniHls.on(Hls.Events.FRAG_LOADED, () => {
-            clearTimeout(hlsWatchdog);
-          });
-
-          let netRetries = 0;
-          let mediaRetries = 0;
-
-          this.miniHls.on(Hls.Events.ERROR, (event, data) => {
-            if (data.fatal) {
-              console.warn('HLS mini fatal erro:', data.type, data.details);
-              switch (data.type) {
-                case Hls.ErrorTypes.NETWORK_ERROR:
-                  netRetries++;
-                  if (netRetries <= 1) {
-                    try { this.miniHls.startLoad(); } catch (e) { failAndContinue(); }
-                  } else {
-                    failAndContinue();
-                  }
-                  break;
-                case Hls.ErrorTypes.MEDIA_ERROR:
-                  mediaRetries++;
-                  if (mediaRetries === 1) {
-                    try { this.miniHls.recoverMediaError(); } catch (e) { failAndContinue(); }
-                  } else if (mediaRetries === 2) {
-                    try {
-                      this.miniHls.swapAudioCodec();
-                      this.miniHls.recoverMediaError();
-                    } catch (e) {
-                      failAndContinue();
-                    }
-                  } else {
-                    failAndContinue();
-                  }
-                  break;
-                default:
-                  failAndContinue();
-                  break;
-              }
-            }
-          });
-          return;
-        } catch (e) {
-          console.warn('Erro ao inicializar Hls.js:', e);
-          failAndContinue();
-          return;
-        }
-      }
-
-      // Se HLS.js não suportado, tenta reprodução nativa de HLS do navegador (webOS / Safari / Tizen)
-      if (this.miniVideo && this.miniVideo.canPlayType('application/vnd.apple.mpegurl')) {
-        this.miniVideo.src = src;
-        startPlay();
-      } else {
-        failAndContinue();
-      }
-    };
-
-    // 2. Tenta reprodução nativa direta no HTML5 video tag (0% CPU, usa decodificador de hardware da TV)
-    const tryNativeDirect = (src, onFail) => {
-      if (!this.miniVideo) return;
-      this.miniVideo.src = src;
-      this.miniVideo.muted = false;
-
-      let nativeStallTimer = setTimeout(() => {
-        if (this.miniVideo && this.miniVideo.readyState < 2) {
-          if (typeof onFail === 'function') onFail();
-        }
-      }, 3000);
-
-      const p = this.miniVideo.play();
-      if (p !== undefined) {
-        p.then(() => {
-          clearTimeout(nativeStallTimer);
-          this.showMiniLoading(false);
-        }).catch(() => {
-          this.miniVideo.muted = true;
-          const retry = this.miniVideo.play();
-          if (retry && typeof retry.then === 'function') {
-            retry.then(() => {
-              clearTimeout(nativeStallTimer);
-              this.showMiniLoading(false);
-            }).catch(() => {
-              clearTimeout(nativeStallTimer);
-              if (typeof onFail === 'function') onFail();
-            });
-          } else {
-            clearTimeout(nativeStallTimer);
-            if (typeof onFail === 'function') onFail();
-          }
-        });
-      } else {
-        clearTimeout(nativeStallTimer);
-        this.showMiniLoading(false);
-      }
-    };
-
-    // 3. Fallback mpegts.js com watchdog ativo e buffer habilitado (ótimo para canais SD)
+    // 1. Reprodução mpegts.js otimizada para canais IPTV (.ts) - SD, HD e FHD
     const tryMpegts = (onFail) => {
       let mpegtsFailed = false;
       let mpegtsWatchdog = null;
@@ -671,26 +523,40 @@ class TVVideoPlayer {
             url: cleanUrl,
             cors: false
           }, {
-            enableWorker: false,
+            enableWorker: true,
             lazyLoad: false,
             enableStashBuffer: true,
-            stashInitialSize: 512 * 1024,
+            stashInitialSize: 384 * 1024,
             autoCleanupSourceBuffer: true,
-            autoCleanupMaxBackwardDuration: 10,
-            autoCleanupMinBackwardDuration: 5
+            autoCleanupMaxBackwardDuration: 12,
+            autoCleanupMinBackwardDuration: 6,
+            liveBufferLatencyChasing: false
           });
+
           this.miniMpegts.attachMediaElement(this.miniVideo);
           this.miniMpegts.load();
           startPlay();
 
+          // Watchdog generoso (4.5s): tempo hábil para handshake TCP e chegada do primeiro I-frame de canal HD/FHD
           mpegtsWatchdog = setTimeout(() => {
             if (this.miniMpegts && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn('mpegts não iniciou em 2.5s, caindo para fallback');
+              console.warn('mpegts não iniciou em 4.5s, acionando fallback');
               cleanupAndFail();
             }
-          }, 2500);
+          }, 4500);
 
-          this.miniMpegts.on(mpegts.Events.ERROR, () => {
+          const onMpegtsReady = () => {
+            clearTimeout(mpegtsWatchdog);
+            this.showMiniLoading(false);
+          };
+          this.miniVideo.addEventListener('playing', onMpegtsReady, { once: true });
+          this.miniVideo.addEventListener('canplay', onMpegtsReady, { once: true });
+          this.miniVideo.addEventListener('timeupdate', () => {
+            if (this.miniVideo && this.miniVideo.currentTime > 0) onMpegtsReady();
+          }, { once: true });
+
+          this.miniMpegts.on(mpegts.Events.ERROR, (errType, errDetail) => {
+            console.warn('mpegts erro fatal:', errType, errDetail);
             cleanupAndFail();
           });
           return;
@@ -703,25 +569,143 @@ class TVVideoPlayer {
       cleanupAndFail();
     };
 
-    // ESTRATÉGIA UNIVERSAL PARA CANAIS AO VIVO (SD, HD, FHD E 4K):
-    // 1. Canais FHD e HD usam HLS (.m3u8) com decodificação por hardware a 60fps na Smart TV (sem sobrecarregar CPU com TS puro).
-    // 2. Se o servidor não entregar HLS ou falhar rápido, tenta nativo direto no HTML5 video tag.
-    // 3. Fallback mpegts.js para transmissões SD ou raw TS que necessitem de demuxer JS.
+    // 2. Reprodução HLS (.m3u8)
+    const tryHls = (src, onFail) => {
+      let hlsWatchdog = null;
+      let hlsFailed = false;
+
+      const cleanupAndFail = () => {
+        if (hlsFailed) return;
+        hlsFailed = true;
+        clearTimeout(hlsWatchdog);
+        if (this.miniHls) {
+          try { this.miniHls.destroy(); } catch (e) {}
+          this.miniHls = null;
+        }
+        if (typeof onFail === 'function') onFail();
+        else this.showMiniLoading(false);
+      };
+
+      if (window.Hls && Hls.isSupported()) {
+        try {
+          this.miniHls = new Hls({
+            enableWorker: false,
+            lowLatencyMode: false,
+            backBufferLength: 6,
+            maxBufferLength: 8,
+            maxMaxBufferLength: 14,
+            maxBufferSize: 16 * 1024 * 1024,
+            maxBufferHole: 0.5,
+            highBufferWatchdogPeriod: 2,
+            nudgeOffset: 0.2,
+            nudgeMaxRetry: 3,
+            manifestLoadingTimeOut: 3000,
+            manifestLoadingMaxRetry: 1,
+            levelLoadingTimeOut: 3000,
+            levelLoadingMaxRetry: 1,
+            fragLoadingTimeOut: 4000,
+            fragLoadingMaxRetry: 2
+          });
+
+          this.miniHls.loadSource(src);
+          this.miniHls.attachMedia(this.miniVideo);
+
+          hlsWatchdog = setTimeout(() => {
+            if (this.miniHls && this.miniVideo && this.miniVideo.readyState < 2) {
+              console.warn('HLS timeout (3s), acionando fallback');
+              cleanupAndFail();
+            }
+          }, 3000);
+
+          this.miniHls.on(Hls.Events.MANIFEST_PARSED, () => {
+            startPlay();
+          });
+
+          this.miniHls.on(Hls.Events.FRAG_LOADED, () => {
+            clearTimeout(hlsWatchdog);
+            this.showMiniLoading(false);
+          });
+
+          let netRetries = 0;
+          this.miniHls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  netRetries++;
+                  if (netRetries <= 1) {
+                    try { this.miniHls.startLoad(); } catch (e) { cleanupAndFail(); }
+                  } else {
+                    cleanupAndFail();
+                  }
+                  break;
+                default:
+                  cleanupAndFail();
+                  break;
+              }
+            }
+          });
+          return;
+        } catch (e) {
+          console.warn('Erro ao inicializar Hls.js:', e);
+          cleanupAndFail();
+          return;
+        }
+      }
+
+      if (this.miniVideo && this.miniVideo.canPlayType('application/vnd.apple.mpegurl')) {
+        this.miniVideo.src = src;
+        startPlay();
+      } else {
+        cleanupAndFail();
+      }
+    };
+
+    // 3. Fallback nativo direto no HTML5 video tag
+    const tryNativeDirect = (src, onFail) => {
+      if (!this.miniVideo) return;
+      this.miniVideo.src = src;
+      this.miniVideo.muted = false;
+
+      let hasPlayed = false;
+      let nativeStallTimer = setTimeout(() => {
+        if (!hasPlayed && this.miniVideo && this.miniVideo.readyState < 2) {
+          if (typeof onFail === 'function') onFail();
+        }
+      }, 3500);
+
+      const onNativePlaying = () => {
+        hasPlayed = true;
+        clearTimeout(nativeStallTimer);
+        this.showMiniLoading(false);
+      };
+      this.miniVideo.addEventListener('playing', onNativePlaying, { once: true });
+      this.miniVideo.addEventListener('timeupdate', onNativePlaying, { once: true });
+
+      const p = this.miniVideo.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          this.miniVideo.muted = true;
+          this.miniVideo.play().catch(() => {
+            clearTimeout(nativeStallTimer);
+            if (typeof onFail === 'function') onFail();
+          });
+        });
+      }
+    };
+
+    // FLUXO DE REPRODUÇÃO DE CANAIS AO VIVO:
+    // Para URLs HLS (.m3u8): HLS -> mpegts -> Nativo
+    // Para URLs IPTV padrão (.ts ou raw): mpegts IMEDIATO -> HLS -> Nativo
     if (isHls) {
       tryHls(cleanUrl, () => {
-        tryNativeDirect(cleanUrl, () => {
-          tryMpegts(null);
+        tryMpegts(() => {
+          tryNativeDirect(cleanUrl, null);
         });
       });
     } else {
-      tryHls(m3u8Candidate, () => {
-        tryNativeDirect(cleanUrl, () => {
-          tryMpegts(() => {
-            if (this.miniVideo) {
-              this.miniVideo.src = cleanUrl;
-              this.miniVideo.play().catch(() => {});
-            }
-          });
+      tryMpegts(() => {
+        tryHls(m3u8Candidate, () => {
+          tryNativeDirect(cleanUrl, null);
         });
       });
     }
@@ -729,7 +713,7 @@ class TVVideoPlayer {
     clearTimeout(this.miniLoadingTimer);
     this.miniLoadingTimer = setTimeout(() => {
       this.showMiniLoading(false);
-    }, 3500);
+    }, 4500);
   }
 
   /**
