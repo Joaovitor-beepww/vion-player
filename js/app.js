@@ -1724,8 +1724,9 @@ const App = {
     const countRecentEl = document.getElementById('count-recently-added');
     if (countRecentEl) countRecentEl.textContent = Math.min(100, (sectionData.channels || []).length);
 
+    const continueList = this.getContinueWatchingList(type);
     const countContinueEl = document.getElementById('count-continue-watching');
-    if (countContinueEl) countContinueEl.textContent = '0';
+    if (countContinueEl) countContinueEl.textContent = String(continueList.length);
 
     // Eventos das categorias rápidas (Imagem 2)
     const quickContinue = document.getElementById('cat-continue-watching');
@@ -1799,7 +1800,23 @@ const App = {
       this.filteredItems = (sectionData._todosList || sectionData.channels || []).slice(0, 100);
     } else if (type === 'continue') {
       if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Continuar Assistindo`;
-      this.filteredItems = [];
+      this.filteredItems = this.getContinueWatchingList(this.activeSection);
+      if (this.filteredItems.length === 0) {
+        const badgeEl = document.getElementById('vod-count-badge');
+        if (badgeEl) badgeEl.textContent = '0 itens';
+        const grid = document.getElementById('vod-grid');
+        if (grid) {
+          grid.innerHTML = `
+            <div style="grid-column: 1 / -1; padding: 70px 20px; text-align: center; color: #94a3b8; font-size: 18px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🎬</div>
+              <div style="font-weight: 700; color: #f1f5f9; font-size: 20px; margin-bottom: 8px;">Nenhum título em andamento</div>
+              <span style="font-size: 15px; opacity: 0.8;">Comece a assistir a um filme ou série e você poderá continuar de onde parou por aqui!</span>
+            </div>
+          `;
+          grid.scrollTop = 0;
+        }
+        return;
+      }
     }
 
     const badgeEl = document.getElementById('vod-count-badge');
@@ -1820,6 +1837,7 @@ const App = {
     const favs = this.getFavorites().filter(f => f.type === this.activeSection);
     const countFavsEl = document.getElementById('count-favorites');
     if (countFavsEl) countFavsEl.textContent = favs.length;
+    this.updateContinueWatchingCount();
   },
 
   selectVodCategory(categoryName, pillElement) {
@@ -2008,6 +2026,22 @@ const App = {
       }
       thumbContainer.appendChild(img);
 
+      // Progresso para Continuar Assistindo (barra visual na base do poster)
+      const prog = isSeries ? this.getSeriesProgress(item) : this.getVodProgress(item);
+      if (prog && prog.percent > 0 && prog.percent < 92) {
+        const progWrap = document.createElement('div');
+        progWrap.className = 'vod-poster-prog-wrap';
+        progWrap.innerHTML = `<div class="vod-poster-prog-bar" style="width: ${prog.percent}%;"></div>`;
+        thumbContainer.appendChild(progWrap);
+
+        if (isSeries && prog.lastLabel) {
+          const epBadge = document.createElement('div');
+          epBadge.className = 'vod-poster-ep-badge';
+          epBadge.textContent = prog.lastLabel;
+          thumbContainer.appendChild(epBadge);
+        }
+      }
+
       const titleEl = document.createElement('div');
       titleEl.className = 'vod-poster-title';
       titleEl.title = item.name;
@@ -2018,7 +2052,12 @@ const App = {
 
       card.addEventListener('click', () => {
         if (isSeries) {
-          this.openSeriesDetails(item, realIndex);
+          let targetSeries = item;
+          if (!targetSeries.seasons && this.data && this.data.series && this.data.series.channels) {
+            const full = this.data.series.channels.find(s => (s.name === item.seriesName || s.name === item.name || s.url === item.url));
+            if (full) targetSeries = { ...full, ...item };
+          }
+          this.openSeriesDetails(targetSeries, realIndex);
         } else {
           this.openMovieDetails(item, realIndex);
         }
@@ -2230,7 +2269,16 @@ const App = {
     tabsContainer.innerHTML = '';
     tabsContainer.scrollLeft = 0;
 
-    const initialSeason = seasonKeys.find(s => (seriesGroup.seasons && seriesGroup.seasons[s] && seriesGroup.seasons[s].length > 0)) || seasonKeys[0];
+    // Identifica se há progresso salvo nesta série
+    const sProg = this.getSeriesProgress(seriesGroup);
+
+    // Se houver temporada salva no progresso e ela existir, abre direto nela!
+    let initialSeason = seasonKeys[0];
+    if (sProg && sProg.lastSeason && seasonKeys.includes(String(sProg.lastSeason))) {
+      initialSeason = String(sProg.lastSeason);
+    } else {
+      initialSeason = seasonKeys.find(s => (seriesGroup.seasons && seriesGroup.seasons[s] && seriesGroup.seasons[s].length > 0)) || seasonKeys[0];
+    }
     let initialSeasonBtn = null;
 
     seasonKeys.forEach((sNum) => {
@@ -2256,11 +2304,34 @@ const App = {
       tabsContainer.appendChild(btn);
     });
 
-    // Configuração dos Botões de Ação da Série (Imagem 4: PLAY, PLAY TRAILER, + FAVORITES)
+    // Configuração dos Botões de Ação da Série (PLAY / CONTINUAR, RESTART, TRAILER, FAVORITES)
     const btnPlayFirst = document.getElementById('btn-series-play-first');
+    const btnRestart = document.getElementById('btn-series-restart');
     const btnTrailer = document.getElementById('btn-series-trailer');
     const btnFav = document.getElementById('btn-series-fav');
     const favText = document.getElementById('series-fav-text');
+    const playText = document.getElementById('series-play-text');
+    const sWrap = document.getElementById('series-progress-wrap');
+    const sFill = document.getElementById('series-progress-bar-fill');
+    const sLabel = document.getElementById('series-progress-label');
+
+    const hasSeriesProgress = sProg && sProg.currentTime > 5 && sProg.percent < 92;
+    if (hasSeriesProgress) {
+      if (sWrap) sWrap.style.display = 'flex';
+      if (sFill) sFill.style.width = `${sProg.percent}%`;
+      if (sLabel) sLabel.textContent = `Continuar: ${sProg.lastLabel || ('Temporada ' + sProg.lastSeason)} • Parou em ${this.formatTime(sProg.currentTime)} de ${this.formatTime(sProg.duration)} (${sProg.percent}%)`;
+      if (playText) playText.textContent = `CONTINUAR: ${sProg.lastLabel || 'S' + sProg.lastSeason}`;
+      if (btnRestart) {
+        btnRestart.style.display = 'inline-flex';
+        btnRestart.onclick = () => {
+          this.playSeriesRestart(seriesGroup);
+        };
+      }
+    } else {
+      if (sWrap) sWrap.style.display = 'none';
+      if (playText) playText.textContent = 'PLAY';
+      if (btnRestart) btnRestart.style.display = 'none';
+    }
 
     const favs = this.getFavorites();
     const isFav = favs.some(f => (f.url || f.name) === (seriesGroup.url || seriesGroup.name));
@@ -2269,17 +2340,15 @@ const App = {
     const initialEps = (seriesGroup.seasons && seriesGroup.seasons[initialSeason]) || [];
     if (btnPlayFirst) {
       btnPlayFirst.onclick = () => {
-        const firstEp = initialEps[0] || { url: seriesGroup.url, name: seriesGroup.name };
-        const seriesTitle = seriesGroup.name || 'Série';
-        const epTitle = firstEp.cleanTitle || 'Episódio 01';
-        if (overlay) overlay.classList.remove('active');
-        if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
-          AndroidDevice.openPlayer(firstEp.url, `${seriesTitle} - ${epTitle}`, seriesTitle, true);
-          return;
+        if (hasSeriesProgress) {
+          const seasonEps = (seriesGroup.seasons && seriesGroup.seasons[sProg.lastSeason]) || [];
+          const epIdx = (typeof sProg.lastEpisodeIndex === 'number' && seasonEps[sProg.lastEpisodeIndex]) ? sProg.lastEpisodeIndex : 0;
+          const targetEp = seasonEps[epIdx] || { url: sProg.lastEpisodeUrl || seriesGroup.url, name: seriesGroup.name };
+          this.playSeriesEpisode(seriesGroup, targetEp, seasonEps, sProg.lastSeason, epIdx, sProg.currentTime);
+        } else {
+          const firstEp = initialEps[0] || { url: seriesGroup.url, name: seriesGroup.name };
+          this.playSeriesEpisode(seriesGroup, firstEp, initialEps, initialSeason, 0, 0);
         }
-        this.player.setPlaylist(initialEps.length > 0 ? initialEps : [seriesGroup]);
-        this.goToScreen('player');
-        this.player.loadStream(firstEp.url, `${seriesTitle} - ${epTitle}`, seriesTitle, 1, true);
       };
     }
 
@@ -2311,6 +2380,41 @@ const App = {
     }, 60);
   },
 
+  playSeriesEpisode(seriesGroup, ep, seasonEps, seasonNum, epIdx, startPositionSec = 0) {
+    const seriesTitle = (seriesGroup && seriesGroup.name) ? seriesGroup.name : 'Série';
+    const epNum = ep.episode || (epIdx + 1);
+    const epTitle = ep.cleanTitle || `Episódio ${epNum}`;
+    const fullTitle = `${seriesTitle} - S${seasonNum}E${epNum} ${epTitle}`;
+
+    this.nowPlayingVod = {
+      type: 'series',
+      seriesGroup: seriesGroup,
+      episode: ep,
+      seasonNum: seasonNum,
+      epIdx: epIdx
+    };
+
+    const overlay = document.getElementById('modal-series-details');
+    if (overlay) overlay.classList.remove('active');
+
+    if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
+      const startMs = Math.round(startPositionSec * 1000);
+      AndroidDevice.openPlayer(ep.url, fullTitle, seriesTitle, true, startMs);
+      return;
+    }
+    this.player.setPlaylist(seasonEps && seasonEps.length > 0 ? seasonEps : [ep]);
+    this.goToScreen('player');
+    this.player.loadStream(ep.url, fullTitle, seriesTitle, epIdx + 1, true, startPositionSec);
+  },
+
+  playSeriesRestart(seriesGroup) {
+    const rawKeys = Object.keys(seriesGroup.seasons || {}).map(Number).filter(n => !isNaN(n) && n > 0);
+    const firstSeason = rawKeys.length > 0 ? String(Math.min(...rawKeys)) : '1';
+    const eps = (seriesGroup.seasons && seriesGroup.seasons[firstSeason]) || [];
+    const firstEp = eps[0] || { url: seriesGroup.url, name: seriesGroup.name };
+    this.playSeriesEpisode(seriesGroup, firstEp, eps, firstSeason, 0, 0);
+  },
+
   // Renderiza Episódios em Cards Widescreen 16:9 com "..." e legenda "S1 E1" (Imagem 3)
   renderSeriesEpisodes(seasonNum) {
     const listContainer = document.getElementById('series-episodes-list');
@@ -2328,6 +2432,8 @@ const App = {
       return;
     }
 
+    const sProg = this.getSeriesProgress(this.activeSeries);
+
     episodes.forEach((ep, idx) => {
       const item = document.createElement('div');
       item.className = 'episode-item focusable';
@@ -2335,29 +2441,40 @@ const App = {
 
       const epNum = ep.episode || (idx + 1);
       const labelSE = `S${seasonNum} E${epNum}`;
+      const epCode = `S${seasonNum}E${epNum}`;
 
       const rawLogo = (ep.logo || this.activeSeries.logo || '').trim();
       const cleanLogo = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawLogo) : rawLogo;
 
+      const epProg = this.getVodProgress(ep);
+      const isWatched = (epProg && epProg.completed) || (sProg && sProg.watchedEpisodes && sProg.watchedEpisodes[epCode]);
+      const isInProgress = !isWatched && (epProg && epProg.currentTime > 5 && epProg.percent < 92);
+
+      let badgesHtml = '';
+      if (isWatched) {
+        item.classList.add('is-watched');
+        badgesHtml += `<span class="episode-watched-badge">✓ Assistido</span>`;
+      } else if (isInProgress) {
+        item.classList.add('is-in-progress');
+        badgesHtml += `
+          <div class="episode-progress-bar">
+            <div class="episode-progress-fill" style="width: ${epProg.percent}%;"></div>
+          </div>
+          <span class="episode-prog-badge">${this.formatTime(epProg.currentTime)}</span>
+        `;
+      }
+
       item.innerHTML = `
         <div class="episode-widescreen-thumb">
           ${cleanLogo && cleanLogo.startsWith('http') ? `<img src="${cleanLogo}" loading="lazy" decoding="async" alt="${labelSE}" onerror="this.remove();" />` : ''}
+          ${badgesHtml}
         </div>
         <div class="episode-label-s-e">${labelSE}</div>
       `;
 
       item.addEventListener('click', () => {
-        const seriesTitle = (this.activeSeries && this.activeSeries.name) ? this.activeSeries.name : 'Série';
-        const epTitle = ep.cleanTitle || `Episódio ${epNum}`;
-        const overlay = document.getElementById('modal-series-details');
-        if (overlay) overlay.classList.remove('active');
-        if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
-          AndroidDevice.openPlayer(ep.url, `${seriesTitle} - ${epTitle}`, seriesTitle, true);
-          return;
-        }
-        this.player.setPlaylist(episodes);
-        this.goToScreen('player');
-        this.player.loadStream(ep.url, `${seriesTitle} - ${epTitle}`, seriesTitle, idx + 1, true);
+        const startPos = (epProg && epProg.currentTime > 5 && epProg.percent < 92) ? epProg.currentTime : 0;
+        this.playSeriesEpisode(this.activeSeries, ep, episodes, seasonNum, idx, startPos);
       });
 
       listContainer.appendChild(item);
@@ -2394,13 +2511,7 @@ const App = {
 
     const modal = document.getElementById('modal-movie-details');
     if (!modal) {
-      if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
-        AndroidDevice.openPlayer(item.url, item.name, item.category, true);
-        return;
-      }
-      this.player.setPlaylist(this.filteredItems);
-      this.goToScreen('player');
-      this.player.loadStream(item.url, item.name, item.category, realIndex + 1, true);
+      this.playSelectedMovie();
       return;
     }
 
@@ -2431,11 +2542,36 @@ const App = {
       }
     }
 
-    // Configura botões de ação (Imagem 4)
+    // Configura botões de ação e barra de progresso (Continuar Assistindo)
     const btnPlay = document.getElementById('btn-movie-play');
+    const btnRestart = document.getElementById('btn-movie-restart');
     const btnTrailer = document.getElementById('btn-movie-trailer');
     const btnFav = document.getElementById('btn-movie-fav');
     const favText = document.getElementById('movie-fav-text');
+    const playText = document.getElementById('movie-play-text');
+    const progWrap = document.getElementById('movie-progress-wrap');
+    const progFill = document.getElementById('movie-progress-bar-fill');
+    const progLabel = document.getElementById('movie-progress-label');
+
+    const prog = this.getVodProgress(item);
+    const hasProgress = prog && prog.currentTime > 5 && prog.percent < 92;
+
+    if (hasProgress) {
+      if (progWrap) progWrap.style.display = 'flex';
+      if (progFill) progFill.style.width = `${prog.percent}%`;
+      if (progLabel) progLabel.textContent = `Parou em ${this.formatTime(prog.currentTime)} de ${this.formatTime(prog.duration)} (${prog.percent}%)`;
+      if (playText) playText.textContent = `CONTINUAR (${this.formatTime(prog.currentTime)})`;
+      if (btnRestart) {
+        btnRestart.style.display = 'inline-flex';
+        btnRestart.onclick = () => {
+          this.playSelectedMovie(0);
+        };
+      }
+    } else {
+      if (progWrap) progWrap.style.display = 'none';
+      if (playText) playText.textContent = 'PLAY';
+      if (btnRestart) btnRestart.style.display = 'none';
+    }
 
     const favs = this.getFavorites();
     const isFav = favs.some(f => (f.url || f.name) === (item.url || item.name));
@@ -2443,7 +2579,8 @@ const App = {
 
     if (btnPlay) {
       btnPlay.onclick = () => {
-        this.playSelectedMovie();
+        const startPos = hasProgress ? prog.currentTime : 0;
+        this.playSelectedMovie(startPos);
       };
     }
 
@@ -2495,7 +2632,7 @@ const App = {
   },
 
   _lastPlayMovieTs: 0,
-  playSelectedMovie() {
+  playSelectedMovie(startPositionSec = 0) {
     if (!this.selectedMovie) return;
     const now = Date.now();
     if (now - this._lastPlayMovieTs < 1500) return;
@@ -2504,17 +2641,20 @@ const App = {
     const item = this.selectedMovie;
     const realIndex = this.selectedMovieIndex || 0;
 
+    this.nowPlayingVod = { type: 'movie', item: item, realIndex: realIndex };
+
     // Fecha o modal de detalhes do filme para não cobrir o player com tela preta
     const modal = document.getElementById('modal-movie-details');
     if (modal) modal.classList.remove('active');
 
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
-      AndroidDevice.openPlayer(item.url, item.name, item.category, true);
+      const startMs = Math.round(startPositionSec * 1000);
+      AndroidDevice.openPlayer(item.url, item.name, item.category, true, startMs);
       return;
     }
     this.player.setPlaylist(this.filteredItems);
     this.goToScreen('player');
-    this.player.loadStream(item.url, item.name, item.category, realIndex + 1, true);
+    this.player.loadStream(item.url, item.name, item.category, realIndex + 1, true, startPositionSec);
   },
 
   // ===================================================================
@@ -2595,27 +2735,9 @@ const App = {
     } else if (this.activeSection === 'movies' || this.activeSection === 'series') {
       this.goToScreen('vod');
       if (this.selectedMovie) {
-        const modal = document.getElementById('modal-movie-details');
-        if (modal) {
-          modal.classList.add('active');
-          setTimeout(() => {
-            const btnPlay = document.getElementById('btn-movie-play');
-            if (btnPlay && window.RemoteControl) {
-              RemoteControl.setFocus(btnPlay);
-            }
-          }, 100);
-        }
+        this.openMovieDetails(this.selectedMovie, this.selectedMovieIndex);
       } else if (this.activeSeries) {
-        const overlay = document.getElementById('modal-series-details');
-        if (overlay) {
-          overlay.classList.add('active');
-          setTimeout(() => {
-            const btnPlayFirst = document.getElementById('btn-series-play-first');
-            if (btnPlayFirst && window.RemoteControl) {
-              RemoteControl.setFocus(btnPlayFirst);
-            }
-          }, 100);
-        }
+        this.openSeriesDetails(this.activeSeries, this.activeSeriesIndex);
       }
     } else {
       this.goToScreen('home');
@@ -2624,6 +2746,23 @@ const App = {
 
   onNativePlayerClosed() {
     this._lastBackTs = Date.now() + 600;
+
+    // Sincroniza progresso salvo no player nativo do Android
+    if (this.nowPlayingVod) {
+      const url = this.nowPlayingVod.item?.url || this.nowPlayingVod.episode?.url;
+      if (url && window.AndroidDevice && typeof AndroidDevice.getSavedPlayback === 'function') {
+        try {
+          const raw = AndroidDevice.getSavedPlayback(url);
+          if (raw) {
+            const data = JSON.parse(raw);
+            if (data && data.position && data.duration) {
+              this.saveVodPlayback(data.position, data.duration, data.position >= data.duration * 0.92);
+            }
+          }
+        } catch(e) {}
+      }
+    }
+
     if (this.selectedMovie) {
       this.currentScreen = 'vod';
       const screenVod = document.getElementById('screen-vod');
@@ -2631,16 +2770,7 @@ const App = {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         screenVod.classList.add('active');
       }
-      const modal = document.getElementById('modal-movie-details');
-      if (modal) {
-        modal.classList.add('active');
-        setTimeout(() => {
-          const btnPlay = document.getElementById('btn-movie-play');
-          if (btnPlay && window.RemoteControl) {
-            RemoteControl.setFocus(btnPlay);
-          }
-        }, 100);
-      }
+      this.openMovieDetails(this.selectedMovie, this.selectedMovieIndex);
       return;
     }
 
@@ -2651,16 +2781,7 @@ const App = {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         screenVod.classList.add('active');
       }
-      const overlay = document.getElementById('modal-series-details');
-      if (overlay) {
-        overlay.classList.add('active');
-        setTimeout(() => {
-          const btnPlayFirst = document.getElementById('btn-series-play-first');
-          if (btnPlayFirst && window.RemoteControl) {
-            RemoteControl.setFocus(btnPlayFirst);
-          }
-        }, 100);
-      }
+      this.openSeriesDetails(this.activeSeries, this.activeSeriesIndex);
       return;
     }
 
@@ -3082,6 +3203,195 @@ const App = {
       });
 
       cal.appendChild(pill);
+    }
+  },
+
+  // ===================================================================
+  // HISTÓRICO DE REPRODUÇÃO & RETOMADA ("CONTINUAR ASSISTINDO")
+  // ===================================================================
+  getPlaybackHistory() {
+    try {
+      return JSON.parse(localStorage.getItem('vion_playback_history') || '{}');
+    } catch (e) {
+      return {};
+    }
+  },
+
+  savePlaybackHistory(history) {
+    try {
+      localStorage.setItem('vion_playback_history', JSON.stringify(history));
+    } catch (e) {}
+  },
+
+  getSeriesHistory() {
+    try {
+      return JSON.parse(localStorage.getItem('vion_series_history') || '{}');
+    } catch (e) {
+      return {};
+    }
+  },
+
+  saveSeriesHistory(seriesHist) {
+    try {
+      localStorage.setItem('vion_series_history', JSON.stringify(seriesHist));
+    } catch (e) {}
+  },
+
+  getVodProgress(item) {
+    if (!item) return null;
+    const history = this.getPlaybackHistory();
+    const key = (item.url || item.name || '').trim();
+    if (!key) return null;
+    const data = history[key];
+    if (!data || !data.currentTime) return null;
+    return data;
+  },
+
+  getSeriesProgress(seriesGroup) {
+    if (!seriesGroup) return null;
+    const hist = this.getSeriesHistory();
+    const key = (seriesGroup.name || seriesGroup.url || '').trim();
+    if (!key) return null;
+    return hist[key] || null;
+  },
+
+  formatTime(totalSeconds) {
+    if (!totalSeconds || isNaN(totalSeconds) || totalSeconds < 0) return '00:00';
+    const s = Math.floor(totalSeconds % 60);
+    const m = Math.floor((totalSeconds / 60) % 60);
+    const h = Math.floor(totalSeconds / 3600);
+    const pad = (n) => String(n).padStart(2, '0');
+    if (h > 0) {
+      return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    return `${pad(m)}:${pad(s)}`;
+  },
+
+  saveVodPlayback(curSec, durSec, isCompleted = false) {
+    if (!curSec || isNaN(curSec) || curSec <= 2) return;
+    const nowPlaying = this.nowPlayingVod;
+    if (!nowPlaying) return;
+
+    const cur = Math.floor(curSec);
+    const dur = (durSec && !isNaN(durSec) && durSec > 0) ? Math.floor(durSec) : 0;
+    const percent = dur > 0 ? Math.min(100, Math.round((cur / dur) * 100)) : 0;
+    const completed = isCompleted || (percent >= 92);
+
+    if (nowPlaying.type === 'movie') {
+      const item = nowPlaying.item;
+      if (!item) return;
+      const key = (item.url || item.name || '').trim();
+      if (!key) return;
+      const history = this.getPlaybackHistory();
+      if (completed) {
+        history[key] = {
+          url: item.url,
+          name: item.name,
+          logo: item.logo || '',
+          category: item.category || 'Filmes',
+          type: 'movies',
+          currentTime: 0,
+          duration: dur,
+          percent: 100,
+          completed: true,
+          timestamp: Date.now()
+        };
+      } else {
+        history[key] = {
+          url: item.url,
+          name: item.name,
+          logo: item.logo || '',
+          category: item.category || 'Filmes',
+          type: 'movies',
+          currentTime: cur,
+          duration: dur,
+          percent: percent,
+          completed: false,
+          timestamp: Date.now()
+        };
+      }
+      this.savePlaybackHistory(history);
+      this.updateContinueWatchingCount('movies');
+    } else if (nowPlaying.type === 'series') {
+      const seriesGroup = nowPlaying.seriesGroup;
+      const ep = nowPlaying.episode;
+      const seasonNum = String(nowPlaying.seasonNum || '1');
+      const epIdx = Number(nowPlaying.epIdx ?? 0);
+      if (!seriesGroup || !ep) return;
+
+      const epKey = (ep.url || ep.name || '').trim();
+      const seriesKey = (seriesGroup.name || seriesGroup.url || '').trim();
+      const epCode = `S${seasonNum}E${ep.episode || epIdx + 1}`;
+
+      // Salva episódio individual no playback history
+      const playbackHistory = this.getPlaybackHistory();
+      if (epKey) {
+        playbackHistory[epKey] = {
+          url: ep.url,
+          name: ep.cleanTitle || ep.name,
+          seriesName: seriesGroup.name,
+          season: seasonNum,
+          episode: ep.episode || epIdx + 1,
+          currentTime: completed ? 0 : cur,
+          duration: dur,
+          percent: completed ? 100 : percent,
+          completed: completed,
+          timestamp: Date.now()
+        };
+        this.savePlaybackHistory(playbackHistory);
+      }
+
+      // Salva progresso geral da série
+      const seriesHistory = this.getSeriesHistory();
+      const existing = seriesHistory[seriesKey] || { watchedEpisodes: {} };
+      if (!existing.watchedEpisodes) existing.watchedEpisodes = {};
+      if (completed) {
+        existing.watchedEpisodes[epCode] = true;
+      }
+
+      seriesHistory[seriesKey] = {
+        ...existing,
+        seriesName: seriesGroup.name,
+        name: seriesGroup.name,
+        url: seriesGroup.url || ep.url,
+        logo: seriesGroup.logo || ep.logo || '',
+        category: seriesGroup.category || 'Séries',
+        type: 'series',
+        lastSeason: seasonNum,
+        lastEpisodeIndex: epIdx,
+        lastEpisodeTitle: ep.cleanTitle || ep.name || `Episódio ${ep.episode || epIdx + 1}`,
+        lastEpisodeUrl: ep.url,
+        lastLabel: epCode,
+        currentTime: completed ? 0 : cur,
+        duration: dur,
+        percent: completed ? 100 : percent,
+        timestamp: Date.now()
+      };
+      this.saveSeriesHistory(seriesHistory);
+      this.updateContinueWatchingCount('series');
+    }
+  },
+
+  getContinueWatchingList(sectionType) {
+    if (sectionType === 'movies') {
+      const history = this.getPlaybackHistory();
+      return Object.values(history)
+        .filter(item => item.type === 'movies' && item.currentTime > 10 && item.percent < 92)
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    } else {
+      const seriesHistory = this.getSeriesHistory();
+      return Object.values(seriesHistory)
+        .filter(item => item.currentTime > 10 && item.percent < 92)
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    }
+  },
+
+  updateContinueWatchingCount(type) {
+    const section = type || this.activeSection || 'movies';
+    const list = this.getContinueWatchingList(section);
+    const countEl = document.getElementById('count-continue-watching');
+    if (countEl) {
+      countEl.textContent = String(list.length);
     }
   },
 

@@ -7843,3 +7843,130 @@ html[data-platform="tv"] *,
 }
 
 
+
+
+/* ===================================================================
+   CONTINUAR ASSISTINDO - BARRAS DE PROGRESSO & BADGES
+   =================================================================== */
+
+/* Barra de progresso nos modais de Filmes e Séries */
+.movie-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 20px 0;
+  max-width: 520px;
+}
+
+.movie-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.movie-progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #facc15, #f59e0b);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+}
+
+.movie-progress-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #facc15;
+  letter-spacing: 0.3px;
+}
+
+/* Barra de progresso nos posters da grade VOD */
+.vod-poster-prog-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 5;
+  overflow: hidden;
+}
+
+.vod-poster-prog-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #facc15, #eab308);
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.7);
+}
+
+.vod-poster-ep-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  z-index: 5;
+  letter-spacing: 0.5px;
+}
+
+/* Badges e estilos nos episódios de séries */
+.episode-item {
+  position: relative;
+}
+
+.episode-item.is-watched {
+  opacity: 0.85;
+}
+
+.episode-watched-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(34, 197, 94, 0.92);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  z-index: 4;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.episode-item.is-in-progress {
+  border-color: rgba(250, 204, 21, 0.7) !important;
+}
+
+.episode-progress-bar {
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 4;
+}
+
+.episode-progress-fill {
+  height: 100%;
+  background: #facc15;
+}
+
+.episode-prog-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+  z-index: 4;
+}

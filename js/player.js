@@ -65,6 +65,17 @@ class TVVideoPlayer {
       this.video.addEventListener('pause', () => {
         this.updatePlayPauseIcon(true);
         this.showControls();
+        if (this.isVodMode && this.video && this.video.currentTime > 5 && window.App && typeof App.saveVodPlayback === 'function') {
+          App.saveVodPlayback(this.video.currentTime, this.video.duration, false);
+        }
+      });
+
+      this.video.addEventListener('ended', () => {
+        this.updatePlayPauseIcon(true);
+        this.showControls();
+        if (this.isVodMode && window.App && typeof App.saveVodPlayback === 'function') {
+          App.saveVodPlayback(0, this.video.duration, true);
+        }
       });
 
       this.video.addEventListener('timeupdate', () => {
@@ -77,12 +88,26 @@ class TVVideoPlayer {
           if (this.currentTimeEl) {
             this.currentTimeEl.textContent = this.formatTime(cur);
           }
+
+          // Salva minutagem do filme/série em reprodução a cada 3.5 segundos
+          if (this.isVodMode && cur > 5 && window.App && typeof App.saveVodPlayback === 'function') {
+            if (!this._lastHtml5SaveTs || Date.now() - this._lastHtml5SaveTs > 3500) {
+              this._lastHtml5SaveTs = Date.now();
+              App.saveVodPlayback(cur, dur, false);
+            }
+          }
         }
       });
 
       this.video.addEventListener('loadedmetadata', () => {
         if (!this.isNativeMode && this.durationTimeEl && this.video && !isNaN(this.video.duration)) {
           this.durationTimeEl.textContent = this.formatTime(this.video.duration);
+        }
+        if (this._pendingSeekPosition && this.video) {
+          try {
+            this.video.currentTime = this._pendingSeekPosition;
+            this._pendingSeekPosition = 0;
+          } catch(e) {}
         }
       });
 
@@ -957,8 +982,9 @@ class TVVideoPlayer {
    * @param {string} category - Categoria ou Série
    * @param {number} channelNumber - Número do canal
    * @param {boolean} [isVod] - Verdadeiro se for filme ou série sob demanda
+   * @param {number} [startPositionSec] - Posição em segundos para continuar de onde parou
    */
-  loadStream(url, channelName, category, channelNumber, isVod) {
+  loadStream(url, channelName, category, channelNumber, isVod, startPositionSec = 0) {
     const cleanUrl = this.normalizeStreamUrl(url);
 
     // .ts é SEMPRE canal ao vivo (nunca VOD)
@@ -971,6 +997,7 @@ class TVVideoPlayer {
     }
 
     this.currentActiveStream = { url: cleanUrl, name: channelName, category, channelNumber };
+    this._pendingSeekPosition = startPositionSec > 3 ? startPositionSec : 0;
 
     // Para o mini player se estiver tocando
     this.stopMini();
@@ -996,7 +1023,7 @@ class TVVideoPlayer {
 
     // Reseta timeline
     if (this.seekSlider) this.seekSlider.value = 0;
-    if (this.currentTimeEl) this.currentTimeEl.textContent = '00:00';
+    if (this.currentTimeEl) this.currentTimeEl.textContent = this.formatTime(startPositionSec);
     if (this.durationTimeEl) this.durationTimeEl.textContent = this.isVodMode ? '--:--' : 'AO VIVO';
 
     this.showLoading(true);
@@ -1019,7 +1046,8 @@ class TVVideoPlayer {
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
       this.stopHtmlVideo();
       this.showLoading(false);
-      AndroidDevice.openPlayer(vodCandidateUrl, channelName, category, this.isVodMode);
+      const startMs = Math.round(startPositionSec * 1000);
+      AndroidDevice.openPlayer(vodCandidateUrl, channelName, category, this.isVodMode, startMs);
       return;
     }
 
@@ -1150,6 +1178,11 @@ class TVVideoPlayer {
   }
 
   stopHtmlVideo() {
+    if (this.isVodMode && this.video && this.video.currentTime > 5 && window.App && typeof App.saveVodPlayback === 'function') {
+      try {
+        App.saveVodPlayback(this.video.currentTime, this.video.duration, false);
+      } catch(e) {}
+    }
     if (this.hls) {
       this.hls.destroy();
       this.hls = null;

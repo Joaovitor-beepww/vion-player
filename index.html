@@ -656,10 +656,21 @@
             Acompanhe todos os episódios desta série com streaming em alta velocidade no Vion Player.
           </p>
 
+          <!-- Barra de Progresso / Onde Parou na Série -->
+          <div id="series-progress-wrap" class="movie-progress-wrap" style="display: none;">
+            <div class="movie-progress-bar-bg">
+              <div id="series-progress-bar-fill" class="movie-progress-bar-fill"></div>
+            </div>
+            <span id="series-progress-label" class="movie-progress-label"></span>
+          </div>
+
           <!-- Botões de Ação Estilo Imagem 4: PLAY, PLAY TRAILER, + FAVORITES -->
           <div class="series-hero-actions">
             <button type="button" id="btn-series-play-first" class="action-btn-cinema focusable" tabindex="0">
-              <span class="btn-triangle">▶</span> <span>PLAY</span>
+              <span class="btn-triangle">▶</span> <span id="series-play-text">PLAY</span>
+            </button>
+            <button type="button" id="btn-series-restart" class="action-btn-cinema focusable" tabindex="0" style="display: none;">
+              <span>↺</span> <span>DO INÍCIO</span>
             </button>
             <button type="button" id="btn-series-trailer" class="action-btn-cinema focusable" tabindex="0">
               <span class="btn-triangle">▶</span> <span>PLAY TRAILER</span>
@@ -707,10 +718,21 @@
           Reproduza este título em alta definição com aceleração por hardware nativo.
         </p>
 
+        <!-- Barra de Progresso / Onde Parou no Filme -->
+        <div id="movie-progress-wrap" class="movie-progress-wrap" style="display: none;">
+          <div class="movie-progress-bar-bg">
+            <div id="movie-progress-bar-fill" class="movie-progress-bar-fill"></div>
+          </div>
+          <span id="movie-progress-label" class="movie-progress-label"></span>
+        </div>
+
         <!-- Botões de Ação Estilo Imagem 4: PLAY, PLAY TRAILER, + FAVORITES -->
         <div class="movie-details-actions">
           <button type="button" id="btn-movie-play" class="action-btn-cinema focusable" tabindex="0">
-            <span class="btn-triangle">▶</span> <span>PLAY</span>
+            <span class="btn-triangle">▶</span> <span id="movie-play-text">PLAY</span>
+          </button>
+          <button type="button" id="btn-movie-restart" class="action-btn-cinema focusable" tabindex="0" style="display: none;">
+            <span>↺</span> <span>DO INÍCIO</span>
           </button>
           <button type="button" id="btn-movie-trailer" class="action-btn-cinema focusable" tabindex="0">
             <span class="btn-triangle">▶</span> <span>PLAY TRAILER</span>
