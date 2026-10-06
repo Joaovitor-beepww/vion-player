@@ -674,25 +674,8 @@
             <div id="series-modal-genres" class="movie-genres-row"></div>
           </div>
           <div id="series-modal-creator" class="details-director-label" style="display: none;"></div>
-          <p id="series-modal-plot" class="series-synopsis">
-            Acompanhe todos os episódios desta série com streaming em alta velocidade no Vion Player.
-          </p>
 
-          <!-- Elenco Principal da Série (Cast) -->
-          <div id="series-details-cast-section" class="details-cast-section" style="display: none;">
-            <h4 class="details-cast-heading">Elenco Principal</h4>
-            <div id="series-details-cast-list" class="details-cast-list"></div>
-          </div>
-
-          <!-- Barra de Progresso / Onde Parou na Série -->
-          <div id="series-progress-wrap" class="movie-progress-wrap" style="display: none;">
-            <div class="movie-progress-bar-bg">
-              <div id="series-progress-bar-fill" class="movie-progress-bar-fill"></div>
-            </div>
-            <span id="series-progress-label" class="movie-progress-label"></span>
-          </div>
-
-          <!-- Botões de Ação Estilo Imagem 4: PLAY, PLAY TRAILER, + FAVORITES -->
+          <!-- Botões de Ação Imediata Estilo Netflix: PLAY, PLAY TRAILER, + FAVORITES -->
           <div class="series-hero-actions">
             <button type="button" id="btn-series-play-first" class="action-btn-cinema focusable" tabindex="0">
               <span class="btn-triangle">▶</span> <span id="series-play-text">PLAY</span>
@@ -707,6 +690,18 @@
               <span class="btn-plus">+</span> <span id="series-fav-text">FAVORITES</span>
             </button>
           </div>
+
+          <!-- Barra de Progresso / Onde Parou na Série -->
+          <div id="series-progress-wrap" class="movie-progress-wrap" style="display: none;">
+            <div class="movie-progress-bar-bg">
+              <div id="series-progress-bar-fill" class="movie-progress-bar-fill"></div>
+            </div>
+            <span id="series-progress-label" class="movie-progress-label"></span>
+          </div>
+
+          <p id="series-modal-plot" class="series-synopsis">
+            Acompanhe todos os episódios desta série com streaming em alta velocidade no Vion Player.
+          </p>
         </div>
       </div>
 
@@ -726,6 +721,12 @@
           <!-- Cards 16:9 widescreen com "..." e legenda "S1 E1", "S1 E2"... -->
         </div>
       </div>
+
+      <!-- Elenco Principal da Série (Cast) -->
+      <div id="series-details-cast-section" class="details-cast-section" style="display: none;">
+        <h4 class="details-cast-heading">Elenco Principal</h4>
+        <div id="series-details-cast-list" class="details-cast-list"></div>
+      </div>
     </div>
   </div>
 
@@ -744,15 +745,6 @@
           <div id="movie-details-genres" class="movie-genres-row"></div>
         </div>
         <div id="movie-details-director" class="details-director-label" style="display: none;"></div>
-        <p id="movie-details-synopsis" class="movie-details-synopsis">
-          Reproduza este título em alta definição com aceleração por hardware nativo.
-        </p>
-
-        <!-- Elenco Principal do Filme (Cast) -->
-        <div id="movie-details-cast-section" class="details-cast-section" style="display: none;">
-          <h4 class="details-cast-heading">Elenco Principal</h4>
-          <div id="movie-details-cast-list" class="details-cast-list"></div>
-        </div>
 
         <!-- Barra de Progresso / Onde Parou no Filme -->
         <div id="movie-progress-wrap" class="movie-progress-wrap" style="display: none;">
@@ -762,7 +754,7 @@
           <span id="movie-progress-label" class="movie-progress-label"></span>
         </div>
 
-        <!-- Botões de Ação Estilo Imagem 4: PLAY, PLAY TRAILER, + FAVORITES -->
+        <!-- Botões de Ação Imediata: PLAY, PLAY TRAILER, + FAVORITES — sempre visíveis no topo -->
         <div class="movie-details-actions">
           <button type="button" id="btn-movie-play" class="action-btn-cinema focusable" tabindex="0">
             <span class="btn-triangle">▶</span> <span id="movie-play-text">PLAY</span>
@@ -779,6 +771,16 @@
           <button type="button" id="btn-movie-close" class="action-btn-cinema focusable btn-cinema-close" tabindex="0">
             <span>✕</span> <span>VOLTAR</span>
           </button>
+        </div>
+
+        <p id="movie-details-synopsis" class="movie-details-synopsis">
+          Reproduza este título em alta definição com aceleração por hardware nativo.
+        </p>
+
+        <!-- Elenco Principal do Filme (Cast) -->
+        <div id="movie-details-cast-section" class="details-cast-section" style="display: none;">
+          <h4 class="details-cast-heading">Elenco Principal</h4>
+          <div id="movie-details-cast-list" class="details-cast-list"></div>
         </div>
       </div>
     </div>

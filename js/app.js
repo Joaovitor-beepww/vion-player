@@ -2554,6 +2554,7 @@ const App = {
           </div>
         `;
       }
+      overlay.scrollTop = 0;
       overlay.classList.add('active');
       if (typeof XtreamCodesEngine !== 'undefined') {
         await XtreamCodesEngine.fetchSeriesEpisodes(seriesGroup);
@@ -2701,6 +2702,7 @@ const App = {
       };
     }
 
+    overlay.scrollTop = 0;
     overlay.classList.add('active');
     this.renderSeriesEpisodes(initialSeason);
 
@@ -3073,6 +3075,7 @@ const App = {
       };
     }
 
+    modal.scrollTop = 0;
     modal.classList.add('active');
     setTimeout(() => {
       if (btnPlay && window.RemoteControl) {
