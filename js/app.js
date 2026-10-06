@@ -1453,17 +1453,17 @@ const App = {
       pill.textContent = cat;
 
       pill.addEventListener('click', () => {
-        this.selectLiveCategory(cat, pill);
+        this.selectLiveCategory(cat, pill, false);
       });
 
       categoriesContainer.appendChild(pill);
     });
 
-    // Seleciona a primeira categoria
-    this.selectLiveCategory(cats[0], categoriesContainer.firstChild);
+    // Seleciona a primeira categoria na carga inicial da tela
+    this.selectLiveCategory(cats[0], categoriesContainer.firstChild, true);
   },
 
-  selectLiveCategory(categoryName, pillElement) {
+  selectLiveCategory(categoryName, pillElement, isInitialScreenLoad = false) {
     this.activeCategory = categoryName;
 
     // Atualiza pills de categoria
@@ -1485,12 +1485,15 @@ const App = {
     this.filteredItems = baseList;
     this.renderLiveChannelsList(this.filteredItems);
 
-    // Toca o primeiro canal automaticamente no Mini-Player e carrega o EPG
-    if (this.filteredItems.length > 0) {
-      this.activeChannelIndex = 0;
-      const firstCh = this.filteredItems[0];
-      this.player.playMiniStream(firstCh.url, firstCh.name, firstCh.category);
-      this.updateChannelEpgSchedule(firstCh);
+    // Apenas inicia o canal na PRIMEIRA abertura da tela caso nenhum canal esteja tocando ainda
+    if (isInitialScreenLoad && (!this.player || !this.player.currentActiveStream)) {
+      if (this.filteredItems.length > 0) {
+        const firstCh = this.filteredItems[0];
+        this.currentPlayingChannel = firstCh;
+        this.activeChannelIndex = 0;
+        this.player.playMiniStream(firstCh.url, firstCh.name, firstCh.category);
+        this.updateChannelEpgSchedule(firstCh);
+      }
     }
   },
 
@@ -1517,7 +1520,11 @@ const App = {
     batch.forEach((ch, localIdx) => {
       const idx = this.renderedChannelsCount + localIdx;
       const row = document.createElement('div');
-      row.className = `live-ch-row focusable ${idx === this.activeChannelIndex ? 'active-playing' : ''}`;
+      const isCurrentlyPlaying = (this.currentPlayingChannel && (
+        (ch.url && this.currentPlayingChannel.url === ch.url) ||
+        (ch.name && this.currentPlayingChannel.name === ch.name)
+      ));
+      row.className = `live-ch-row focusable ${isCurrentlyPlaying ? 'active-playing' : ''}`;
       row.setAttribute('tabindex', '0');
 
       const rawLogo = (ch.logo || '').trim();
@@ -1553,11 +1560,17 @@ const App = {
       // Ao clicar ou pressionar OK/Enter no controle remoto: troca de canal, ou abre tela cheia se já for o ativo
       row.addEventListener('click', () => {
         clearTimeout(this.previewFocusTimer);
-        if (this.activeChannelIndex === idx) {
+        const isAlreadyPlaying = (this.currentPlayingChannel && (
+          (ch.url && this.currentPlayingChannel.url === ch.url) ||
+          (ch.name && this.currentPlayingChannel.name === ch.name)
+        ));
+
+        if (isAlreadyPlaying) {
           // Se clicou no canal que já está tocando, expande para tela cheia
           this.expandMiniToFullscreen();
         } else {
           // Canal novo: muda o canal ativo, inicia o stream no mini-player e atualiza o EPG
+          this.currentPlayingChannel = ch;
           this.activeChannelIndex = idx;
           document.querySelectorAll('.live-ch-row').forEach(r => r.classList.remove('active-playing'));
           row.classList.add('active-playing');
@@ -1569,7 +1582,9 @@ const App = {
 
       // Duplo clique ou duplo toque rápido: abre tela cheia instantaneamente
       row.addEventListener('dblclick', () => {
+        this.currentPlayingChannel = ch;
         this.activeChannelIndex = idx;
+        this.player.playMiniStream(ch.url, ch.name, ch.category);
         this.expandMiniToFullscreen();
       });
 
@@ -1619,6 +1634,7 @@ const App = {
     const ch = this.filteredItems[this.activeChannelIndex];
     if (!ch) return;
 
+    this.currentPlayingChannel = ch;
     this.updateChannelEpgSchedule(ch);
 
     document.querySelectorAll('.live-ch-row').forEach((r, idx) => {
@@ -2985,157 +3001,59 @@ const App = {
       return;
     }
 
-    const chName = (channel.name || '').trim();
-    const chCat = (channel.category || '').toLowerCase();
-    const chLower = chName.toLowerCase();
-
-    const now = new Date();
-    if (dayOffset !== 0) {
-      now.setDate(now.getDate() + dayOffset);
-    }
-    const curHour = now.getHours();
-    const curMin = now.getMinutes();
-    const totalMinutesNow = curHour * 60 + curMin;
-
-    // Identificação inteligente do perfil do canal
-    let profile = 'general';
-    if (/(?:sport|espn|futebol|globoesporte|premiere|combate|dazn|fox|bandsports|conmebol|tnt sports|cazé|caze|arena|ufc|nba)/i.test(chLower) || /(?:esporte|sports|futebol|luta)/i.test(chCat)) {
-      profile = 'sports';
-    } else if (/(?:news|noticia|notícia|cnn|jovem pan|globonews|bandnews|record news|recordnews)/i.test(chLower) || /(?:noticia|notícia|noticias|news)/i.test(chCat)) {
-      profile = 'news';
-    } else if (/(?:telecine|hbo|cinema|cine|movie|warner|max|megapix|paramount|space|sony|universal|tnt\b|cinemax|studio)/i.test(chLower) || /(?:filme|filmes|cinema|series)/i.test(chCat)) {
-      profile = 'movies';
-    } else if (/(?:cartoon|kids|infantil|gloob|disney|nick|discovery kids|boing|toons|animax)/i.test(chLower) || /(?:infantil|kids|desenho|animacao)/i.test(chCat)) {
-      profile = 'kids';
-    } else if (/(?:discovery|natgeo|history|animal planet|curta|investigação|investigacao|science)/i.test(chLower) || /(?:documentario|documentários|doc)/i.test(chCat)) {
-      profile = 'doc';
-    } else if (/(?:globo|sbt|record|band\b|rede tv|redetv|cultura)/i.test(chLower) || /(?:aberto|abertos|variedades)/i.test(chCat)) {
-      profile = 'open';
-    } else if (/(?:24\s*h|24hrs|24 horas)/i.test(chLower) || /(?:24\s*h|24hrs|24 horas)/i.test(chCat)) {
-      profile = '24h';
-    }
-
-    const programTemplates = {
-      sports: [
-        { title: "Pré-Jogo Especial & Análise Tática", dur: 60, desc: "Aquecimento completo com escalações e entrevistas exclusivas" },
-        { title: `${chName} - Transmissão Ao Vivo`, dur: 120, desc: "A cobertura completa da partida lance a lance em Full HD 60fps" },
-        { title: "Linha de Passe - Debate & Melhores Momentos", dur: 90, desc: "Comentários e análise aprofundada dos lances da rodada" },
-        { title: "SportsCenter Noturno - Giro Mundial", dur: 60, desc: "Os principais gols, resultados e notícias de todos os esportes" },
-        { title: "Melhores Momentos & Gols da Rodada", dur: 60, desc: "Compacto dos melhores lances e jogadas decisivas" }
-      ],
-      news: [
-        { title: `Edição em Tempo Real - ${curHour}h`, dur: 60, desc: "As manchetes urgentes do Brasil e do mundo ao vivo" },
-        { title: "Análise Econômica & Mercado Financeiro", dur: 60, desc: "Bolsa de valores, cotação das moedas e o cenário do dia" },
-        { title: "Plantão Especial de Notícias", dur: 90, desc: "Cobertura aprofundada dos principais fatos da política nacional" },
-        { title: "Jornal da Noite - Panorama Completo", dur: 60, desc: "Resumo com os principais acontecimentos e reportagens exclusivas" },
-        { title: "Debate & Opinião dos Especialistas", dur: 60, desc: "Mesa redonda sobre os temas que movimentaram o dia" }
-      ],
-      movies: [
-        { title: "Sessão Premium: As Maiores Bilheterias", dur: 120, desc: "Cinema de tirar o fôlego em alta definição 4K HDR com áudio 5.1" },
-        { title: "Cine Ação & Suspense Sem Intervalos", dur: 110, desc: "Histórias eletrizantes com elenco estelar e muita adrenalina" },
-        { title: "Super Estreia da Noite - Edição Especial", dur: 130, desc: "O grande lançamento do mês nas melhores telas de cinema" },
-        { title: "Cinema da Madrugada: Cult & Clássicos", dur: 105, desc: "Sucessos aclamados pela crítica e pelo público" },
-        { title: "Maratona Cinema: Cine Pipoca", dur: 95, desc: "Diversão e aventura garantida para toda a família curtir" }
-      ],
-      kids: [
-        { title: "Clube da Animação: Aventuras Mágicas", dur: 45, desc: "Os personagens favoritos dos pequenos em historinhas divertidas" },
-        { title: "Hora dos Toons: Super Heróis em Ação", dur: 45, desc: "Muita risada, descobertas e episódios inéditos cheios de energia" },
-        { title: "Cine Kids: Animação Especial", dur: 90, desc: "Longa-metragem animado cheio de aventuras, magia e canções" },
-        { title: "Turma da Fantasia: Novos Episódios", dur: 45, desc: "Desenhos educativos que divertem e ensinam brincando" }
-      ],
-      doc: [
-        { title: "Planeta Selvagem: Predadores da Terra", dur: 60, desc: "A vida secreta da fauna selvagem em florestas tropicais" },
-        { title: "Grandes Mistérios da História Antiga", dur: 60, desc: "Descobertas arqueológicas e civilizações perdidas no tempo" },
-        { title: "Mega Construções & Engenharia Extrema", dur: 60, desc: "As obras mais grandiosas e inovadoras do planeta" },
-        { title: "Cosmos & Segredos do Universo", dur: 60, desc: "Uma viagem pelas galáxias e mistérios da astronomia moderna" }
-      ],
-      open: [
-        { title: "Jornal Regional - Edição Ao Vivo", dur: 75, desc: "Fatos locais, trânsito, clima e as notícias da sua região" },
-        { title: "Programa de Variedades & Entretenimento", dur: 90, desc: "Entrevistas, música, culinária e histórias emocionantes" },
-        { title: "Novela das Oito - Capítulo do Dia", dur: 60, desc: "As reviravoltas da trama mais acompanhada do Brasil" },
-        { title: "Grande Jornal Nacional Ao Vivo", dur: 50, desc: "O resumo das notícias mais importantes do país e do mundo" },
-        { title: "Sessão Cinema / Futebol Especial", dur: 120, desc: "Grandes partidas ou superproduções premiadas da TV aberta" }
-      ],
-      '24h': [
-        { title: `Maratona 24H: ${chName}`, dur: 120, desc: `Transmissão sem intervalos dos melhores episódios ininterruptos` },
-        { title: "Sessão Contínua: Melhores Momentos", dur: 120, desc: "Seleção especial de episódios mais assistidos pelos fãs" },
-        { title: "Sequência de Clássicos 24 Horas", dur: 120, desc: "Reviva as temporadas que marcaram época com qualidade Full HD" },
-        { title: "Especial Noturno 24H Sem Cortes", dur: 120, desc: "Programação contínua exclusiva sem comerciais" }
-      ],
-      general: [
-        { title: `Transmissão Ao Vivo: ${chName}`, dur: 90, desc: `Programação ao vivo com sinal Full HD de ${chName}` },
-        { title: "Próxima Atração em Alta Definição", dur: 90, desc: "Conteúdo exclusivo com imagem e áudio digital impecáveis" },
-        { title: "Programação Especial da Noite", dur: 120, desc: "Os destaques mais esperados da grade de programação" },
-        { title: "Sessão Madrugada Premium", dur: 120, desc: "Variedades, cultura e entretenimento de qualidade superior" }
-      ]
-    };
-
-    const list = programTemplates[profile] || programTemplates.general;
-
-    const prog1Dur = list[0].dur || 90;
-    const prog1StartMin = Math.max(0, totalMinutesNow - Math.floor(prog1Dur * 0.45));
-    const prog1EndMin = prog1StartMin + prog1Dur;
-    const prog1Elapsed = totalMinutesNow - prog1StartMin;
-    const prog1Progress = dayOffset === 0 ? Math.min(95, Math.max(10, Math.round((prog1Elapsed / prog1Dur) * 100))) : 0;
-
-    const formatHour = (mins) => {
-      const h = Math.floor((mins % 1440) / 60);
-      const m = Math.floor(mins % 60);
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    };
-
-    const slots = [];
-    slots.push({
-      time: `${formatHour(prog1StartMin)} - ${formatHour(prog1EndMin)}`,
-      name: list[0].title,
-      desc: list[0].desc,
-      isNow: dayOffset === 0,
-      progress: prog1Progress
-    });
-
-    let currentSlotStart = prog1EndMin;
-    for (let i = 1; i < 4; i++) {
-      const prog = list[i % list.length];
-      const slotEnd = currentSlotStart + (prog.dur || 60);
-      slots.push({
-        time: `${formatHour(currentSlotStart)} - ${formatHour(slotEnd)}`,
-        name: prog.title,
-        desc: prog.desc,
-        isNow: false
+    const renderSlots = (slots) => {
+      if (!slots || slots.length === 0) return;
+      let html = '';
+      slots.forEach(slot => {
+        if (slot.isNow) {
+          html += `
+            <div class="epg-row epg-row-active">
+              <div class="epg-header-line">
+                <span class="epg-badge-live">● NO AR</span>
+                <span class="epg-time epg-time-active">${slot.time}</span>
+              </div>
+              <div class="epg-name epg-name-active">${escapeHtml(slot.name)}</div>
+              <div class="epg-progress-bar-wrap">
+                <div class="epg-progress-bar-fill" style="width: ${slot.progress}%"></div>
+              </div>
+              <div class="epg-desc">${escapeHtml(slot.desc)}</div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="epg-row epg-row-upcoming">
+              <div class="epg-upcoming-time">${slot.time}</div>
+              <div class="epg-upcoming-content">
+                <div class="epg-name">${escapeHtml(slot.name)}</div>
+                <div class="epg-desc-sub">${escapeHtml(slot.desc)}</div>
+              </div>
+            </div>
+          `;
+        }
       });
-      currentSlotStart = slotEnd;
+      scheduleContainer.innerHTML = html;
+    };
+
+    // 1. Obtém a programação única do canal via EpgService (instantâneo e personalizado)
+    const initialSlots = (window.EpgService && typeof EpgService.getChannelSchedule === 'function')
+      ? EpgService.getChannelSchedule(channel, dayOffset)
+      : [];
+
+    if (initialSlots && initialSlots.length > 0) {
+      renderSlots(initialSlots);
     }
 
-    let html = '';
-    slots.forEach(slot => {
-      if (slot.isNow) {
-        html += `
-          <div class="epg-row epg-row-active">
-            <div class="epg-header-line">
-              <span class="epg-badge-live">● NO AR</span>
-              <span class="epg-time epg-time-active">${slot.time}</span>
-            </div>
-            <div class="epg-name epg-name-active">${escapeHtml(slot.name)}</div>
-            <div class="epg-progress-bar-wrap">
-              <div class="epg-progress-bar-fill" style="width: ${slot.progress}%"></div>
-            </div>
-            <div class="epg-desc">${escapeHtml(slot.desc)}</div>
-          </div>
-        `;
-      } else {
-        html += `
-          <div class="epg-row epg-row-upcoming">
-            <div class="epg-upcoming-time">${slot.time}</div>
-            <div class="epg-upcoming-content">
-              <div class="epg-name">${escapeHtml(slot.name)}</div>
-              <div class="epg-desc-sub">${escapeHtml(slot.desc)}</div>
-            </div>
-          </div>
-        `;
-      }
-    });
-
-    scheduleContainer.innerHTML = html;
+    // 2. Tenta buscar EPG oficial do servidor Xtream se aplicável (assíncrono)
+    if (dayOffset === 0 && window.EpgService && typeof EpgService.fetchXtreamEpg === 'function') {
+      const activeChUrl = channel.url;
+      EpgService.fetchXtreamEpg(channel, (serverSlots) => {
+        // Apenas atualiza se o canal ainda for o visualizado atualmente
+        const curCh = (this.filteredItems && this.filteredItems[this.activeChannelIndex]) || this.currentPlayingChannel;
+        if (curCh && curCh.url === activeChUrl && serverSlots && serverSlots.length > 0) {
+          renderSlots(serverSlots);
+        }
+      });
+    }
   },
 
   // ===================================================================
