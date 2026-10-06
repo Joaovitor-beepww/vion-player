@@ -255,6 +255,7 @@ const RemoteControl = {
     if (App.currentScreen === 'player') {
       if (this.KEYS.BACK.includes(code)) {
         e.preventDefault();
+        if (window.App) App._lastBackTs = Date.now() + 500;
         App.closePlayer && App.closePlayer();
       } else if (this.KEYS.PLAY.includes(code) || this.KEYS.PAUSE.includes(code) || this.KEYS.PLAY_PAUSE.includes(code)) {
         e.preventDefault();

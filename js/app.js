@@ -2002,7 +2002,7 @@ const App = {
 
       card.addEventListener('click', () => {
         if (isSeries) {
-          this.openSeriesDetails(item);
+          this.openSeriesDetails(item, realIndex);
         } else {
           this.openMovieDetails(item, realIndex);
         }
@@ -2095,8 +2095,9 @@ const App = {
   // ===================================================================
   // 3. TELA CINEMATOGRÁFICA DE SÉRIES (ESTILO NETFLIX / HBO MAX)
   // ===================================================================
-  async openSeriesDetails(seriesGroup) {
+  async openSeriesDetails(seriesGroup, realIndex = 0) {
     this.activeSeries = seriesGroup;
+    this.activeSeriesIndex = realIndex;
     const overlay = document.getElementById('modal-series-details');
     if (!overlay) return;
 
@@ -2350,11 +2351,22 @@ const App = {
   closeSeriesModal() {
     const overlay = document.getElementById('modal-series-details');
     if (overlay) overlay.classList.remove('active');
+    const targetIdx = this.activeSeriesIndex;
     this.activeSeries = null;
+    this.activeSeriesIndex = null;
     setTimeout(() => {
-      const activeCard = document.querySelector('#vod-grid .vod-poster-card.focused') || document.querySelector('#vod-grid .vod-poster-card');
-      if (activeCard && window.RemoteControl) {
-        RemoteControl.setFocus(activeCard);
+      let targetCard = null;
+      if (typeof targetIdx === 'number' && targetIdx >= 0) {
+        const cards = document.querySelectorAll('#vod-grid .vod-poster-card');
+        if (cards && cards[targetIdx]) {
+          targetCard = cards[targetIdx];
+        }
+      }
+      if (!targetCard) {
+        targetCard = document.querySelector('#vod-grid .vod-poster-card.focused') || document.querySelector('#vod-grid .vod-poster-card');
+      }
+      if (targetCard && window.RemoteControl) {
+        RemoteControl.setFocus(targetCard);
       }
     }, 60);
   },
@@ -2446,11 +2458,22 @@ const App = {
   closeMovieDetails() {
     const modal = document.getElementById('modal-movie-details');
     if (modal) modal.classList.remove('active');
+    const targetIdx = this.selectedMovieIndex;
     this.selectedMovie = null;
+    this.selectedMovieIndex = null;
     setTimeout(() => {
-      const activeCard = document.querySelector('#vod-grid .vod-poster-card.focused') || document.querySelector('#vod-grid .vod-poster-card');
-      if (activeCard && window.RemoteControl) {
-        RemoteControl.setFocus(activeCard);
+      let targetCard = null;
+      if (typeof targetIdx === 'number' && targetIdx >= 0) {
+        const cards = document.querySelectorAll('#vod-grid .vod-poster-card');
+        if (cards && cards[targetIdx]) {
+          targetCard = cards[targetIdx];
+        }
+      }
+      if (!targetCard) {
+        targetCard = document.querySelector('#vod-grid .vod-poster-card.focused') || document.querySelector('#vod-grid .vod-poster-card');
+      }
+      if (targetCard && window.RemoteControl) {
+        RemoteControl.setFocus(targetCard);
       }
     }, 60);
   },
@@ -2537,6 +2560,12 @@ const App = {
     const iframe = document.getElementById('trailer-iframe');
     if (iframe) iframe.src = '';
     if (modal) modal.classList.remove('active');
+    setTimeout(() => {
+      const btnTrailer = document.getElementById('btn-movie-trailer') || document.getElementById('btn-series-trailer');
+      if (btnTrailer && window.RemoteControl) {
+        RemoteControl.setFocus(btnTrailer);
+      }
+    }, 60);
   },
 
   // ===================================================================
@@ -2544,6 +2573,7 @@ const App = {
   // ===================================================================
   closePlayer() {
     this.player.stop();
+    this._lastBackTs = Date.now() + 500;
     if (this.activeSection === 'channels') {
       this.goToScreen('channels');
     } else if (this.activeSection === 'movies' || this.activeSection === 'series') {
@@ -2557,7 +2587,7 @@ const App = {
             if (btnPlay && window.RemoteControl) {
               RemoteControl.setFocus(btnPlay);
             }
-          }, 80);
+          }, 100);
         }
       } else if (this.activeSeries) {
         const overlay = document.getElementById('modal-series-details');
@@ -2568,11 +2598,59 @@ const App = {
             if (btnPlayFirst && window.RemoteControl) {
               RemoteControl.setFocus(btnPlayFirst);
             }
-          }, 80);
+          }, 100);
         }
       }
     } else {
       this.goToScreen('home');
+    }
+  },
+
+  onNativePlayerClosed() {
+    this._lastBackTs = Date.now() + 600;
+    if (this.selectedMovie) {
+      this.currentScreen = 'vod';
+      const screenVod = document.getElementById('screen-vod');
+      if (screenVod && !screenVod.classList.contains('active')) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        screenVod.classList.add('active');
+      }
+      const modal = document.getElementById('modal-movie-details');
+      if (modal) {
+        modal.classList.add('active');
+        setTimeout(() => {
+          const btnPlay = document.getElementById('btn-movie-play');
+          if (btnPlay && window.RemoteControl) {
+            RemoteControl.setFocus(btnPlay);
+          }
+        }, 100);
+      }
+      return;
+    }
+
+    if (this.activeSeries) {
+      this.currentScreen = 'vod';
+      const screenVod = document.getElementById('screen-vod');
+      if (screenVod && !screenVod.classList.contains('active')) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        screenVod.classList.add('active');
+      }
+      const overlay = document.getElementById('modal-series-details');
+      if (overlay) {
+        overlay.classList.add('active');
+        setTimeout(() => {
+          const btnPlayFirst = document.getElementById('btn-series-play-first');
+          if (btnPlayFirst && window.RemoteControl) {
+            RemoteControl.setFocus(btnPlayFirst);
+          }
+        }, 100);
+      }
+      return;
+    }
+
+    if (this.activeSection === 'channels' || this.currentScreen === 'channels') {
+      this.goToScreen('channels');
+      return;
     }
   },
 
@@ -2612,6 +2690,8 @@ const App = {
       target.classList.add('active');
 
       setTimeout(() => {
+        const activeModal = document.querySelector('.tv-dialog-overlay.active, .movie-details-overlay.active, .trailer-modal-overlay.active, .sync-modal-overlay.active');
+        if (activeModal) return;
         const firstFocus = target.querySelector('.focusable');
         if (firstFocus) {
           RemoteControl.setFocus(firstFocus);
@@ -2660,7 +2740,7 @@ const App = {
   _lastBackTs: 0,
   handleBack() {
     const now = Date.now();
-    if (now - this._lastBackTs < 160) return;
+    if (now - this._lastBackTs < 350) return;
     this._lastBackTs = now;
 
     // Se um campo de texto estiver em foco, desfoque-o
@@ -2678,6 +2758,7 @@ const App = {
 
     // 1. Se estiver no player de vídeo HTML5 em tela cheia, fecha o player com prioridade absoluta
     if (this.currentScreen === 'player') {
+      this._lastBackTs = now + 450;
       this.closePlayer();
       return;
     }
