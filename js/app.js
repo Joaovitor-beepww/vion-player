@@ -80,6 +80,7 @@ const TmdbResolver = {
           const poster = rawPoster ? ((typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawPoster) : rawPoster) : null;
           const backdrop = rawBackdrop ? ((typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawBackdrop) : rawBackdrop) : null;
           const meta = {
+            id: first.id,
             poster,
             backdrop,
             plot: first.overview || '',
@@ -97,6 +98,56 @@ const TmdbResolver = {
 
     this._pending.set(cacheKey, promise);
     return promise;
+  },
+
+  _seasonEpCache: new Map(),
+
+  async resolveSeasonEpisodes(seriesName, seasonNumber) {
+    const clean = this.cleanTitle(seriesName);
+    if (!clean) return {};
+    const sNum = parseInt(seasonNumber, 10) || 1;
+
+    let meta = await this.resolve(clean, true);
+    if (!meta || !meta.id) {
+      const altClean = clean.replace(/[^a-zA-Z0-9 ]/g, ' ').trim();
+      if (altClean && altClean !== clean) {
+        meta = await this.resolve(altClean, true);
+      }
+    }
+    if (!meta || !meta.id) return {};
+
+    const cacheKey = `${meta.id}:s${sNum}`;
+    if (this._seasonEpCache.has(cacheKey)) {
+      return this._seasonEpCache.get(cacheKey);
+    }
+
+    try {
+      const url = `https://api.themoviedb.org/3/tv/${meta.id}/season/${sNum}?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&language=pt-BR`;
+      const res = await fetch(url);
+      if (!res.ok) return {};
+      const data = await res.json();
+      const map = {};
+      if (data && Array.isArray(data.episodes)) {
+        data.episodes.forEach(ep => {
+          const epNum = ep.episode_number;
+          let still = null;
+          if (ep.still_path) {
+            const rawStill = `https://image.tmdb.org/t/p/w500${ep.still_path}`;
+            still = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawStill) : rawStill;
+          }
+          map[epNum] = {
+            still,
+            name: ep.name || '',
+            overview: ep.overview || '',
+            voteAverage: ep.vote_average || 0
+          };
+        });
+      }
+      this._seasonEpCache.set(cacheKey, map);
+      return map;
+    } catch (e) {
+      return {};
+    }
   }
 };
 TmdbResolver.init();
@@ -2195,6 +2246,9 @@ const App = {
     // Busca automática no TMDB para completar capa, backdrop, sinopse e nota se faltarem
     TmdbResolver.resolve(seriesGroup.name, true).then(meta => {
       if (meta) {
+        if (meta.id) {
+          seriesGroup.tmdbId = meta.id;
+        }
         if (meta.poster && posterEl && (!posterEl.src || posterEl.style.display === 'none')) {
           posterEl.src = meta.poster;
           posterEl.style.display = 'block';
@@ -2436,11 +2490,12 @@ const App = {
     this.playSeriesEpisode(seriesGroup, firstEp, eps, firstSeason, 0, 0, true);
   },
 
-  // Renderiza Episódios em Cards Widescreen 16:9 com "..." e legenda "S1 E1" (Imagem 3)
+  // Renderiza Episódios em Cards Widescreen 16:9 com foto de cena exclusiva de cada episódio do TMDB
   renderSeriesEpisodes(seasonNum) {
     const listContainer = document.getElementById('series-episodes-list');
     if (!listContainer || !this.activeSeries) return;
 
+    this.activeSeason = seasonNum;
     listContainer.innerHTML = '';
     const episodes = (this.activeSeries.seasons && this.activeSeries.seasons[seasonNum]) || [];
 
@@ -2454,6 +2509,8 @@ const App = {
     }
 
     const sProg = this.getSeriesProgress(this.activeSeries);
+    const seriesBackdrop = (this.activeSeries.backdrop || '').trim();
+    const seriesLogo = (this.activeSeries.logo || '').trim();
 
     episodes.forEach((ep, idx) => {
       const item = document.createElement('div');
@@ -2461,11 +2518,18 @@ const App = {
       item.setAttribute('tabindex', '0');
 
       const epNum = ep.episode || (idx + 1);
+      item.dataset.epNum = epNum;
       const labelSE = `S${seasonNum} E${epNum}`;
       const epCode = `S${seasonNum}E${epNum}`;
 
-      const rawLogo = (ep.logo || this.activeSeries.logo || '').trim();
-      const cleanLogo = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawLogo) : rawLogo;
+      // 1. Imagem de capa do episódio:
+      // Se o episódio já tem foto de cena salva (ep.still), usa ela.
+      // Se ep.logo for exclusivo do episódio (diferente da logo geral da série), usa ele.
+      // Caso contrário, usa como base o backdrop horizontal (16:9) da série ou logo.
+      const epStill = (ep.still || '').trim();
+      const rawEpLogo = (ep.logo || '').trim();
+      const initialRaw = epStill || (rawEpLogo && rawEpLogo !== seriesLogo ? rawEpLogo : '') || seriesBackdrop || seriesLogo;
+      const cleanThumb = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(initialRaw) : initialRaw;
 
       const epProg = this.getVodProgress(ep);
       let epCurTime = epProg ? Number(epProg.currentTime) : 0;
@@ -2488,12 +2552,15 @@ const App = {
         `;
       }
 
+      const epTitleName = ep.cleanTitle || '';
+
       item.innerHTML = `
         <div class="episode-widescreen-thumb">
-          ${cleanLogo && cleanLogo.startsWith('http') ? `<img src="${cleanLogo}" loading="lazy" decoding="async" alt="${labelSE}" onerror="this.remove();" />` : ''}
+          ${cleanThumb && cleanThumb.startsWith('http') ? `<img class="episode-thumb-img" src="${cleanThumb}" loading="lazy" decoding="async" alt="${labelSE}" onerror="this.remove();" />` : ''}
           ${badgesHtml}
         </div>
         <div class="episode-label-s-e">${labelSE}</div>
+        <div class="episode-title-name">${epTitleName}</div>
       `;
 
       item.addEventListener('click', () => {
@@ -2503,6 +2570,54 @@ const App = {
 
       listContainer.appendChild(item);
     });
+
+    // 2. Busca assíncrona das fotos de cena exclusivas de cada episódio no TMDB
+    const activeRef = this.activeSeries;
+    const currentSeason = seasonNum;
+
+    TmdbResolver.resolveSeasonEpisodes(activeRef.name, currentSeason).then(stillsMap => {
+      if (!stillsMap || !this.activeSeries || this.activeSeries !== activeRef || this.activeSeason !== currentSeason) {
+        return;
+      }
+
+      Object.keys(stillsMap).forEach(numStr => {
+        const epData = stillsMap[numStr];
+        if (!epData) return;
+        const targetCard = listContainer.querySelector(`[data-ep-num="${numStr}"]`);
+        if (!targetCard) return;
+
+        // Atualiza a imagem com a cena real do episódio (screenshot 16:9)
+        if (epData.still) {
+          const thumbWrap = targetCard.querySelector('.episode-widescreen-thumb');
+          if (thumbWrap) {
+            let img = thumbWrap.querySelector('.episode-thumb-img');
+            if (!img) {
+              img = document.createElement('img');
+              img.className = 'episode-thumb-img';
+              img.loading = 'lazy';
+              img.decoding = 'async';
+              img.alt = `S${currentSeason} E${numStr}`;
+              thumbWrap.insertBefore(img, thumbWrap.firstChild);
+            }
+            img.src = epData.still;
+            img.onerror = () => { img.remove(); };
+          }
+
+          const matchEp = episodes.find(e => (e.episode || 0) == Number(numStr));
+          if (matchEp) matchEp.still = epData.still;
+        }
+
+        // Se houver título oficial do episódio (ex.: "Piloto", "Capítulo 1"), exibe abaixo
+        if (epData.name && epData.name !== `Episódio ${numStr}`) {
+          const titleEl = targetCard.querySelector('.episode-title-name');
+          if (titleEl) {
+            titleEl.textContent = epData.name;
+          }
+          const matchEp = episodes.find(e => (e.episode || 0) == Number(numStr));
+          if (matchEp) matchEp.cleanTitle = epData.name;
+        }
+      });
+    }).catch(() => {});
   },
 
   closeSeriesModal() {

@@ -7198,13 +7198,15 @@ html[data-platform="tv"] *,
   letter-spacing: 4px !important;
 }
 
-.episode-widescreen-thumb img {
+.episode-widescreen-thumb img,
+.episode-thumb-img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
   position: absolute !important;
   inset: 0 !important;
   z-index: 2 !important;
+  transition: opacity 0.25s ease !important;
 }
 
 .episode-label-s-e {
@@ -7214,6 +7216,20 @@ html[data-platform="tv"] *,
   color: #ffffff !important;
   text-align: center !important;
   letter-spacing: 0.5px !important;
+}
+
+.episode-title-name {
+  margin-top: 2px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #94a3b8 !important;
+  text-align: center !important;
+  max-width: 195px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  letter-spacing: 0.3px !important;
+  min-height: 14px !important;
 }
 
 /* Foco no Episódio 16:9 */
@@ -7232,6 +7248,11 @@ html[data-platform="tv"] *,
 .episode-item:hover .episode-label-s-e {
   color: #ffffff !important;
   font-weight: 800 !important;
+}
+
+.episode-item.focused .episode-title-name,
+.episode-item:hover .episode-title-name {
+  color: #facc15 !important;
 }
 
 
