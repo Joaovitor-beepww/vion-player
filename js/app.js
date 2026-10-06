@@ -148,9 +148,204 @@ const TmdbResolver = {
     } catch (e) {
       return {};
     }
+  },
+
+  _creditsCache: new Map(),
+
+  async resolveDetailsAndCredits(tmdbId, isSeries = false) {
+    if (!tmdbId) return null;
+    const cacheKey = (isSeries ? 'tv_cred:' : 'mv_cred:') + tmdbId;
+    if (this._creditsCache.has(cacheKey)) {
+      return this._creditsCache.get(cacheKey);
+    }
+
+    try {
+      const endpoint = isSeries ? `tv/${tmdbId}` : `movie/${tmdbId}`;
+      const url = `https://api.themoviedb.org/3/${endpoint}?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&append_to_response=credits&language=pt-BR`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+
+      const genres = Array.isArray(data.genres) ? data.genres.map(g => g.name) : [];
+      let director = '';
+      if (!isSeries && data.credits && Array.isArray(data.credits.crew)) {
+        const d = data.credits.crew.find(c => c.job === 'Director');
+        if (d) director = d.name;
+      } else if (isSeries) {
+        if (Array.isArray(data.created_by) && data.created_by.length > 0) {
+          director = data.created_by.map(c => c.name).join(', ');
+        } else if (data.credits && Array.isArray(data.credits.crew)) {
+          const c = data.credits.crew.find(cr => cr.job === 'Creator' || cr.job === 'Executive Producer');
+          if (c) director = c.name;
+        }
+      }
+
+      const cast = [];
+      if (data.credits && Array.isArray(data.credits.cast)) {
+        data.credits.cast.slice(0, 10).forEach(actor => {
+          let photo = null;
+          if (actor.profile_path) {
+            const raw = `https://image.tmdb.org/t/p/w185${actor.profile_path}`;
+            photo = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(raw) : raw;
+          }
+          cast.push({
+            name: actor.name,
+            character: actor.character || '',
+            photo: photo
+          });
+        });
+      }
+
+      const durationMinutes = isSeries ? (data.episode_run_time?.[0] || 45) : (data.runtime || 0);
+
+      const result = {
+        genres,
+        director,
+        cast,
+        durationMinutes,
+        tagline: data.tagline || ''
+      };
+
+      this._creditsCache.set(cacheKey, result);
+      return result;
+    } catch (e) {
+      return null;
+    }
   }
 };
 TmdbResolver.init();
+
+// ===================================================================
+// CONTROLE PARENTAL COM PIN (PROTEÇÃO DE CATEGORIAS +18)
+// ===================================================================
+const ParentalControl = {
+  _sessionUnlocked: false,
+  _currentInput: '',
+  _onSuccessCallback: null,
+  _isChangingPin: false,
+
+  getPin() {
+    return localStorage.getItem('vion_parental_pin') || '0000';
+  },
+
+  setPin(newPin) {
+    localStorage.setItem('vion_parental_pin', newPin);
+  },
+
+  isAdult(categoryName, itemName = '') {
+    if (typeof M3UParser !== 'undefined' && typeof M3UParser.isAdultItem === 'function') {
+      return M3UParser.isAdultItem({ category: categoryName, name: itemName });
+    }
+    const str = `${categoryName || ''} ${itemName || ''}`.toLowerCase();
+    return /(?:xxx|\+18|\b18\+|\badulto\b|\badultos\b|\badult\b|\bporn\b|\bporno\b|\bpornô\b|\bsexy\b|\berotico\b|\berótico\b)/i.test(str);
+  },
+
+  checkAccess(categoryName, itemName, onSuccess) {
+    if (!this.isAdult(categoryName, itemName)) {
+      if (typeof onSuccess === 'function') onSuccess();
+      return true;
+    }
+
+    if (this._sessionUnlocked) {
+      if (typeof onSuccess === 'function') onSuccess();
+      return true;
+    }
+
+    this.openPinModal(false, onSuccess);
+    return false;
+  },
+
+  openPinModal(isChangingPin = false, onSuccess = null) {
+    this._isChangingPin = isChangingPin;
+    this._onSuccessCallback = onSuccess;
+    this._currentInput = '';
+
+    const modal = document.getElementById('modal-parental-pin');
+    const title = document.getElementById('parental-pin-title');
+    const desc = document.getElementById('parental-pin-desc');
+    const errorEl = document.getElementById('parental-pin-error');
+
+    if (title) title.textContent = isChangingPin ? 'Alterar PIN Parental' : 'Controle Parental';
+    if (desc) desc.textContent = isChangingPin 
+      ? 'Digite o novo PIN de 4 dígitos desejado:' 
+      : 'Esta categoria contém conteúdo adulto (+18). Digite o PIN de 4 dígitos para acessar (Padrão: 0000):';
+    if (errorEl) errorEl.style.display = 'none';
+
+    this.updateDots();
+    if (modal) modal.style.display = 'flex';
+
+    const firstKey = modal ? modal.querySelector('.pin-key-btn') : null;
+    if (firstKey && typeof RemoteControl !== 'undefined') {
+      RemoteControl.setFocus(firstKey);
+    }
+  },
+
+  closePinModal() {
+    const modal = document.getElementById('modal-parental-pin');
+    if (modal) modal.style.display = 'none';
+    this._currentInput = '';
+    this._isChangingPin = false;
+    this._onSuccessCallback = null;
+  },
+
+  handleDigit(digit) {
+    if (this._currentInput.length < 4) {
+      this._currentInput += digit;
+      this.updateDots();
+      if (this._currentInput.length === 4) {
+        setTimeout(() => this.verifyPin(), 120);
+      }
+    }
+  },
+
+  handleBackspace() {
+    if (this._currentInput.length > 0) {
+      this._currentInput = this._currentInput.slice(0, -1);
+      this.updateDots();
+    }
+  },
+
+  handleClear() {
+    this._currentInput = '';
+    this.updateDots();
+  },
+
+  updateDots() {
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById(`pin-dot-${i}`);
+      if (dot) {
+        dot.classList.toggle('filled', i < this._currentInput.length);
+      }
+    }
+  },
+
+  verifyPin() {
+    const errorEl = document.getElementById('parental-pin-error');
+    if (this._isChangingPin) {
+      this.setPin(this._currentInput);
+      if (window.App && typeof App.showToast === 'function') {
+        App.showToast('🔒 Novo PIN de controle parental salvo com sucesso!');
+      }
+      this.closePinModal();
+      return;
+    }
+
+    const currentPin = this.getPin();
+    if (this._currentInput === currentPin) {
+      this._sessionUnlocked = true;
+      const cb = this._onSuccessCallback;
+      this.closePinModal();
+      if (typeof cb === 'function') cb();
+    } else {
+      if (errorEl) {
+        errorEl.textContent = 'PIN incorreto. Tente novamente.';
+        errorEl.style.display = 'block';
+      }
+      this._currentInput = '';
+      this.updateDots();
+    }
+  }
+};
 
 const App = {
   currentScreen: 'reseller-login',
@@ -826,6 +1021,34 @@ const App = {
     // Ir para Login a partir de Configurações
     document.getElementById('btn-goto-login')?.addEventListener('click', () => {
       this.goToScreen('reseller-login');
+    });
+
+    // Alterar PIN de Controle Parental a partir de Configurações
+    document.getElementById('btn-settings-parental-pin')?.addEventListener('click', () => {
+      ParentalControl.openPinModal(true);
+    });
+
+    // Teclado Numérico do PIN Parental na tela
+    document.querySelectorAll('.pin-key-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = btn.dataset.key;
+        if (key === 'back') {
+          ParentalControl.handleBackspace();
+        } else if (key === 'clear') {
+          ParentalControl.handleClear();
+        } else if (key !== undefined) {
+          ParentalControl.handleDigit(key);
+        }
+      });
+    });
+
+    // Botão Cancelar PIN Parental
+    document.getElementById('btn-parental-pin-cancel')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      ParentalControl.closePinModal();
     });
 
     // 3. Topo Dashboard: Reload & Exit
@@ -1515,6 +1738,15 @@ const App = {
   },
 
   selectLiveCategory(categoryName, pillElement, isInitialScreenLoad = false) {
+    if (ParentalControl.isAdult(categoryName)) {
+      if (!ParentalControl._sessionUnlocked) {
+        ParentalControl.checkAccess(categoryName, '', () => {
+          this.selectLiveCategory(categoryName, pillElement, isInitialScreenLoad);
+        });
+        return;
+      }
+    }
+
     this.activeCategory = categoryName;
 
     // Atualiza pills de categoria
@@ -1892,6 +2124,15 @@ const App = {
   },
 
   selectVodCategory(categoryName, pillElement) {
+    if (ParentalControl.isAdult(categoryName)) {
+      if (!ParentalControl._sessionUnlocked) {
+        ParentalControl.checkAccess(categoryName, '', () => {
+          this.selectVodCategory(categoryName, pillElement);
+        });
+        return;
+      }
+    }
+
     this.activeCategory = categoryName;
 
     document.querySelectorAll('.vod-sidebar-item').forEach(el => el.classList.remove('active-cat'));
@@ -2243,11 +2484,44 @@ const App = {
       ratingEl.textContent = seriesGroup.rating ? `★ ${seriesGroup.rating}` : '★ 8.5';
     }
 
-    // Busca automática no TMDB para completar capa, backdrop, sinopse e nota se faltarem
-    TmdbResolver.resolve(seriesGroup.name, true).then(meta => {
+    // Limpa seções anteriores de elenco, criador e gêneros
+    const seriesGenresEl = document.getElementById('series-modal-genres');
+    const seriesCreatorEl = document.getElementById('series-modal-creator');
+    const seriesCastSec = document.getElementById('series-details-cast-section');
+    const seriesCastList = document.getElementById('series-details-cast-list');
+    if (seriesGenresEl) seriesGenresEl.innerHTML = '';
+    if (seriesCreatorEl) { seriesCreatorEl.innerHTML = ''; seriesCreatorEl.style.display = 'none'; }
+    if (seriesCastSec) seriesCastSec.style.display = 'none';
+    if (seriesCastList) seriesCastList.innerHTML = '';
+
+    // Busca automática no TMDB para completar capa, backdrop, sinopse, nota, gêneros, criador e elenco
+    TmdbResolver.resolve(seriesGroup.name, true).then(async (meta) => {
       if (meta) {
         if (meta.id) {
           seriesGroup.tmdbId = meta.id;
+          const creds = await TmdbResolver.resolveDetailsAndCredits(meta.id, true);
+          if (creds) {
+            if (creds.genres && creds.genres.length > 0 && seriesGenresEl) {
+              seriesGenresEl.innerHTML = creds.genres.map(g => `<span class="genre-pill">${g}</span>`).join('');
+            }
+            if (creds.director && seriesCreatorEl) {
+              seriesCreatorEl.innerHTML = `<strong>Criador / Produção:</strong> ${creds.director}`;
+              seriesCreatorEl.style.display = 'block';
+            }
+            if (creds.cast && creds.cast.length > 0 && seriesCastSec && seriesCastList) {
+              seriesCastList.innerHTML = creds.cast.map(c => `
+                <div class="cast-item">
+                  <div class="cast-photo-wrap">
+                    ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="cast-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                    <div class="cast-photo-placeholder" style="${c.photo ? 'display:none;' : ''}">👤</div>
+                  </div>
+                  <span class="cast-name" title="${c.name}">${c.name}</span>
+                  <span class="cast-character" title="${c.character}">${c.character}</span>
+                </div>
+              `).join('');
+              seriesCastSec.style.display = 'block';
+            }
+          }
         }
         if (meta.poster && posterEl && (!posterEl.src || posterEl.style.display === 'none')) {
           posterEl.src = meta.poster;
@@ -2680,6 +2954,61 @@ const App = {
         backdropEl.style.backgroundImage = 'none';
       }
     }
+
+    // Limpa e prepara seções de elenco, diretor e gêneros
+    const genresEl = document.getElementById('movie-details-genres');
+    const directorEl = document.getElementById('movie-details-director');
+    const castSec = document.getElementById('movie-details-cast-section');
+    const castList = document.getElementById('movie-details-cast-list');
+    if (genresEl) genresEl.innerHTML = '';
+    if (directorEl) { directorEl.innerHTML = ''; directorEl.style.display = 'none'; }
+    if (castSec) castSec.style.display = 'none';
+    if (castList) castList.innerHTML = '';
+
+    // Busca dados no TMDB (sinopse, poster, backdrop, gêneros, diretor, elenco)
+    TmdbResolver.resolve(item.name, false).then(async (meta) => {
+      if (meta) {
+        if (meta.poster && backdropEl && backdropEl.style.backgroundImage === 'none') {
+          backdropEl.style.backgroundImage = `url('${meta.poster}')`;
+        }
+        if (meta.plot && synopsisEl && (!item.plot || item.plot.length < 10)) {
+          synopsisEl.textContent = meta.plot;
+        }
+        if (meta.year && yearEl) {
+          yearEl.textContent = meta.year;
+        }
+        if (meta.id) {
+          const creds = await TmdbResolver.resolveDetailsAndCredits(meta.id, false);
+          if (creds) {
+            if (creds.durationMinutes && durEl) {
+              const h = Math.floor(creds.durationMinutes / 60);
+              const m = creds.durationMinutes % 60;
+              durEl.textContent = `⏱ ${h}h ${m}m`;
+            }
+            if (creds.genres && creds.genres.length > 0 && genresEl) {
+              genresEl.innerHTML = creds.genres.map(g => `<span class="genre-pill">${g}</span>`).join('');
+            }
+            if (creds.director && directorEl) {
+              directorEl.innerHTML = `<strong>Diretor:</strong> ${creds.director}`;
+              directorEl.style.display = 'block';
+            }
+            if (creds.cast && creds.cast.length > 0 && castSec && castList) {
+              castList.innerHTML = creds.cast.map(c => `
+                <div class="cast-item">
+                  <div class="cast-photo-wrap">
+                    ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="cast-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                    <div class="cast-photo-placeholder" style="${c.photo ? 'display:none;' : ''}">👤</div>
+                  </div>
+                  <span class="cast-name" title="${c.name}">${c.name}</span>
+                  <span class="cast-character" title="${c.character}">${c.character}</span>
+                </div>
+              `).join('');
+              castSec.style.display = 'block';
+            }
+          }
+        }
+      }
+    });
 
     // Configura botões de ação e barra de progresso (Continuar Assistindo)
     const btnPlay = document.getElementById('btn-movie-play');

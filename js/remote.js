@@ -113,6 +113,27 @@ const RemoteControl = {
 
     // 1. Tecla Voltar do controle remoto (Android TV, webOS, Tizen, Fire TV, PC Escape/Backspace)
     if (this.isBackKey(code, e)) {
+      const parentalModal = document.getElementById('modal-parental-pin');
+      if (parentalModal && parentalModal.style.display !== 'none') {
+        e.preventDefault();
+        if (typeof ParentalControl !== 'undefined') ParentalControl.closePinModal();
+        return;
+      }
+
+      const tracksModal = document.getElementById('modal-player-tracks');
+      if (tracksModal && tracksModal.style.display !== 'none') {
+        e.preventDefault();
+        if (App.player) App.player.closeTracksModal();
+        return;
+      }
+
+      const quickGuide = document.getElementById('mini-fs-quick-guide');
+      if (quickGuide && quickGuide.classList.contains('active')) {
+        e.preventDefault();
+        if (App.player) App.player.toggleQuickGuide(false);
+        return;
+      }
+
       const trailerModal = document.getElementById('modal-trailer-player');
       if (trailerModal && trailerModal.classList.contains('active')) {
         e.preventDefault();
@@ -132,6 +153,21 @@ const RemoteControl = {
       }
       App.handleBack && App.handleBack();
       return;
+    }
+
+    // Teclas numéricas para o PIN de Controle Parental
+    const parentalModal = document.getElementById('modal-parental-pin');
+    if (parentalModal && parentalModal.style.display !== 'none') {
+      const numCodes = [48,49,50,51,52,53,54,55,56,57];
+      const numpadCodes = [96,97,98,99,100,101,102,103,104,105];
+      let digit = null;
+      if (numCodes.includes(code)) digit = String(code - 48);
+      else if (numpadCodes.includes(code)) digit = String(code - 96);
+      if (digit !== null) {
+        e.preventDefault();
+        if (typeof ParentalControl !== 'undefined') ParentalControl.handleDigit(digit);
+        return;
+      }
     }
 
     // 2. Se o usuário estiver focado em um input de busca e usar o D-Pad:
@@ -221,34 +257,54 @@ const RemoteControl = {
 
     // Mini player em tela cheia (canal ao vivo)
     if (App.player && App.player.isMiniFullscreen) {
-      if (this.KEYS.BACK.includes(code)) {
-        e.preventDefault();
-        App.player.collapseMiniFullscreen();
-      } else if (this.KEYS.UP.includes(code) || this.KEYS.CH_UP.includes(code)) {
-        e.preventDefault();
-        App.previousMiniChannel && App.previousMiniChannel();
-      } else if (this.KEYS.DOWN.includes(code) || this.KEYS.CH_DOWN.includes(code)) {
-        e.preventDefault();
-        App.nextMiniChannel && App.nextMiniChannel();
-      } else if (this.KEYS.LEFT.includes(code) || this.KEYS.RIGHT.includes(code)) {
-        e.preventDefault();
-        App.player.toggleMiniFullscreenOsd && App.player.toggleMiniFullscreenOsd();
-      } else if (this.KEYS.ENTER.includes(code)) {
-        e.preventDefault();
-        const focusedBack = document.getElementById('btn-mini-fs-back');
-        if (focusedBack && (focusedBack.classList.contains('focused') || document.activeElement === focusedBack)) {
-          focusedBack.click();
-        } else {
-          App.player.toggleMiniFullscreenOsd && App.player.toggleMiniFullscreenOsd();
+      const quickGuide = document.getElementById('mini-fs-quick-guide');
+      const isGuideOpen = quickGuide && quickGuide.classList.contains('active');
+
+      if (isGuideOpen) {
+        if (this.isBackKey(code, e) || this.KEYS.LEFT.includes(code)) {
+          e.preventDefault();
+          App.player.toggleQuickGuide(false);
+          return;
         }
-      } else if (this.KEYS.PLAY.includes(code) || this.KEYS.PAUSE.includes(code) || this.KEYS.PLAY_PAUSE.includes(code)) {
-        e.preventDefault();
-        App.player.toggleMiniFullscreenOsd && App.player.toggleMiniFullscreenOsd();
-      } else if (this.KEYS.STOP.includes(code)) {
-        e.preventDefault();
-        App.player.collapseMiniFullscreen && App.player.collapseMiniFullscreen();
+        // UP / DOWN / ENTER dentro do mini-guia são processados pelo D-pad
+      } else {
+        if (this.KEYS.LEFT.includes(code) || this.KEYS.GUIDE.includes(code) || this.KEYS.MENU.includes(code)) {
+          e.preventDefault();
+          App.player.toggleQuickGuide(true);
+          return;
+        }
+        if (this.KEYS.BACK.includes(code)) {
+          e.preventDefault();
+          App.player.collapseMiniFullscreen();
+        } else if (this.KEYS.UP.includes(code) || this.KEYS.CH_UP.includes(code)) {
+          e.preventDefault();
+          App.previousMiniChannel && App.previousMiniChannel();
+        } else if (this.KEYS.DOWN.includes(code) || this.KEYS.CH_DOWN.includes(code)) {
+          e.preventDefault();
+          App.nextMiniChannel && App.nextMiniChannel();
+        } else if (this.KEYS.RIGHT.includes(code)) {
+          e.preventDefault();
+          App.player.toggleMiniFullscreenOsd && App.player.toggleMiniFullscreenOsd();
+        } else if (this.KEYS.ENTER.includes(code)) {
+          e.preventDefault();
+          const focusedBack = document.getElementById('btn-mini-fs-back');
+          const focusedGuide = document.getElementById('btn-mini-fs-quick-guide');
+          if (focusedBack && (focusedBack.classList.contains('focused') || document.activeElement === focusedBack)) {
+            focusedBack.click();
+          } else if (focusedGuide && (focusedGuide.classList.contains('focused') || document.activeElement === focusedGuide)) {
+            focusedGuide.click();
+          } else {
+            App.player.toggleMiniFullscreenOsd && App.player.toggleMiniFullscreenOsd();
+          }
+        } else if (this.KEYS.PLAY.includes(code) || this.KEYS.PAUSE.includes(code) || this.KEYS.PLAY_PAUSE.includes(code)) {
+          e.preventDefault();
+          App.player.toggleMiniFullscreenOsd && App.player.toggleMiniFullscreenOsd();
+        } else if (this.KEYS.STOP.includes(code)) {
+          e.preventDefault();
+          App.player.collapseMiniFullscreen && App.player.collapseMiniFullscreen();
+        }
+        return;
       }
-      return;
     }
 
     // Player de video HTML5 em tela cheia
@@ -291,7 +347,14 @@ const RemoteControl = {
       return;
     }
 
-    const activeOverlay = document.querySelector('.tv-dialog-overlay.active, .movie-details-overlay.active');
+    const pModal = document.getElementById('modal-parental-pin');
+    const tModal = document.getElementById('modal-player-tracks');
+    const qGuide = document.getElementById('mini-fs-quick-guide');
+    let activeOverlay = null;
+    if (pModal && pModal.style.display !== 'none') activeOverlay = pModal;
+    else if (tModal && tModal.style.display !== 'none') activeOverlay = tModal;
+    else if (qGuide && qGuide.classList.contains('active')) activeOverlay = qGuide;
+    else activeOverlay = document.querySelector('.tv-dialog-overlay.active, .movie-details-overlay.active');
     const currentContainer = activeOverlay || document.querySelector('.screen.active');
     if (!currentContainer) return;
 

@@ -521,6 +521,9 @@
             <button type="button" id="btn-mini-fs-back" class="mini-fs-back-btn focusable" tabindex="0">
               ◀ Voltar aos Canais
             </button>
+            <button type="button" id="btn-mini-fs-quick-guide" class="mini-fs-back-btn focusable" tabindex="0" style="margin-left: 10px;">
+              <span>☰</span> <span>Guia de Canais</span>
+            </button>
             <div class="mini-fs-topbar-info">
               <span id="mini-fs-topbar-title" class="mini-fs-topbar-title">Canal Ao Vivo</span>
               <div class="mini-fs-badge"><span class="pulse-dot-red"></span> AO VIVO</div>
@@ -537,10 +540,26 @@
               </div>
               <div class="mini-fs-hints">
                 <span>[OK] Voltar aos Canais</span>
-                <span>[◀ ▶] Ocultar / Mostrar Info</span>
+                <span>[☰ / ◀] Guia Rápido</span>
                 <span>[▲ ▼] Próximo / Anterior</span>
                 <span>[Voltar] Sair da Tela Cheia</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Mini-Guia Lateral Rápido de Canais em Tela Cheia (Estilo TiviMate) -->
+          <div id="mini-fs-quick-guide" class="quick-guide-sidebar">
+            <div class="quick-guide-header">
+              <div class="quick-guide-title">
+                <span>📺</span> <span>GUIA DE CANAIS</span>
+              </div>
+              <div class="quick-guide-cat-badge" id="quick-guide-current-cat">Todos</div>
+            </div>
+            <div id="quick-guide-channels-list" class="quick-guide-channels-list">
+              <!-- Lista dinâmica de canais com número, logo, nome e EPG atual -->
+            </div>
+            <div class="quick-guide-hint">
+              <span>[▲ ▼] Navegar</span> <span>[OK] Assistir</span> <span>[◀] Fechar</span>
             </div>
           </div>
         </div>
@@ -652,10 +671,18 @@
             <span class="series-meta-pill" id="series-modal-badge">1 Temporada • 12 Episódios</span>
             <span class="series-meta-pill quality">4K Ultra HD</span>
             <span class="series-meta-pill audio">Dolby 5.1</span>
+            <div id="series-modal-genres" class="movie-genres-row"></div>
           </div>
+          <div id="series-modal-creator" class="details-director-label" style="display: none;"></div>
           <p id="series-modal-plot" class="series-synopsis">
             Acompanhe todos os episódios desta série com streaming em alta velocidade no Vion Player.
           </p>
+
+          <!-- Elenco Principal da Série (Cast) -->
+          <div id="series-details-cast-section" class="details-cast-section" style="display: none;">
+            <h4 class="details-cast-heading">Elenco Principal</h4>
+            <div id="series-details-cast-list" class="details-cast-list"></div>
+          </div>
 
           <!-- Barra de Progresso / Onde Parou na Série -->
           <div id="series-progress-wrap" class="movie-progress-wrap" style="display: none;">
@@ -714,10 +741,18 @@
           <span class="movie-year-badge" id="movie-details-year">2026</span>
           <span class="movie-duration-badge" id="movie-details-duration">⏱ 01:45:00</span>
           <span class="movie-category-tag" id="movie-details-category">Filme</span>
+          <div id="movie-details-genres" class="movie-genres-row"></div>
         </div>
+        <div id="movie-details-director" class="details-director-label" style="display: none;"></div>
         <p id="movie-details-synopsis" class="movie-details-synopsis">
           Reproduza este título em alta definição com aceleração por hardware nativo.
         </p>
+
+        <!-- Elenco Principal do Filme (Cast) -->
+        <div id="movie-details-cast-section" class="details-cast-section" style="display: none;">
+          <h4 class="details-cast-heading">Elenco Principal</h4>
+          <div id="movie-details-cast-list" class="details-cast-list"></div>
+        </div>
 
         <!-- Barra de Progresso / Onde Parou no Filme -->
         <div id="movie-progress-wrap" class="movie-progress-wrap" style="display: none;">
@@ -788,6 +823,9 @@
         </div>
 
         <div class="player-ctrl-top-right">
+          <button type="button" id="btn-player-tracks" class="player-tracks-btn focusable" tabindex="0" title="Áudio e Legendas">
+            <span>💬</span> <span>Áudio & Legendas</span>
+          </button>
           <span id="player-ctrl-badge" class="player-badge">LIVE</span>
         </div>
       </div>
@@ -875,6 +913,9 @@
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <button id="btn-goto-login" class="pill-btn focusable" style="border-color: var(--primary-yellow); color: var(--primary-yellow); justify-content: center; width: 100%;" tabindex="0">
             🔑 Fazer Login / Conectar Provedor
+          </button>
+          <button id="btn-settings-parental-pin" class="pill-btn focusable" style="border-color: rgba(255, 255, 255, 0.2); justify-content: center; width: 100%;" tabindex="0">
+            🔒 Alterar PIN de Controle Parental
           </button>
           <button id="btn-clear-playlist" class="pill-btn focusable" style="border-color: var(--danger); color: var(--danger); justify-content: center; width: 100%;" tabindex="0">
             🚪 Sair da Conta / Desconectar Provedor
@@ -1008,6 +1049,88 @@
         <div id="sync-progress-bar-fill" class="sync-progress-bar-fill"></div>
       </div>
       <span id="sync-modal-subtitle" class="sync-modal-subtitle">Por favor, aguarde até a lista finalizar...</span>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL DE CONTROLE PARENTAL (PIN +18)
+       =================================================================== -->
+  <div id="modal-parental-pin" class="parental-pin-overlay" style="display: none;">
+    <div class="parental-pin-card">
+      <div class="pin-card-icon">🔒</div>
+      <h3 id="parental-pin-title" class="pin-title">Controle Parental</h3>
+      <p id="parental-pin-desc" class="pin-desc">Digite o PIN de 4 dígitos para acessar esta categoria ou alterar suas configurações.</p>
+      
+      <!-- Indicador visual dos 4 dígitos -->
+      <div class="pin-dots-wrap">
+        <span class="pin-dot" id="pin-dot-0"></span>
+        <span class="pin-dot" id="pin-dot-1"></span>
+        <span class="pin-dot" id="pin-dot-2"></span>
+        <span class="pin-dot" id="pin-dot-3"></span>
+      </div>
+
+      <div id="parental-pin-error" class="pin-error" style="display: none;"></div>
+
+      <!-- Teclado Numérico para TV e Mouse -->
+      <div class="pin-keypad-grid">
+        <button type="button" class="pin-key-btn focusable" data-key="1" tabindex="0">1</button>
+        <button type="button" class="pin-key-btn focusable" data-key="2" tabindex="0">2</button>
+        <button type="button" class="pin-key-btn focusable" data-key="3" tabindex="0">3</button>
+        <button type="button" class="pin-key-btn focusable" data-key="4" tabindex="0">4</button>
+        <button type="button" class="pin-key-btn focusable" data-key="5" tabindex="0">5</button>
+        <button type="button" class="pin-key-btn focusable" data-key="6" tabindex="0">6</button>
+        <button type="button" class="pin-key-btn focusable" data-key="7" tabindex="0">7</button>
+        <button type="button" class="pin-key-btn focusable" data-key="8" tabindex="0">8</button>
+        <button type="button" class="pin-key-btn focusable" data-key="9" tabindex="0">9</button>
+        <button type="button" class="pin-key-btn pin-key-back focusable" data-key="back" tabindex="0">⌫</button>
+        <button type="button" class="pin-key-btn focusable" data-key="0" tabindex="0">0</button>
+        <button type="button" class="pin-key-btn pin-key-clear focusable" data-key="clear" tabindex="0">C</button>
+      </div>
+
+      <div class="pin-actions">
+        <button type="button" id="btn-parental-pin-cancel" class="pill-btn focusable" tabindex="0">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL DE SELEÇÃO DE ÁUDIO E LEGENDAS
+       =================================================================== -->
+  <div id="modal-player-tracks" class="tracks-modal-overlay" style="display: none;">
+    <div class="tracks-modal-card">
+      <div class="tracks-modal-header">
+        <div class="tracks-modal-title-wrap">
+          <span class="tracks-header-icon">💬</span>
+          <h3 class="tracks-modal-title">Áudio & Legendas</h3>
+        </div>
+        <button type="button" id="btn-close-tracks-modal" class="pill-btn focusable" tabindex="0">✕ Fechar</button>
+      </div>
+
+      <div class="tracks-columns">
+        <!-- Coluna de Áudio -->
+        <div class="tracks-col">
+          <h4 class="tracks-col-title">🔊 Faixa de Áudio</h4>
+          <div id="player-audio-tracks-list" class="tracks-list">
+            <!-- Lista dinâmica de áudios -->
+          </div>
+        </div>
+
+        <!-- Coluna de Legendas -->
+        <div class="tracks-col">
+          <h4 class="tracks-col-title">💬 Legendas</h4>
+          <div id="player-subtitle-tracks-list" class="tracks-list">
+            <!-- Lista dinâmica de legendas -->
+          </div>
+        </div>
+      </div>
+
+      <div class="tracks-footer-hint">
+        <span>[▲ ▼] Escolher Faixa</span>
+        <span>[OK] Ativar</span>
+        <span>[Voltar] Fechar</span>
+      </div>
     </div>
   </div>
 

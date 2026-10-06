@@ -303,6 +303,32 @@ class TVVideoPlayer {
       e.stopPropagation();
       this.nextChannel();
     });
+
+    // 8. Botão de Áudio e Legendas no Player
+    const btnTracks = document.getElementById('btn-player-tracks');
+    if (btnTracks) {
+      btnTracks.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openTracksModal();
+      });
+    }
+
+    const btnCloseTracks = document.getElementById('btn-close-tracks-modal');
+    if (btnCloseTracks) {
+      btnCloseTracks.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.closeTracksModal();
+      });
+    }
+
+    // 9. Botão de Mini-Guia Rápido de Canais em Tela Cheia
+    const btnQuickGuide = document.getElementById('btn-mini-fs-quick-guide');
+    if (btnQuickGuide) {
+      btnQuickGuide.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleQuickGuide();
+      });
+    }
   }
 
   // ===================================================================
@@ -953,6 +979,7 @@ class TVVideoPlayer {
     const box = document.getElementById('mini-player-container');
     if (!box) return;
 
+    this.toggleQuickGuide(false);
     this.isMiniFullscreen = false;
     box.classList.remove('fullscreen-mode');
     this.showMiniFullscreenOsd(false);
@@ -974,6 +1001,90 @@ class TVVideoPlayer {
     // Mantém o SOM da prévia ao voltar (bug: a prévia ficava muda)
     if (this.miniVideo) {
       this.miniVideo.muted = false;
+    }
+  }
+
+  // ===================================================================
+  // MINI-GUIA RÁPIDO LATERAL DE CANAIS EM TELA CHEIA (TIVIMATE STYLE)
+  // ===================================================================
+  toggleQuickGuide(forceState = null) {
+    const guideEl = document.getElementById('mini-fs-quick-guide');
+    if (!guideEl) return;
+    const isCurrentlyActive = guideEl.classList.contains('active');
+    const shouldOpen = forceState !== null ? forceState : !isCurrentlyActive;
+
+    if (!shouldOpen) {
+      guideEl.classList.remove('active');
+      const backBtn = document.getElementById('btn-mini-fs-back');
+      if (backBtn && typeof RemoteControl !== 'undefined') {
+        RemoteControl.setFocus(backBtn, false);
+      }
+      return;
+    }
+
+    // Abre o mini-guia lateral
+    guideEl.classList.add('active');
+    this.renderQuickGuideChannels();
+  }
+
+  renderQuickGuideChannels() {
+    const listEl = document.getElementById('quick-guide-channels-list');
+    const catBadge = document.getElementById('quick-guide-current-cat');
+    if (!listEl) return;
+
+    const channels = (window.App && App.filteredItems) ? App.filteredItems : [];
+    const activeIdx = (window.App && typeof App.activeChannelIndex === 'number') ? App.activeChannelIndex : 0;
+    const catName = (window.App && App.activeCategory) ? App.activeCategory : 'Todos';
+
+    if (catBadge) catBadge.textContent = catName;
+
+    listEl.innerHTML = '';
+    channels.forEach((ch, idx) => {
+      const row = document.createElement('div');
+      row.className = `quick-ch-row focusable ${idx === activeIdx ? 'active' : ''}`;
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('data-index', idx);
+
+      const rawLogo = (ch.logo || '').trim();
+      const logoUrl = (rawLogo && rawLogo.startsWith('http'))
+        ? ((typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawLogo) : rawLogo)
+        : 'icon.png';
+
+      let progTitle = 'Programação Ao Vivo';
+      if (window.EpgService && typeof EpgService.getCurrentProgram === 'function') {
+        const ep = EpgService.getCurrentProgram(ch.name || ch.id);
+        if (ep && ep.title) progTitle = ep.title;
+      }
+
+      row.innerHTML = `
+        <span class="quick-ch-num">${idx + 1}</span>
+        <img src="${logoUrl}" alt="${ch.name}" class="quick-ch-logo" onerror="this.src='icon.png'">
+        <div class="quick-ch-info">
+          <span class="quick-ch-name">${ch.name}</span>
+          <span class="quick-ch-epg">${progTitle}</span>
+        </div>
+      `;
+
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.App && typeof App.updateActiveChannelUiAndStream === 'function') {
+          App.activeChannelIndex = idx;
+          App.updateActiveChannelUiAndStream(false);
+          listEl.querySelectorAll('.quick-ch-row').forEach(r => r.classList.remove('active'));
+          row.classList.add('active');
+        }
+      });
+
+      listEl.appendChild(row);
+    });
+
+    // Rola até o canal atualmente em reprodução e dá foco nele
+    const activeRow = listEl.children[activeIdx];
+    if (activeRow) {
+      activeRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (typeof RemoteControl !== 'undefined') {
+        RemoteControl.setFocus(activeRow, false);
+      }
     }
   }
 
@@ -1203,6 +1314,7 @@ class TVVideoPlayer {
     clearTimeout(this.controlsTimeout);
     clearTimeout(this.loadingWatchdog);
     this.showLoading(false);
+    this.closeTracksModal();
     if (this.controlsOverlay) {
       this.controlsOverlay.classList.add('hidden');
     }
@@ -1214,5 +1326,162 @@ class TVVideoPlayer {
       }
     }
     this.stopHtmlVideo();
+  }
+
+  // ===================================================================
+  // SELETOR DE ÁUDIO E LEGENDAS (HLS.JS / HTML5)
+  // ===================================================================
+  getAudioTracks() {
+    if (this.hls && this.hls.audioTracks && this.hls.audioTracks.length > 0) {
+      return this.hls.audioTracks.map((t, idx) => ({
+        id: idx,
+        name: t.name || t.lang || `Áudio ${idx + 1}`,
+        lang: t.lang || '',
+        active: idx === this.hls.audioTrack
+      }));
+    }
+    if (this.video && this.video.audioTracks && this.video.audioTracks.length > 0) {
+      return Array.from(this.video.audioTracks).map((t, idx) => ({
+        id: idx,
+        name: t.label || t.language || `Áudio ${idx + 1}`,
+        lang: t.language || '',
+        active: t.enabled
+      }));
+    }
+    return [{ id: 0, name: 'Padrão (Original)', lang: 'orig', active: true }];
+  }
+
+  setAudioTrack(trackId) {
+    if (this.hls && this.hls.audioTracks) {
+      this.hls.audioTrack = trackId;
+    } else if (this.video && this.video.audioTracks) {
+      Array.from(this.video.audioTracks).forEach((t, idx) => {
+        t.enabled = (idx === trackId);
+      });
+    }
+    this.renderTracksModal();
+    if (window.App && typeof App.showToast === 'function') {
+      const tracks = this.getAudioTracks();
+      const sel = tracks.find(t => t.id === trackId);
+      App.showToast(`🔊 Áudio: ${sel ? sel.name : 'Selecionado'}`);
+    }
+  }
+
+  getSubtitleTracks() {
+    if (this.hls && this.hls.subtitleTracks && this.hls.subtitleTracks.length > 0) {
+      const current = this.hls.subtitleTrack;
+      const list = [
+        { id: -1, name: 'Desativada (Sem legendas)', active: current === -1 }
+      ];
+      this.hls.subtitleTracks.forEach((t, idx) => {
+        list.push({
+          id: idx,
+          name: t.name || t.lang || `Legenda ${idx + 1}`,
+          lang: t.lang || '',
+          active: idx === current
+        });
+      });
+      return list;
+    }
+    if (this.video && this.video.textTracks && this.video.textTracks.length > 0) {
+      const isAnyActive = Array.from(this.video.textTracks).some(t => t.mode === 'showing');
+      const list = [
+        { id: -1, name: 'Desativada (Sem legendas)', active: !isAnyActive }
+      ];
+      Array.from(this.video.textTracks).forEach((t, idx) => {
+        list.push({
+          id: idx,
+          name: t.label || t.language || `Legenda ${idx + 1}`,
+          lang: t.language || '',
+          active: t.mode === 'showing'
+        });
+      });
+      return list;
+    }
+    return [{ id: -1, name: 'Nenhuma legenda disponível', active: true, disabled: true }];
+  }
+
+  setSubtitleTrack(trackId) {
+    if (this.hls && this.hls.subtitleTracks) {
+      this.hls.subtitleTrack = trackId;
+    } else if (this.video && this.video.textTracks) {
+      Array.from(this.video.textTracks).forEach((t, idx) => {
+        t.mode = (idx === trackId) ? 'showing' : 'disabled';
+      });
+    }
+    this.renderTracksModal();
+    if (window.App && typeof App.showToast === 'function') {
+      const subs = this.getSubtitleTracks();
+      const sel = subs.find(s => s.id === trackId);
+      App.showToast(`💬 Legenda: ${sel ? sel.name : 'Selecionada'}`);
+    }
+  }
+
+  openTracksModal() {
+    const modal = document.getElementById('modal-player-tracks');
+    if (!modal) return;
+    this.renderTracksModal();
+    modal.style.display = 'flex';
+    clearTimeout(this.controlsTimeout);
+
+    const firstItem = modal.querySelector('.tracks-pill:not([disabled])');
+    if (firstItem && typeof RemoteControl !== 'undefined') {
+      RemoteControl.setFocus(firstItem);
+    }
+  }
+
+  closeTracksModal() {
+    const modal = document.getElementById('modal-player-tracks');
+    if (!modal) return;
+    modal.style.display = 'none';
+    const btnTracks = document.getElementById('btn-player-tracks');
+    if (btnTracks && typeof RemoteControl !== 'undefined') {
+      RemoteControl.setFocus(btnTracks);
+    }
+    this.resetControlsTimeout(4500);
+  }
+
+  renderTracksModal() {
+    const audioListEl = document.getElementById('player-audio-tracks-list');
+    const subListEl = document.getElementById('player-subtitle-tracks-list');
+
+    if (audioListEl) {
+      audioListEl.innerHTML = '';
+      const audios = this.getAudioTracks();
+      audios.forEach(a => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `tracks-pill focusable ${a.active ? 'active' : ''}`;
+        btn.setAttribute('tabindex', '0');
+        btn.textContent = a.name;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.setAudioTrack(a.id);
+        });
+        audioListEl.appendChild(btn);
+      });
+    }
+
+    if (subListEl) {
+      subListEl.innerHTML = '';
+      const subs = this.getSubtitleTracks();
+      subs.forEach(s => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `tracks-pill focusable ${s.active ? 'active' : ''}`;
+        btn.setAttribute('tabindex', '0');
+        btn.textContent = s.name;
+        if (s.disabled) {
+          btn.style.opacity = '0.5';
+          btn.style.pointerEvents = 'none';
+        } else {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.setSubtitleTrack(s.id);
+          });
+        }
+        subListEl.appendChild(btn);
+      });
+    }
   }
 }
