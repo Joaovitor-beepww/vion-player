@@ -24,15 +24,20 @@ const TmdbResolver = {
     } catch(e) {}
   },
 
+  _saveTimer: null,
+
   save() {
-    try {
-      const obj = {};
-      let count = 0;
-      this._cache.forEach((v, k) => {
-        if (v && count < 800) { obj[k] = v; count++; }
-      });
-      localStorage.setItem('vion_tmdb_posters', JSON.stringify(obj));
-    } catch(e) {}
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => {
+      try {
+        const obj = {};
+        let count = 0;
+        this._cache.forEach((v, k) => {
+          if (v && count < 800) { obj[k] = v; count++; }
+        });
+        localStorage.setItem('vion_tmdb_posters', JSON.stringify(obj));
+      } catch(e) {}
+    }, 2500);
   },
 
   cleanTitle(raw) {
@@ -104,7 +109,7 @@ const App = {
   activeChannelIndex: 0,
   filteredItems: [],
   renderedCount: 0,
-  PAGE_SIZE: 120,
+  PAGE_SIZE: 36,
   activeSeries: null,
   activeSeason: 1,
   clockInterval: null,
@@ -1640,12 +1645,16 @@ const App = {
       headingEl.textContent = type === 'movies' ? 'Movies | Recently Added' : 'Series | Recently Added';
     }
 
-    // Calcula a contagem de cada categoria
-    const catCounts = {};
-    (sectionData.channels || []).forEach(item => {
-      const cat = item.category || 'Outros';
-      catCounts[cat] = (catCounts[cat] || 0) + 1;
-    });
+    // Calcula a contagem de cada categoria (memoizado para performance instantânea)
+    if (!sectionData._catCounts) {
+      const counts = {};
+      (sectionData.channels || []).forEach(item => {
+        const cat = item.category || 'Outros';
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+      sectionData._catCounts = counts;
+    }
+    const catCounts = sectionData._catCounts;
 
     // Atualiza contadores das categorias rápidas (Imagem 2)
     const favs = this.getFavorites().filter(f => f.type === type);
@@ -1762,15 +1771,21 @@ const App = {
     let baseList = [];
 
     if (categoryName === 'Todos' || categoryName === 'Recently added') {
-      if (this.activeSection === 'movies') {
-        // "Todos" filtra e não exibe filmes de conteúdo adulto (+18) logo de cara
-        baseList = sectionData.channels.filter(c => !c.isAdult);
-      } else {
-        // "Todos" em séries também filtra e não exibe animes/hentai +18 logo de cara
-        baseList = sectionData.channels.filter(c => !c.isAdult);
+      if (!sectionData._todosList) {
+        sectionData._todosList = (sectionData.channels || []).filter(c => !c.isAdult);
       }
+      baseList = sectionData._todosList;
     } else {
-      baseList = sectionData.channels.filter(c => c.category === categoryName);
+      if (!sectionData._catMap) {
+        const map = new Map();
+        (sectionData.channels || []).forEach(c => {
+          const cat = c.category || 'Outros';
+          if (!map.has(cat)) map.set(cat, []);
+          map.get(cat).push(c);
+        });
+        sectionData._catMap = map;
+      }
+      baseList = sectionData._catMap.get(categoryName) || [];
     }
 
     this.filteredItems = baseList;
@@ -1851,56 +1866,21 @@ const App = {
         img.style.display = 'block';
       };
 
-      let triedTmdb = false;
-      const fetchTmdbCover = () => {
-        if (triedTmdb) return;
-        triedTmdb = true;
-        TmdbResolver.resolve(item.name, isSeries).then(meta => {
-          if (meta && meta.poster) {
-            item.logo = meta.poster;
-            if (meta.backdrop && !item.backdrop) item.backdrop = meta.backdrop;
-            if (meta.plot && !item.plot) item.plot = meta.plot;
-            if (meta.rating && !item.rating) item.rating = meta.rating;
-            img.classList.remove('img-hidden');
-            img.style.display = 'block';
-            img.style.opacity = '1';
-            img.src = meta.poster;
-          } else {
-            if (logoUrl && logoUrl.startsWith('http')) {
-              const cleanHostPath = logoUrl.replace(/^https?:\/\/(?:i[0-3]\.wp\.com\/)?/i, '');
-              img.classList.remove('img-hidden');
-              img.style.display = 'block';
-              img.style.opacity = '1';
-              img.src = `https://wsrv.nl/?url=${encodeURIComponent(cleanHostPath)}&w=300&output=jpg`;
-            } else {
-              img.classList.add('img-hidden');
-              img.style.display = 'none';
-            }
-          }
-        }).catch(() => {
-          if (logoUrl && logoUrl.startsWith('http')) {
-            const cleanHostPath = logoUrl.replace(/^https?:\/\/(?:i[0-3]\.wp\.com\/)?/i, '');
-            img.classList.remove('img-hidden');
-            img.style.display = 'block';
-            img.style.opacity = '1';
-            img.src = `https://wsrv.nl/?url=${encodeURIComponent(cleanHostPath)}&w=300&output=jpg`;
-          } else {
-            img.classList.add('img-hidden');
-            img.style.display = 'none';
-          }
-        });
-      };
-
       img.onerror = () => {
-        if (!triedTmdb) {
-          fetchTmdbCover();
-        } else {
-          img.classList.add('img-hidden');
-          img.style.display = 'none';
-        }
+        img.classList.add('img-hidden');
+        img.style.display = 'none';
       };
 
-      if (logoUrl && logoUrl.startsWith('http')) {
+      const cleanTitle = TmdbResolver.cleanTitle(item.name);
+      const cacheKey = (isSeries ? 'tv:' : 'mv:') + cleanTitle.toLowerCase();
+      const cachedMeta = TmdbResolver._cache.get(cacheKey);
+
+      if (cachedMeta && cachedMeta.poster) {
+        img.src = cachedMeta.poster;
+        img.classList.remove('img-hidden');
+        img.style.opacity = '1';
+        img.style.display = 'block';
+      } else if (logoUrl && logoUrl.startsWith('http')) {
         img.src = logoUrl;
         if (img.complete && img.naturalWidth > 0) {
           img.classList.remove('img-hidden');
@@ -1908,11 +1888,11 @@ const App = {
           img.style.display = 'block';
         }
       } else {
-        // Logo ausente na lista IPTV: busca automaticamente no TMDB!
-        fetchTmdbCover();
+        // Logo ausente: exibe capa gráfica estilizada de 0ms sem bloquear o carregamento
+        img.classList.add('img-hidden');
+        img.style.display = 'none';
       }
       thumbContainer.appendChild(img);
-
 
       const titleEl = document.createElement('div');
       titleEl.className = 'vod-poster-title';
@@ -1929,6 +1909,25 @@ const App = {
           this.openMovieDetails(item, realIndex);
         }
       });
+
+      // Lazy TMDB on focus: resolve poster oficial apenas ao navegar até o card
+      const fetchTmdbOnFocus = () => {
+        if (!item.logo || !item.logo.startsWith('http') || img.classList.contains('img-hidden')) {
+          TmdbResolver.resolve(item.name, isSeries).then(meta => {
+            if (meta && meta.poster) {
+              item.logo = meta.poster;
+              if (meta.backdrop && !item.backdrop) item.backdrop = meta.backdrop;
+              if (meta.plot && !item.plot) item.plot = meta.plot;
+              if (meta.rating && !item.rating) item.rating = meta.rating;
+              img.classList.remove('img-hidden');
+              img.style.display = 'block';
+              img.style.opacity = '1';
+              img.src = meta.poster;
+            }
+          }).catch(() => {});
+        }
+      };
+      card.addEventListener('focus', fetchTmdbOnFocus, { passive: true });
 
       // Atualiza o fundo da tela com o pôster/fanart do filme ou série em foco
       const updateVodBackdrop = () => {

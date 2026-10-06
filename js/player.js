@@ -494,7 +494,7 @@ class TVVideoPlayer {
     };
 
     // 1. Reprodução mpegts.js otimizada para canais IPTV (.ts) - SD, HD e FHD
-    const tryMpegts = (onFail) => {
+    const tryMpegts = (onFail, useWorker = true) => {
       let mpegtsFailed = false;
       let mpegtsWatchdog = null;
 
@@ -523,27 +523,28 @@ class TVVideoPlayer {
             url: cleanUrl,
             cors: false
           }, {
-            enableWorker: true,
+            enableWorker: useWorker,
             lazyLoad: false,
             enableStashBuffer: true,
             stashInitialSize: 384 * 1024,
             autoCleanupSourceBuffer: true,
             autoCleanupMaxBackwardDuration: 12,
             autoCleanupMinBackwardDuration: 6,
-            liveBufferLatencyChasing: false
+            liveBufferLatencyChasing: false,
+            reuseRedirectedURL: true
           });
 
           this.miniMpegts.attachMediaElement(this.miniVideo);
           this.miniMpegts.load();
           startPlay();
 
-          // Watchdog generoso (4.5s): tempo hábil para handshake TCP e chegada do primeiro I-frame de canal HD/FHD
+          // Watchdog resiliente (6.5s): tempo para handshake TCP e decodificação do primeiro I-frame
           mpegtsWatchdog = setTimeout(() => {
             if (this.miniMpegts && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn('mpegts não iniciou em 4.5s, acionando fallback');
+              console.warn(`mpegts (worker=${useWorker}) não iniciou em 6.5s, acionando próximo estágio`);
               cleanupAndFail();
             }
-          }, 4500);
+          }, 6500);
 
           const onMpegtsReady = () => {
             clearTimeout(mpegtsWatchdog);
@@ -551,17 +552,18 @@ class TVVideoPlayer {
           };
           this.miniVideo.addEventListener('playing', onMpegtsReady, { once: true });
           this.miniVideo.addEventListener('canplay', onMpegtsReady, { once: true });
+          this.miniVideo.addEventListener('loadeddata', onMpegtsReady, { once: true });
           this.miniVideo.addEventListener('timeupdate', () => {
             if (this.miniVideo && this.miniVideo.currentTime > 0) onMpegtsReady();
           }, { once: true });
 
           this.miniMpegts.on(mpegts.Events.ERROR, (errType, errDetail) => {
-            console.warn('mpegts erro fatal:', errType, errDetail);
+            console.warn(`mpegts (worker=${useWorker}) erro fatal:`, errType, errDetail);
             cleanupAndFail();
           });
           return;
         } catch (e) {
-          console.warn('mpegts falhou na inicialização:', e);
+          console.warn(`mpegts (worker=${useWorker}) falhou na inicialização:`, e);
           cleanupAndFail();
           return;
         }
@@ -693,27 +695,31 @@ class TVVideoPlayer {
       }
     };
 
-    // FLUXO DE REPRODUÇÃO DE CANAIS AO VIVO:
-    // Para URLs HLS (.m3u8): HLS -> mpegts -> Nativo
-    // Para URLs IPTV padrão (.ts ou raw): mpegts IMEDIATO -> HLS -> Nativo
-    if (isHls) {
-      tryHls(cleanUrl, () => {
-        tryMpegts(() => {
-          tryNativeDirect(cleanUrl, null);
-        });
-      });
-    } else {
+    // FLUXO DE REPRODUÇÃO RESILIENTE DE CANAIS AO VIVO:
+    // Estágio 1: mpegts com Worker (ultra-baixo uso de CPU na UI thread)
+    // Estágio 2: mpegts inline/sem Worker (contorna restrições CORS de WebWorker em WebViews Android)
+    // Estágio 3: HLS (.m3u8)
+    // Estágio 4: HTML5 direto (decodificador nativo do navegador/WebView)
+    const startMpegtsChain = (finalFail) => {
       tryMpegts(() => {
-        tryHls(m3u8Candidate, () => {
-          tryNativeDirect(cleanUrl, null);
-        });
-      });
+        tryMpegts(() => {
+          tryHls(m3u8Candidate, () => {
+            tryNativeDirect(cleanUrl, finalFail);
+          });
+        }, false);
+      }, true);
+    };
+
+    if (isHls) {
+      tryHls(cleanUrl, () => startMpegtsChain(null));
+    } else {
+      startMpegtsChain(null);
     }
 
     clearTimeout(this.miniLoadingTimer);
     this.miniLoadingTimer = setTimeout(() => {
       this.showMiniLoading(false);
-    }, 4500);
+    }, 6500);
   }
 
   /**
