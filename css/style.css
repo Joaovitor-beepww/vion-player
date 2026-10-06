@@ -2731,12 +2731,12 @@ body .sig-motto {
   position: relative !important;
   z-index: 10 !important;
   max-width: 1720px !important;
-  width: 94% !important;
+  width: 95% !important;
   margin: 0 auto !important;
-  padding: 24px 36px 60px 36px !important;
+  padding: 14px 32px 24px 32px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 20px !important;
+  gap: 10px !important;
 }
 
 /* Topbar */
@@ -2788,20 +2788,20 @@ body .sig-motto {
 .series-hero-row {
   display: flex !important;
   align-items: flex-start !important;
-  gap: 32px !important;
+  gap: 24px !important;
   width: 100% !important;
   margin-top: 2px !important;
 }
 
 .series-hero-poster-wrap {
-  width: 180px !important;
-  min-width: 180px !important;
+  width: 145px !important;
+  min-width: 145px !important;
   aspect-ratio: 2 / 3 !important;
-  border-radius: 14px !important;
+  border-radius: 12px !important;
   overflow: hidden !important;
   background: #0f172a !important;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9) !important;
-  border: 2px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
   position: relative !important;
 }
 
@@ -2816,15 +2816,15 @@ body .sig-motto {
   flex: 1 !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 12px !important;
+  gap: 7px !important;
 }
 
 .series-title {
-  font-size: 32px !important;
+  font-size: 26px !important;
   font-weight: 900 !important;
   color: #ffffff !important;
   line-height: 1.15 !important;
-  letter-spacing: -0.5px !important;
+  letter-spacing: -0.4px !important;
   margin: 0 !important;
   text-shadow: 0 4px 18px rgba(0, 0, 0, 0.8) !important;
 }
@@ -2866,13 +2866,13 @@ body .sig-motto {
 }
 
 .series-synopsis {
-  font-size: 14.5px !important;
-  line-height: 1.55 !important;
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
   color: #cbd5e1 !important;
   max-width: 950px !important;
   margin: 0 !important;
   display: -webkit-box !important;
-  -webkit-line-clamp: 3 !important;
+  -webkit-line-clamp: 2 !important;
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -7106,21 +7106,21 @@ html[data-platform="tv"] *,
    3. SÉRIES - TEMPORADAS E EPISÓDIOS 16:9 (IMAGEM 3)
    ------------------------------------------------------------- */
 .series-seasons-section {
-  margin-top: 24px !important;
+  margin-top: 12px !important;
 }
 
 .series-section-title {
-  font-size: 22px !important;
+  font-size: 18px !important;
   font-weight: 800 !important;
   color: #ffffff !important;
-  margin-bottom: 14px !important;
+  margin-bottom: 8px !important;
 }
 
 .series-seasons-tabs {
   display: flex !important;
-  gap: 12px !important;
+  gap: 10px !important;
   overflow-x: auto !important;
-  padding-bottom: 12px !important;
+  padding-bottom: 6px !important;
 }
 
 /* Season Tab Pill (Imagem 3) */
@@ -7129,8 +7129,8 @@ html[data-platform="tv"] *,
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 8px !important;
-  padding: 10px 24px !important;
-  font-size: 16px !important;
+  padding: 8px 20px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
   transition: all 0.18s ease !important;
@@ -7149,19 +7149,23 @@ html[data-platform="tv"] *,
 }
 
 /* Grade de Episódios em Linha Horizontal 16:9 (Imagem 3) */
+.series-episodes-section {
+  margin-top: 4px !important;
+}
+
 .series-episodes-list {
   display: flex !important;
   flex-direction: row !important;
-  gap: 20px !important;
+  gap: 16px !important;
   overflow-x: auto !important;
   overflow-y: hidden !important;
-  padding: 12px 0 24px 0 !important;
+  padding: 4px 0 16px 0 !important;
 }
 
 /* Card Widescreen 16:9 de Episódio (Imagem 3) */
 .episode-item {
   flex-shrink: 0 !important;
-  width: 230px !important;
+  width: 210px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -7204,8 +7208,8 @@ html[data-platform="tv"] *,
 }
 
 .episode-label-s-e {
-  margin-top: 10px !important;
-  font-size: 15px !important;
+  margin-top: 6px !important;
+  font-size: 13.5px !important;
   font-weight: 700 !important;
   color: #ffffff !important;
   text-align: center !important;
@@ -7232,30 +7236,67 @@ html[data-platform="tv"] *,
 
 
 /* -------------------------------------------------------------
-   4. BOTÕES DE AÇÃO: PLAY, PLAY TRAILER, + FAVORITES (IMAGEM 4)
+   4. BOTÕES DE AÇÃO: LADO A LADO (UMA DO LADO DA OUTRA)
+   Reduz o espaçamento e sobe as temporadas e episódios
    ------------------------------------------------------------- */
-.series-hero-actions,
+.series-hero-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  max-width: 100% !important;
+  margin-top: 10px !important;
+}
+
+.series-hero-actions .action-btn-cinema {
+  width: auto !important;
+  min-width: 130px !important;
+  padding: 10px 20px !important;
+  height: 42px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
 .movie-details-actions {
   display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-  max-width: 250px !important;
-  margin-top: 20px !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  max-width: 100% !important;
+  margin-top: 12px !important;
+}
+
+.movie-details-actions .action-btn-cinema {
+  width: auto !important;
+  min-width: 130px !important;
+  padding: 10px 20px !important;
+  height: 42px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
 }
 
 .action-btn-cinema {
-  width: 100% !important;
   background: #141720 !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 8px !important;
-  padding: 14px 22px !important;
-  font-size: 16px !important;
+  padding: 10px 20px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
   cursor: pointer !important;
   transition: all 0.18s ease !important;
   box-sizing: border-box !important;
@@ -7853,8 +7894,8 @@ html[data-platform="tv"] *,
 .movie-progress-wrap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 14px 0 20px 0;
+  gap: 4px;
+  margin: 6px 0 8px 0;
   max-width: 520px;
 }
 
