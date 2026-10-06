@@ -2152,7 +2152,6 @@ const App = {
         const firstEp = initialEps[0] || { url: seriesGroup.url, name: seriesGroup.name };
         const seriesTitle = seriesGroup.name || 'Série';
         const epTitle = firstEp.cleanTitle || 'Episódio 01';
-        this.closeSeriesModal();
         if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
           AndroidDevice.openPlayer(firstEp.url, `${seriesTitle} - ${epTitle}`, seriesTitle, true);
           return;
@@ -2229,7 +2228,6 @@ const App = {
       item.addEventListener('click', () => {
         const seriesTitle = (this.activeSeries && this.activeSeries.name) ? this.activeSeries.name : 'Série';
         const epTitle = ep.cleanTitle || `Episódio ${epNum}`;
-        this.closeSeriesModal();
         if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
           AndroidDevice.openPlayer(ep.url, `${seriesTitle} - ${epTitle}`, seriesTitle, true);
           return;
@@ -2349,7 +2347,6 @@ const App = {
     if (!this.selectedMovie) return;
     const item = this.selectedMovie;
     const realIndex = this.selectedMovieIndex || 0;
-    this.closeMovieDetails();
 
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
       AndroidDevice.openPlayer(item.url, item.name, item.category, true);
@@ -2430,6 +2427,29 @@ const App = {
       this.goToScreen('channels');
     } else if (this.activeSection === 'movies' || this.activeSection === 'series') {
       this.goToScreen('vod');
+      if (this.selectedMovie) {
+        const modal = document.getElementById('modal-movie-details');
+        if (modal) {
+          modal.classList.add('active');
+          setTimeout(() => {
+            const btnPlay = document.getElementById('btn-movie-play');
+            if (btnPlay && window.RemoteControl) {
+              RemoteControl.setFocus(btnPlay);
+            }
+          }, 80);
+        }
+      } else if (this.activeSeries) {
+        const overlay = document.getElementById('modal-series-details');
+        if (overlay) {
+          overlay.classList.add('active');
+          setTimeout(() => {
+            const btnPlayFirst = document.getElementById('btn-series-play-first');
+            if (btnPlayFirst && window.RemoteControl) {
+              RemoteControl.setFocus(btnPlayFirst);
+            }
+          }, 80);
+        }
+      }
     } else {
       this.goToScreen('home');
     }
