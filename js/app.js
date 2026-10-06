@@ -1824,23 +1824,31 @@ const App = {
       if (!sectionData._todosList || !sectionData._todosListSorted) {
         const nonAdult = (sectionData.channels || []).filter(c => !c.isAdult);
         sectionData._todosList = nonAdult.slice().sort((a, b) => {
+          const aCat = (a.category || '').toUpperCase();
+          const bCat = (b.category || '').toUpperCase();
+          const aName = (a.name || '').toUpperCase();
+          const bName = (b.name || '').toUpperCase();
+
+          const a4k = aCat.includes('4K') || aCat.includes('UHD') || aCat.includes('2160P') || aName.includes('4K') || aName.includes('UHD') || aName.includes('2160P');
+          const b4k = bCat.includes('4K') || bCat.includes('UHD') || bCat.includes('2160P') || bName.includes('4K') || bName.includes('UHD') || bName.includes('2160P');
+
+          // 1. Filmes 100% compatíveis (FHD/HD) SEMPRE antes de 4K (evita tela preta com som)
+          if (a4k !== b4k) return a4k ? 1 : -1;
+
+          // 2. Filmes COM capa oficial antes de filmes sem capa
           const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
           const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
           if (aCover !== bCover) return aCover ? -1 : 1;
 
-          const aCat = (a.category || '').toUpperCase();
-          const bCat = (b.category || '').toUpperCase();
+          // 3. Lançamentos recentes
           const aLanc = aCat.includes('LANÇAMENTO') || aCat.includes('LANCAMENTO');
           const bLanc = bCat.includes('LANÇAMENTO') || bCat.includes('LANCAMENTO');
           if (aLanc !== bLanc) return aLanc ? -1 : 1;
 
+          // 4. Mais Assistidos e Populares
           const aPop = aCat.includes('MAIS ASSISTIDO') || aCat.includes('POPULAR') || aCat.includes('EM ALTA');
           const bPop = bCat.includes('MAIS ASSISTIDO') || bCat.includes('POPULAR') || bCat.includes('EM ALTA');
           if (aPop !== bPop) return aPop ? -1 : 1;
-
-          const a4k = aCat.includes('4K') || aCat.includes('UHD');
-          const b4k = bCat.includes('4K') || bCat.includes('UHD');
-          if (a4k !== b4k) return a4k ? 1 : -1;
 
           return 0;
         });

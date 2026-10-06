@@ -349,6 +349,7 @@ const XtreamCodesEngine = {
     const maisAssistidosMovies = [];
     const outrosComCapa = [];
     const moviesSemCapa = [];
+    const movies4K = [];
     const adultMovies = [];
     if (Array.isArray(vodStreams)) {
       vodStreams.forEach((st, idx) => {
@@ -372,10 +373,14 @@ const XtreamCodesEngine = {
         } else {
           const hasCover = !!(logoUrl && logoUrl.startsWith('http'));
           const catUpper = cat.toUpperCase();
-          const isLanc = catUpper.includes('LANÇAMENTO') || catUpper.includes('LANCAMENTO');
-          const isMais = catUpper.includes('MAIS ASSISTIDO') || catUpper.includes('POPULAR') || catUpper.includes('EM ALTA');
+          const nameUpper = (item.name || '').toUpperCase();
+          const is4k = catUpper.includes('4K') || catUpper.includes('UHD') || catUpper.includes('2160P') || nameUpper.includes('4K') || nameUpper.includes('UHD') || nameUpper.includes('2160P');
+          const isLanc = (catUpper.includes('LANÇAMENTO') || catUpper.includes('LANCAMENTO')) && !is4k;
+          const isMais = (catUpper.includes('MAIS ASSISTIDO') || catUpper.includes('POPULAR') || catUpper.includes('EM ALTA')) && !is4k;
 
-          if (isLanc) {
+          if (is4k) {
+            movies4K.push(item);
+          } else if (isLanc) {
             lancamentoMovies.push(item);
           } else if (isMais) {
             maisAssistidosMovies.push(item);
@@ -388,14 +393,16 @@ const XtreamCodesEngine = {
       });
     }
 
-    // Na visualização "Todos", filmes com capa de alta qualidade (Lançamentos, Mais Assistidos e Gerais) aparecem PRIMEIRO!
+    // Na visualização "Todos", filmes 100% compatíveis (FHD/HD com capas oficiais) aparecem PRIMEIRO!
+    // Conteúdo 4K (pesado/HEVC) fica na sua própria categoria e no final de "Todos" para evitar tela preta em TVs
     const allRegularMovies = [
       ...lancamentoMovies.filter(m => m.logo && m.logo.startsWith('http')),
       ...maisAssistidosMovies.filter(m => m.logo && m.logo.startsWith('http')),
       ...outrosComCapa,
       ...lancamentoMovies.filter(m => !m.logo || !m.logo.startsWith('http')),
       ...maisAssistidosMovies.filter(m => !m.logo || !m.logo.startsWith('http')),
-      ...moviesSemCapa
+      ...moviesSemCapa,
+      ...movies4K
     ];
 
     // Series (Séries e Novelas)
@@ -602,8 +609,16 @@ const M3UParser = {
       ...Array.from(adultMovieCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))
     ];
 
-    // Ordena filmes regulares garantindo que itens com capa válida apareçam primeiro
+    // Ordena filmes regulares garantindo que itens compatíveis e com capa válida apareçam primeiro
     const sortedRegularMovies = regularMovies.slice().sort((a, b) => {
+      const aCat = (a.category || '').toUpperCase();
+      const bCat = (b.category || '').toUpperCase();
+      const aName = (a.name || '').toUpperCase();
+      const bName = (b.name || '').toUpperCase();
+      const a4k = aCat.includes('4K') || aCat.includes('UHD') || aCat.includes('2160P') || aName.includes('4K') || aName.includes('UHD') || aName.includes('2160P');
+      const b4k = bCat.includes('4K') || bCat.includes('UHD') || bCat.includes('2160P') || bName.includes('4K') || bName.includes('UHD') || bName.includes('2160P');
+      if (a4k !== b4k) return a4k ? 1 : -1;
+
       const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
       const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
       if (aCover !== bCover) return aCover ? -1 : 1;
@@ -901,23 +916,29 @@ const M3UParser = {
       }
       if (parsed.movies && parsed.movies.channels) {
         parsed.movies.channels.forEach(m => { if (m && m.logo) m.logo = normalizeImageUrl(m.logo); });
-        // Prioriza filmes com capas oficiais para a categoria "Todos"
+        // Prioriza filmes com capas oficiais para a categoria "Todos" (4K pesado vai para o final)
         parsed.movies.channels.sort((a, b) => {
           if (a.isAdult !== b.isAdult) return a.isAdult ? 1 : -1;
+          const aCat = (a.category || '').toUpperCase();
+          const bCat = (b.category || '').toUpperCase();
+          const aName = (a.name || '').toUpperCase();
+          const bName = (b.name || '').toUpperCase();
+          const a4k = aCat.includes('4K') || aCat.includes('UHD') || aCat.includes('2160P') || aName.includes('4K') || aName.includes('UHD') || aName.includes('2160P');
+          const b4k = bCat.includes('4K') || bCat.includes('UHD') || bCat.includes('2160P') || bName.includes('4K') || bName.includes('UHD') || bName.includes('2160P');
+          if (a4k !== b4k) return a4k ? 1 : -1;
+
           const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
           const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
           if (aCover !== bCover) return aCover ? -1 : 1;
-          const aCat = (a.category || '').toUpperCase();
-          const bCat = (b.category || '').toUpperCase();
+
           const aLanc = aCat.includes('LANÇAMENTO') || aCat.includes('LANCAMENTO');
           const bLanc = bCat.includes('LANÇAMENTO') || bCat.includes('LANCAMENTO');
           if (aLanc !== bLanc) return aLanc ? -1 : 1;
+
           const aPop = aCat.includes('MAIS ASSISTIDO') || aCat.includes('POPULAR') || aCat.includes('EM ALTA');
           const bPop = bCat.includes('MAIS ASSISTIDO') || bCat.includes('POPULAR') || bCat.includes('EM ALTA');
           if (aPop !== bPop) return aPop ? -1 : 1;
-          const a4k = aCat.includes('4K') || aCat.includes('UHD');
-          const b4k = bCat.includes('4K') || bCat.includes('UHD');
-          if (a4k !== b4k) return a4k ? 1 : -1;
+
           return 0;
         });
       }
@@ -1000,8 +1021,16 @@ const M3UParser = {
       ...Array.from(adultMovieCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))
     ];
 
-    // Ordena filmes regulares garantindo que itens com capa válida apareçam primeiro
+    // Ordena filmes regulares garantindo que itens compatíveis e com capa válida apareçam primeiro
     const sortedRegularMovies = regularMovies.slice().sort((a, b) => {
+      const aCat = (a.category || '').toUpperCase();
+      const bCat = (b.category || '').toUpperCase();
+      const aName = (a.name || '').toUpperCase();
+      const bName = (b.name || '').toUpperCase();
+      const a4k = aCat.includes('4K') || aCat.includes('UHD') || aCat.includes('2160P') || aName.includes('4K') || aName.includes('UHD') || aName.includes('2160P');
+      const b4k = bCat.includes('4K') || bCat.includes('UHD') || bCat.includes('2160P') || bName.includes('4K') || bName.includes('UHD') || bName.includes('2160P');
+      if (a4k !== b4k) return a4k ? 1 : -1;
+
       const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
       const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
       if (aCover !== bCover) return aCover ? -1 : 1;

@@ -1009,18 +1009,24 @@ class TVVideoPlayer {
       this.showLoading(false);
     }, 7000);
 
+    // Normaliza URLs VOD: Garante formato .mp4 compatível com aceleração por hardware
+    let vodCandidateUrl = cleanUrl;
+    if (this.isVodMode && cleanUrl.toLowerCase().includes('.mkv')) {
+      vodCandidateUrl = cleanUrl.replace(/\.mkv(\?.*)?$/i, '.mp4$1');
+    }
+
     // Prioridade 1: Se estiver rodando no Android Nativo, abre a PlayerActivity de hardware nativo do Android
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
       this.stopHtmlVideo();
       this.showLoading(false);
-      AndroidDevice.openPlayer(cleanUrl, channelName, category, this.isVodMode);
+      AndroidDevice.openPlayer(vodCandidateUrl, channelName, category, this.isVodMode);
       return;
     }
 
     if (window.AndroidPlayer && typeof AndroidPlayer.play === 'function') {
       this.isNativeMode = true;
       this.stopHtmlVideo();
-      AndroidPlayer.play(cleanUrl, this.isVodMode);
+      AndroidPlayer.play(vodCandidateUrl, this.isVodMode);
       return;
     }
 
@@ -1077,12 +1083,12 @@ class TVVideoPlayer {
           console.warn('HLS erro fatal, caindo para reprodução nativa HTML5:', data.type);
           this.hls.destroy();
           this.hls = null;
-          this.video.src = cleanUrl;
+          this.video.src = vodCandidateUrl;
           startPlayFullscreen();
         }
       });
     } else {
-      this.video.src = cleanUrl;
+      this.video.src = vodCandidateUrl;
       startPlayFullscreen();
     }
   }
