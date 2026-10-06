@@ -2315,11 +2315,16 @@ const App = {
     const sFill = document.getElementById('series-progress-bar-fill');
     const sLabel = document.getElementById('series-progress-label');
 
-    const hasSeriesProgress = sProg && sProg.currentTime > 5 && sProg.percent < 92;
+    let sCurTime = sProg ? Number(sProg.currentTime) : 0;
+    if (sCurTime > 86400) sCurTime = Math.round(sCurTime / 1000);
+    let sDurTime = (sProg && sProg.duration) ? Number(sProg.duration) : 0;
+    if (sDurTime > 86400) sDurTime = Math.round(sDurTime / 1000);
+
+    const hasSeriesProgress = sProg && sCurTime > 5 && sProg.percent < 92;
     if (hasSeriesProgress) {
       if (sWrap) sWrap.style.display = 'flex';
       if (sFill) sFill.style.width = `${sProg.percent}%`;
-      if (sLabel) sLabel.textContent = `Continuar: ${sProg.lastLabel || ('Temporada ' + sProg.lastSeason)} • Parou em ${this.formatTime(sProg.currentTime)} de ${this.formatTime(sProg.duration)} (${sProg.percent}%)`;
+      if (sLabel) sLabel.textContent = `Continuar: ${sProg.lastLabel || ('Temporada ' + sProg.lastSeason)} • Parou em ${this.formatTime(sCurTime)} de ${this.formatTime(sDurTime)} (${sProg.percent}%)`;
       if (playText) playText.textContent = `CONTINUAR: ${sProg.lastLabel || 'S' + sProg.lastSeason}`;
       if (btnRestart) {
         btnRestart.style.display = 'inline-flex';
@@ -2344,10 +2349,10 @@ const App = {
           const seasonEps = (seriesGroup.seasons && seriesGroup.seasons[sProg.lastSeason]) || [];
           const epIdx = (typeof sProg.lastEpisodeIndex === 'number' && seasonEps[sProg.lastEpisodeIndex]) ? sProg.lastEpisodeIndex : 0;
           const targetEp = seasonEps[epIdx] || { url: sProg.lastEpisodeUrl || seriesGroup.url, name: seriesGroup.name };
-          this.playSeriesEpisode(seriesGroup, targetEp, seasonEps, sProg.lastSeason, epIdx, sProg.currentTime);
+          this.playSeriesEpisode(seriesGroup, targetEp, seasonEps, sProg.lastSeason, epIdx, sCurTime, false);
         } else {
           const firstEp = initialEps[0] || { url: seriesGroup.url, name: seriesGroup.name };
-          this.playSeriesEpisode(seriesGroup, firstEp, initialEps, initialSeason, 0, 0);
+          this.playSeriesEpisode(seriesGroup, firstEp, initialEps, initialSeason, 0, 0, false);
         }
       };
     }
@@ -2380,7 +2385,7 @@ const App = {
     }, 60);
   },
 
-  playSeriesEpisode(seriesGroup, ep, seasonEps, seasonNum, epIdx, startPositionSec = 0) {
+  playSeriesEpisode(seriesGroup, ep, seasonEps, seasonNum, epIdx, startPositionSec = 0, isRestart = false) {
     const seriesTitle = (seriesGroup && seriesGroup.name) ? seriesGroup.name : 'Série';
     const epNum = ep.episode || (epIdx + 1);
     const epTitle = ep.cleanTitle || `Episódio ${epNum}`;
@@ -2397,14 +2402,17 @@ const App = {
     const overlay = document.getElementById('modal-series-details');
     if (overlay) overlay.classList.remove('active');
 
+    let startSec = isRestart ? 0 : Math.max(0, Math.floor(Number(startPositionSec) || 0));
+    if (startSec > 86400) startSec = Math.round(startSec / 1000);
+
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
-      const startMs = Math.round(startPositionSec * 1000);
-      AndroidDevice.openPlayer(ep.url, fullTitle, seriesTitle, true, startMs);
+      const startMs = Math.round(startSec * 1000);
+      AndroidDevice.openPlayer(ep.url, fullTitle, seriesTitle, true, startMs, isRestart);
       return;
     }
     this.player.setPlaylist(seasonEps && seasonEps.length > 0 ? seasonEps : [ep]);
     this.goToScreen('player');
-    this.player.loadStream(ep.url, fullTitle, seriesTitle, epIdx + 1, true, startPositionSec);
+    this.player.loadStream(ep.url, fullTitle, seriesTitle, epIdx + 1, true, startSec);
   },
 
   playSeriesRestart(seriesGroup) {
@@ -2412,7 +2420,20 @@ const App = {
     const firstSeason = rawKeys.length > 0 ? String(Math.min(...rawKeys)) : '1';
     const eps = (seriesGroup.seasons && seriesGroup.seasons[firstSeason]) || [];
     const firstEp = eps[0] || { url: seriesGroup.url, name: seriesGroup.name };
-    this.playSeriesEpisode(seriesGroup, firstEp, eps, firstSeason, 0, 0);
+
+    // Reseta histórico da série no localStorage
+    const seriesHistory = this.getSeriesHistory();
+    const seriesKey = (seriesGroup.name || seriesGroup.url || '').trim();
+    if (seriesKey && seriesHistory[seriesKey]) {
+      seriesHistory[seriesKey].currentTime = 0;
+      seriesHistory[seriesKey].percent = 0;
+      this.saveSeriesHistory(seriesHistory);
+    }
+    if (firstEp && window.AndroidDevice && typeof AndroidDevice.savePlayback === 'function') {
+      AndroidDevice.savePlayback(firstEp.url, 0, 0);
+    }
+
+    this.playSeriesEpisode(seriesGroup, firstEp, eps, firstSeason, 0, 0, true);
   },
 
   // Renderiza Episódios em Cards Widescreen 16:9 com "..." e legenda "S1 E1" (Imagem 3)
@@ -2447,8 +2468,11 @@ const App = {
       const cleanLogo = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawLogo) : rawLogo;
 
       const epProg = this.getVodProgress(ep);
+      let epCurTime = epProg ? Number(epProg.currentTime) : 0;
+      if (epCurTime > 86400) epCurTime = Math.round(epCurTime / 1000);
+
       const isWatched = (epProg && epProg.completed) || (sProg && sProg.watchedEpisodes && sProg.watchedEpisodes[epCode]);
-      const isInProgress = !isWatched && (epProg && epProg.currentTime > 5 && epProg.percent < 92);
+      const isInProgress = !isWatched && (epProg && epCurTime > 5 && epProg.percent < 92);
 
       let badgesHtml = '';
       if (isWatched) {
@@ -2460,7 +2484,7 @@ const App = {
           <div class="episode-progress-bar">
             <div class="episode-progress-fill" style="width: ${epProg.percent}%;"></div>
           </div>
-          <span class="episode-prog-badge">${this.formatTime(epProg.currentTime)}</span>
+          <span class="episode-prog-badge">${this.formatTime(epCurTime)}</span>
         `;
       }
 
@@ -2473,8 +2497,8 @@ const App = {
       `;
 
       item.addEventListener('click', () => {
-        const startPos = (epProg && epProg.currentTime > 5 && epProg.percent < 92) ? epProg.currentTime : 0;
-        this.playSeriesEpisode(this.activeSeries, ep, episodes, seasonNum, idx, startPos);
+        const startPos = (epProg && epCurTime > 5 && epProg.percent < 92) ? epCurTime : 0;
+        this.playSeriesEpisode(this.activeSeries, ep, episodes, seasonNum, idx, startPos, false);
       });
 
       listContainer.appendChild(item);
@@ -2554,17 +2578,22 @@ const App = {
     const progLabel = document.getElementById('movie-progress-label');
 
     const prog = this.getVodProgress(item);
-    const hasProgress = prog && prog.currentTime > 5 && prog.percent < 92;
+    let curTime = prog ? Number(prog.currentTime) : 0;
+    if (curTime > 86400) curTime = Math.round(curTime / 1000);
+    let durTime = (prog && prog.duration) ? Number(prog.duration) : 0;
+    if (durTime > 86400) durTime = Math.round(durTime / 1000);
+
+    const hasProgress = prog && curTime > 5 && prog.percent < 92;
 
     if (hasProgress) {
       if (progWrap) progWrap.style.display = 'flex';
       if (progFill) progFill.style.width = `${prog.percent}%`;
-      if (progLabel) progLabel.textContent = `Parou em ${this.formatTime(prog.currentTime)} de ${this.formatTime(prog.duration)} (${prog.percent}%)`;
-      if (playText) playText.textContent = `CONTINUAR (${this.formatTime(prog.currentTime)})`;
+      if (progLabel) progLabel.textContent = `Parou em ${this.formatTime(curTime)} de ${this.formatTime(durTime)} (${prog.percent}%)`;
+      if (playText) playText.textContent = `CONTINUAR (${this.formatTime(curTime)})`;
       if (btnRestart) {
         btnRestart.style.display = 'inline-flex';
         btnRestart.onclick = () => {
-          this.playSelectedMovie(0);
+          this.playSelectedMovie(0, true);
         };
       }
     } else {
@@ -2579,8 +2608,8 @@ const App = {
 
     if (btnPlay) {
       btnPlay.onclick = () => {
-        const startPos = hasProgress ? prog.currentTime : 0;
-        this.playSelectedMovie(startPos);
+        const startPos = hasProgress ? curTime : 0;
+        this.playSelectedMovie(startPos, false);
       };
     }
 
@@ -2632,7 +2661,7 @@ const App = {
   },
 
   _lastPlayMovieTs: 0,
-  playSelectedMovie(startPositionSec = 0) {
+  playSelectedMovie(startPositionSec = 0, isRestart = false) {
     if (!this.selectedMovie) return;
     const now = Date.now();
     if (now - this._lastPlayMovieTs < 1500) return;
@@ -2647,14 +2676,30 @@ const App = {
     const modal = document.getElementById('modal-movie-details');
     if (modal) modal.classList.remove('active');
 
+    let startSec = isRestart ? 0 : Math.max(0, Math.floor(Number(startPositionSec) || 0));
+    if (startSec > 86400) startSec = Math.round(startSec / 1000);
+
+    if (isRestart) {
+      const history = this.getPlaybackHistory();
+      const key = (item.url || item.name || '').trim();
+      if (key && history[key]) {
+        history[key].currentTime = 0;
+        history[key].percent = 0;
+        this.savePlaybackHistory(history);
+      }
+      if (window.AndroidDevice && typeof AndroidDevice.savePlayback === 'function') {
+        AndroidDevice.savePlayback(item.url, 0, 0);
+      }
+    }
+
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
-      const startMs = Math.round(startPositionSec * 1000);
-      AndroidDevice.openPlayer(item.url, item.name, item.category, true, startMs);
+      const startMs = Math.round(startSec * 1000);
+      AndroidDevice.openPlayer(item.url, item.name, item.category, true, startMs, isRestart);
       return;
     }
     this.player.setPlaylist(this.filteredItems);
     this.goToScreen('player');
-    this.player.loadStream(item.url, item.name, item.category, realIndex + 1, true, startPositionSec);
+    this.player.loadStream(item.url, item.name, item.category, realIndex + 1, true, startSec);
   },
 
   // ===================================================================
@@ -2755,8 +2800,14 @@ const App = {
           const raw = AndroidDevice.getSavedPlayback(url);
           if (raw) {
             const data = JSON.parse(raw);
-            if (data && data.position && data.duration) {
-              this.saveVodPlayback(data.position, data.duration, data.position >= data.duration * 0.92);
+            if (data && (typeof data.position !== 'undefined') && (typeof data.duration !== 'undefined')) {
+              let pos = Number(data.position);
+              let dur = Number(data.duration);
+              if (pos > 86400) pos = Math.round(pos / 1000);
+              if (dur > 86400) dur = Math.round(dur / 1000);
+              if (dur > 0 || pos > 0) {
+                this.saveVodPlayback(pos, dur, dur > 0 && pos >= dur * 0.92);
+              }
             }
           }
         } catch(e) {}
@@ -3211,7 +3262,22 @@ const App = {
   // ===================================================================
   getPlaybackHistory() {
     try {
-      return JSON.parse(localStorage.getItem('vion_playback_history') || '{}');
+      const history = JSON.parse(localStorage.getItem('vion_playback_history') || '{}');
+      let changed = false;
+      for (const k in history) {
+        if (history[k]) {
+          if (typeof history[k].currentTime === 'number' && history[k].currentTime > 86400) {
+            history[k].currentTime = Math.round(history[k].currentTime / 1000);
+            changed = true;
+          }
+          if (typeof history[k].duration === 'number' && history[k].duration > 86400) {
+            history[k].duration = Math.round(history[k].duration / 1000);
+            changed = true;
+          }
+        }
+      }
+      if (changed) this.savePlaybackHistory(history);
+      return history;
     } catch (e) {
       return {};
     }
@@ -3225,7 +3291,22 @@ const App = {
 
   getSeriesHistory() {
     try {
-      return JSON.parse(localStorage.getItem('vion_series_history') || '{}');
+      const seriesHist = JSON.parse(localStorage.getItem('vion_series_history') || '{}');
+      let changed = false;
+      for (const k in seriesHist) {
+        if (seriesHist[k]) {
+          if (typeof seriesHist[k].currentTime === 'number' && seriesHist[k].currentTime > 86400) {
+            seriesHist[k].currentTime = Math.round(seriesHist[k].currentTime / 1000);
+            changed = true;
+          }
+          if (typeof seriesHist[k].duration === 'number' && seriesHist[k].duration > 86400) {
+            seriesHist[k].duration = Math.round(seriesHist[k].duration / 1000);
+            changed = true;
+          }
+        }
+      }
+      if (changed) this.saveSeriesHistory(seriesHist);
+      return seriesHist;
     } catch (e) {
       return {};
     }
@@ -3244,6 +3325,8 @@ const App = {
     if (!key) return null;
     const data = history[key];
     if (!data || !data.currentTime) return null;
+    if (data.currentTime > 86400) data.currentTime = Math.round(data.currentTime / 1000);
+    if (data.duration > 86400) data.duration = Math.round(data.duration / 1000);
     return data;
   },
 
@@ -3252,14 +3335,21 @@ const App = {
     const hist = this.getSeriesHistory();
     const key = (seriesGroup.name || seriesGroup.url || '').trim();
     if (!key) return null;
-    return hist[key] || null;
+    const data = hist[key] || null;
+    if (data) {
+      if (data.currentTime > 86400) data.currentTime = Math.round(data.currentTime / 1000);
+      if (data.duration > 86400) data.duration = Math.round(data.duration / 1000);
+    }
+    return data;
   },
 
   formatTime(totalSeconds) {
     if (!totalSeconds || isNaN(totalSeconds) || totalSeconds < 0) return '00:00';
-    const s = Math.floor(totalSeconds % 60);
-    const m = Math.floor((totalSeconds / 60) % 60);
-    const h = Math.floor(totalSeconds / 3600);
+    let sec = Number(totalSeconds);
+    if (sec > 86400) sec = Math.round(sec / 1000);
+    const s = Math.floor(sec % 60);
+    const m = Math.floor((sec / 60) % 60);
+    const h = Math.floor(sec / 3600);
     const pad = (n) => String(n).padStart(2, '0');
     if (h > 0) {
       return `${pad(h)}:${pad(m)}:${pad(s)}`;
@@ -3268,12 +3358,19 @@ const App = {
   },
 
   saveVodPlayback(curSec, durSec, isCompleted = false) {
-    if (!curSec || isNaN(curSec) || curSec <= 2) return;
+    if (!curSec || isNaN(curSec)) return;
     const nowPlaying = this.nowPlayingVod;
     if (!nowPlaying) return;
 
-    const cur = Math.floor(curSec);
-    const dur = (durSec && !isNaN(durSec) && durSec > 0) ? Math.floor(durSec) : 0;
+    let cur = Math.floor(Number(curSec));
+    let dur = (durSec && !isNaN(durSec) && Number(durSec) > 0) ? Math.floor(Number(durSec)) : 0;
+
+    // Normalização: se vier em milissegundos (> 86400 = 24h), converte para segundos
+    if (cur > 86400) cur = Math.round(cur / 1000);
+    if (dur > 86400) dur = Math.round(dur / 1000);
+
+    if (cur <= 2 && !isCompleted) return;
+
     const percent = dur > 0 ? Math.min(100, Math.round((cur / dur) * 100)) : 0;
     const completed = isCompleted || (percent >= 92);
 

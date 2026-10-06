@@ -461,9 +461,11 @@ class TVVideoPlayer {
 
   formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return '00:00';
-    const s = Math.floor(seconds % 60);
-    const m = Math.floor((seconds / 60) % 60);
-    const h = Math.floor(seconds / 3600);
+    let sec = Number(seconds);
+    if (sec > 86400) sec = Math.round(sec / 1000);
+    const s = Math.floor(sec % 60);
+    const m = Math.floor((sec / 60) % 60);
+    const h = Math.floor(sec / 3600);
     if (h > 0) {
       return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
@@ -996,8 +998,11 @@ class TVVideoPlayer {
       this.isVodMode = cleanUrl.includes('/movie/') || cleanUrl.includes('/series/') || /\.(mp4|mkv|avi|mov)$/i.test(cleanUrl);
     }
 
+    let startSec = Math.max(0, Math.floor(Number(startPositionSec) || 0));
+    if (startSec > 86400) startSec = Math.round(startSec / 1000);
+
     this.currentActiveStream = { url: cleanUrl, name: channelName, category, channelNumber };
-    this._pendingSeekPosition = startPositionSec > 3 ? startPositionSec : 0;
+    this._pendingSeekPosition = startSec > 3 ? startSec : 0;
 
     // Para o mini player se estiver tocando
     this.stopMini();
@@ -1023,7 +1028,7 @@ class TVVideoPlayer {
 
     // Reseta timeline
     if (this.seekSlider) this.seekSlider.value = 0;
-    if (this.currentTimeEl) this.currentTimeEl.textContent = this.formatTime(startPositionSec);
+    if (this.currentTimeEl) this.currentTimeEl.textContent = this.formatTime(startSec);
     if (this.durationTimeEl) this.durationTimeEl.textContent = this.isVodMode ? '--:--' : 'AO VIVO';
 
     this.showLoading(true);
@@ -1046,7 +1051,7 @@ class TVVideoPlayer {
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
       this.stopHtmlVideo();
       this.showLoading(false);
-      const startMs = Math.round(startPositionSec * 1000);
+      const startMs = Math.round(startSec * 1000);
       AndroidDevice.openPlayer(vodCandidateUrl, channelName, category, this.isVodMode, startMs);
       return;
     }
