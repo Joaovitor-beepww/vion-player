@@ -42,6 +42,15 @@ window.addEventListener('hashchange', () => {
   }
 });
 
+function normalizeMac(mac) {
+  if (!mac || typeof mac !== 'string') return '';
+  const clean = mac.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+  if (clean.length === 12) {
+    return clean.match(/.{1,2}/g).join(':');
+  }
+  return clean;
+}
+
 /**
  * 1. Navegação Global entre Abas
  */
@@ -2023,6 +2032,15 @@ function initActivateDeviceModal() {
   const btnCancel = document.getElementById('btn-cancel-activate-modal');
   const form = document.getElementById('modal-activate-device-form') || document.getElementById('modal-activate-form');
   const alertBox = document.getElementById('activate-alert-box');
+  const macInput = document.getElementById('input-activate-mac');
+
+  // Máscara e auto-formatação dinâmica para MAC no painel de revenda (XX:XX:XX:XX:XX:XX)
+  macInput?.addEventListener('input', (e) => {
+    let val = e.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
+    if (val.length > 12) val = val.substring(0, 12);
+    const parts = val.match(/.{1,2}/g) || [];
+    e.target.value = parts.join(':');
+  });
 
   btnOpen?.addEventListener('click', () => {
     if (modal) modal.style.display = 'flex';
@@ -2038,56 +2056,84 @@ function initActivateDeviceModal() {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const mac = document.getElementById('input-activate-mac')?.value.trim().toUpperCase();
-    const comment = document.getElementById('input-activate-comment')?.value.trim();
+    const rawMac = macInput?.value.trim() || '';
+    const normMac = normalizeMac(rawMac);
+    const cleanMac = rawMac.replace(/[^0-9A-Fa-f]/g, '');
+    const comment = document.getElementById('input-activate-comment')?.value.trim() || 'Cliente';
     const plan = document.getElementById('select-activate-plan')?.value || '1year';
 
+    if (cleanMac.length !== 12 || !normMac) {
+      showAlert(alertBox, 'Por favor, informe um endereço MAC válido contendo 12 dígitos (ex: 00:1A:79:B4:C2:5D).', 'error');
+      macInput?.focus();
+      return;
+    }
+
     const session = getResellerSession();
-    const cost = plan === 'lifetime' ? 2 : 1;
+    const cost = (plan === 'lifetime' || plan === 'vitalicio') ? 2 : 1;
 
     if ((session.credits || 0) < cost) {
       showAlert(alertBox, `Saldo insuficiente! Você precisa de ${cost} crédito(s).`, 'error');
       return;
     }
 
-    showAlert(alertBox, '🔄 Ativando dispositivo...', 'info');
+    showAlert(alertBox, '🔄 Ativando dispositivo no servidor...', 'info');
 
+    let serverSuccess = false;
     try {
-      await fetch('/api/reseller/activate-device', {
+      const res = await fetch('/api/reseller/activate-device', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: session.email, mac, comment, plan })
+        body: JSON.stringify({ email: session.email, mac: normMac, comment, plan })
       });
-    } catch(err) {}
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        showAlert(alertBox, data?.error || 'Erro ao processar ativação no servidor.', 'error');
+        return;
+      }
+      if (data.reseller) {
+        saveResellerSession(data.reseller);
+        session.credits = data.reseller.credits;
+        session.activations = data.reseller.activations;
+        session.creditHistory = data.reseller.creditHistory;
+      }
+      serverSuccess = true;
+    } catch(err) {
+      console.warn('Falha de rede ao ativar dispositivo:', err);
+    }
 
-    session.credits -= cost;
-    if (!Array.isArray(session.activations)) session.activations = [];
-    session.activations.unshift({
-      id: 'act_' + Date.now(),
-      mac, comment, plan, cost,
-      date: Date.now(),
-      status: 'Ativo'
-    });
+    if (!serverSuccess) {
+      session.credits -= cost;
+      if (!Array.isArray(session.activations)) session.activations = [];
+      session.activations.unshift({
+        id: 'act_' + Date.now(),
+        mac: normMac, comment, plan, cost,
+        date: Date.now(),
+        expiresAt: (plan === 'lifetime' || plan === 'vitalicio') ? null : Date.now() + 365 * 24 * 60 * 60 * 1000,
+        status: 'Ativo'
+      });
 
-    if (!Array.isArray(session.creditHistory)) session.creditHistory = [];
-    session.creditHistory.unshift({
-      id: 'use_' + Date.now(),
-      type: 'activation',
-      amount: -cost,
-      desc: `Ativação do dispositivo MAC ${mac}`,
-      date: Date.now()
-    });
+      if (!Array.isArray(session.creditHistory)) session.creditHistory = [];
+      session.creditHistory.unshift({
+        id: 'use_' + Date.now(),
+        type: 'activation',
+        amount: -cost,
+        desc: `Ativação do dispositivo MAC ${normMac}`,
+        date: Date.now()
+      });
 
-    saveResellerSession(session);
+      saveResellerSession(session);
+    }
+
     refreshHubDashboard();
     renderHubDevices();
 
-    showAlert(alertBox, `✔ Dispositivo MAC ${mac} ativado com sucesso!`, 'success');
-    const actItem = session.activations[0];
+    showAlert(alertBox, `✔ Dispositivo MAC ${normMac} ativado com sucesso!`, 'success');
+    const actItem = (session.activations && session.activations[0]) || {};
     setTimeout(() => {
       if (modal) modal.style.display = 'none';
       if (alertBox) alertBox.style.display = 'none';
-      openActivationReceiptModal(mac, comment, plan, actItem ? actItem.expiresAt : null, Date.now());
+      if (macInput) macInput.value = '';
+      openActivationReceiptModal(normMac, comment, plan, actItem.expiresAt || null, Date.now());
     }, 700);
   });
 }

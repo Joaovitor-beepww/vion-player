@@ -85,10 +85,46 @@ if (!fs.existsSync(DATA_RESELLERS)) {
   fs.writeFileSync(DATA_RESELLERS, JSON.stringify(initialResellers, null, 2), 'utf8');
 }
 
+function normalizeMac(mac) {
+  if (!mac || typeof mac !== 'string') return '';
+  const clean = mac.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+  if (clean.length === 12) {
+    return clean.match(/.{1,2}/g).join(':');
+  }
+  return clean;
+}
+
+function findDevice(devices, rawMac) {
+  if (!devices || !rawMac) return null;
+  const norm = normalizeMac(rawMac);
+  const clean = String(rawMac).replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+  const raw = String(rawMac).toUpperCase().trim();
+  return devices[norm] || devices[clean] || devices[raw] || null;
+}
+
 function loadDevices() {
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(raw || '{}');
+    const data = JSON.parse(raw || '{}');
+    let dirty = false;
+    for (const k of Object.keys(data)) {
+      const dev = data[k];
+      if (!dev) continue;
+      const norm = normalizeMac(dev.mac || k);
+      const clean = (dev.mac || k).replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+      if (norm && norm !== k && !data[norm]) {
+        data[norm] = dev;
+        dirty = true;
+      }
+      if (clean && clean !== k && !data[clean]) {
+        data[clean] = dev;
+        dirty = true;
+      }
+    }
+    if (dirty) {
+      try { fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8'); } catch(e) {}
+    }
+    return data;
   } catch (e) {
     return {};
   }
@@ -210,26 +246,35 @@ function fulfillPayment(payment) {
     }
   } else if (payment.type === 'activation' && payment.mac) {
     const devices = loadDevices();
-    const normalizedMac = payment.mac.trim().toUpperCase();
-    if (!devices[normalizedMac]) {
-      const fallbackKey = String(Math.abs(normalizedMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
-      devices[normalizedMac] = {
-        mac: normalizedMac,
+    const rawMac = String(payment.mac).trim();
+    const normMac = normalizeMac(rawMac);
+    const cleanMac = rawMac.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+    let targetDevice = findDevice(devices, rawMac);
+    if (!targetDevice) {
+      const fallbackKey = String(Math.abs(normMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+      const now = Date.now();
+      targetDevice = {
+        mac: normMac,
         key: fallbackKey,
         playlists: [],
-        registeredAt: Date.now()
+        registeredAt: now,
+        trialExpiresAt: now + (7 * 24 * 60 * 60 * 1000)
       };
     }
     const isLifetime = payment.plan === 'vitalicio' || payment.plan === 'lifetime';
-    devices[normalizedMac].active = true;
-    devices[normalizedMac].activated = true;
-    devices[normalizedMac].plan = isLifetime ? 'vitalicio' : 'anual';
-    devices[normalizedMac].expiresAt = isLifetime ? null : Date.now() + 365 * 24 * 60 * 60 * 1000;
-    devices[normalizedMac].expiryDate = isLifetime
+    targetDevice.mac = normMac;
+    targetDevice.active = true;
+    targetDevice.activated = true;
+    targetDevice.plan = isLifetime ? 'vitalicio' : 'anual';
+    targetDevice.expiresAt = isLifetime ? null : Date.now() + 365 * 24 * 60 * 60 * 1000;
+    targetDevice.expiryDate = isLifetime
       ? Date.now() + 100 * 365 * 24 * 60 * 60 * 1000
       : Date.now() + 365 * 24 * 60 * 60 * 1000;
+
+    devices[normMac] = targetDevice;
+    devices[cleanMac] = targetDevice;
     saveDevices(devices);
-    console.log(`[PIX Mercado Pago] Dispositivo ${normalizedMac} ativado com sucesso! Plano: ${devices[normalizedMac].plan}`);
+    console.log(`[PIX Mercado Pago] Dispositivo ${normMac} ativado com sucesso! Plano: ${targetDevice.plan}`);
   }
 }
 
@@ -796,10 +841,19 @@ const server = http.createServer(async (req, res) => {
           // 5. Ativar Dispositivo
           if (pathname === '/api/reseller/activate-device') {
             const email = (payload.email || '').trim().toLowerCase();
-            const mac = (payload.mac || '').trim().toUpperCase();
+            const rawMac = (payload.mac || '').trim();
+            const normMac = normalizeMac(rawMac);
+            const cleanMac = rawMac.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
             const plan = payload.plan || '1year';
-            const cost = plan === 'lifetime' ? 2 : 1;
+            const isLifetime = (plan === 'lifetime' || plan === 'vitalicio');
+            const cost = isLifetime ? 2 : 1;
             const comment = (payload.comment || 'Ativação via Revendedor').trim();
+
+            if (!normMac) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Endereço MAC inválido.' }));
+              return;
+            }
 
             const reseller = resellers[email];
             if (!reseller) {
@@ -816,14 +870,15 @@ const server = http.createServer(async (req, res) => {
 
             // Deduz créditos
             reseller.credits -= cost;
+            const expiresAt = isLifetime ? null : Date.now() + 365 * 24 * 60 * 60 * 1000;
             const newAct = {
               id: 'act_' + Date.now(),
-              mac,
+              mac: normMac,
               comment,
-              plan,
+              plan: isLifetime ? 'lifetime' : '1year',
               cost,
               date: Date.now(),
-              expiresAt: plan === 'lifetime' ? null : Date.now() + 365 * 24 * 60 * 60 * 1000,
+              expiresAt,
               status: 'Ativo'
             };
 
@@ -835,26 +890,47 @@ const server = http.createServer(async (req, res) => {
               id: 'use_' + Date.now(),
               type: 'activation',
               amount: -cost,
-              desc: `Ativação do dispositivo MAC ${mac} (${plan === 'lifetime' ? 'Vitalícia' : '1 Ano'})`,
+              desc: `Ativação do dispositivo MAC ${normMac} (${isLifetime ? 'Vitalícia' : '1 Ano'})`,
               date: Date.now()
             });
 
-            // Registra dispositivo no devices.json se não existir
+            // Registra dispositivo no devices.json se não existir ou atualiza
             const devices = loadDevices();
-            if (!devices[mac]) {
-              const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
-              devices[mac] = { mac, key: fallbackKey, playlists: [], activated: true, expiresAt: newAct.expiresAt };
-            } else {
-              devices[mac].activated = true;
-              devices[mac].expiresAt = newAct.expiresAt;
+            let targetDevice = findDevice(devices, rawMac);
+            if (!targetDevice) {
+              const fallbackKey = String(Math.abs(normMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+              const now = Date.now();
+              targetDevice = {
+                mac: normMac,
+                key: fallbackKey,
+                playlists: [],
+                registeredAt: now,
+                trialExpiresAt: now + (7 * 24 * 60 * 60 * 1000)
+              };
             }
+
+            targetDevice.mac = normMac;
+            targetDevice.activated = true;
+            targetDevice.active = true;
+            targetDevice.plan = isLifetime ? 'vitalicio' : 'anual';
+            targetDevice.expiresAt = expiresAt;
+
+            // Salva sob a chave canônica formatada e também sob clean hex como alias
+            devices[normMac] = targetDevice;
+            devices[cleanMac] = targetDevice;
+            if (rawMac && rawMac.toUpperCase() !== normMac && rawMac.toUpperCase() !== cleanMac) {
+              devices[rawMac.toUpperCase()] = targetDevice;
+            }
+
             saveDevices(devices);
             saveResellers(resellers);
+
+            console.log(`[Reseller API] Dispositivo ativado com sucesso: MAC ${normMac} (${cleanMac}) | Plano: ${targetDevice.plan}`);
 
             const safeReseller = { ...reseller };
             delete safeReseller.password;
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, reseller: safeReseller }));
+            res.end(JSON.stringify({ success: true, reseller: safeReseller, device: targetDevice }));
             return;
           }
 
@@ -1387,14 +1463,30 @@ const server = http.createServer(async (req, res) => {
   // ===================================================================
   if (pathname.startsWith('/api/device')) {
     if (req.method === 'GET') {
-      const mac = (urlObj.searchParams.get('mac') || '').toUpperCase().trim();
+      const rawMac = (urlObj.searchParams.get('mac') || '').trim();
+      const normMac = normalizeMac(rawMac);
       const devices = loadDevices();
-      const device = devices[mac];
+      let device = findDevice(devices, rawMac);
 
       if (!device) {
         res.writeHead(404, { 'Content-Type': 'application/json; charset=UTF-8' });
         res.end(JSON.stringify({ success: false, error: 'Dispositivo não encontrado' }));
         return;
+      }
+
+      // Garante integridade e persistência de dados de ativação e teste
+      if (!device.registeredAt) {
+        device.registeredAt = device.createdAt || Date.now();
+      }
+      if (!device.trialExpiresAt) {
+        device.trialExpiresAt = device.registeredAt + (7 * 24 * 60 * 60 * 1000);
+      }
+      if (device.activated || device.active) {
+        device.activated = true;
+        device.active = true;
+        if (!device.plan) {
+          device.plan = device.expiresAt ? 'anual' : 'vitalicio';
+        }
       }
 
       res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
@@ -1408,10 +1500,12 @@ const server = http.createServer(async (req, res) => {
       req.on('end', () => {
         try {
           const payload = JSON.parse(body || '{}');
-          const mac = (payload.mac || '').toUpperCase().trim();
+          const rawMac = (payload.mac || '').trim();
+          const normMac = normalizeMac(rawMac);
+          const cleanMac = rawMac.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
           const key = (payload.key || '').toString().trim();
 
-          if (!mac) {
+          if (!normMac) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, error: 'MAC Address obrigatório' }));
             return;
@@ -1421,28 +1515,68 @@ const server = http.createServer(async (req, res) => {
 
           // 1. Registro automático disparado pelo App (TV / Celular / Web)
           if (pathname === '/api/device/register') {
-            if (!devices[mac]) {
-              const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
-              devices[mac] = { mac, key: key || fallbackKey, playlists: [] };
-            } else if (key) {
-              devices[mac].key = key;
+            let device = findDevice(devices, rawMac);
+            const now = Date.now();
+
+            if (!device) {
+              const fallbackKey = String(Math.abs(normMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+              device = {
+                mac: normMac,
+                key: key || fallbackKey,
+                playlists: [],
+                registeredAt: now,
+                trialExpiresAt: now + (7 * 24 * 60 * 60 * 1000),
+                activated: false,
+                active: false
+              };
+            } else {
+              // Dispositivo já existe: NUNCA reseta o período de teste na reinstalação!
+              if (!device.registeredAt) {
+                device.registeredAt = device.createdAt || now;
+              }
+              if (!device.trialExpiresAt) {
+                device.trialExpiresAt = device.registeredAt + (7 * 24 * 60 * 60 * 1000);
+              }
+              if (key) {
+                device.key = key;
+              }
+              device.mac = normMac;
             }
+
+            devices[normMac] = device;
+            devices[cleanMac] = device;
+            if (rawMac && rawMac.toUpperCase() !== normMac && rawMac.toUpperCase() !== cleanMac) {
+              devices[rawMac.toUpperCase()] = device;
+            }
+
             saveDevices(devices);
-            console.log(`[API] Dispositivo registrado/atualizado: MAC ${mac} | KEY ${devices[mac].key}`);
+            console.log(`[API] Dispositivo registrado/atualizado: MAC ${normMac} | KEY ${device.key} | Ativado: ${device.activated} | Expira: ${new Date(device.trialExpiresAt).toISOString()}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, device: devices[mac] }));
+            res.end(JSON.stringify({ success: true, device }));
             return;
           }
 
           // 2. Validação de Login do Portal
           if (pathname === '/api/device/validate' || pathname === '/api/device/login') {
-            let existing = devices[mac];
+            let existing = findDevice(devices, rawMac);
+            const now = Date.now();
+
             if (!existing) {
-              const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
-              existing = { mac, key: key || fallbackKey, playlists: [], activated: true, createdAt: Date.now() };
-              devices[mac] = existing;
+              const fallbackKey = String(Math.abs(normMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+              existing = {
+                mac: normMac,
+                key: key || fallbackKey,
+                playlists: [],
+                activated: true,
+                active: true,
+                registeredAt: now,
+                trialExpiresAt: now + (7 * 24 * 60 * 60 * 1000),
+                createdAt: now
+              };
+              devices[normMac] = existing;
+              devices[cleanMac] = existing;
               saveDevices(devices);
-              console.log(`[Portal Login] Dispositivo auto-registrado para MAC: ${mac} com KEY: ${existing.key}`);
+              console.log(`[Portal Login] Dispositivo auto-registrado para MAC: ${normMac} com KEY: ${existing.key}`);
             } else if (existing.key && key && existing.key !== key) {
               res.writeHead(401, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({
@@ -1452,10 +1586,12 @@ const server = http.createServer(async (req, res) => {
               return;
             } else if (!existing.key && key) {
               existing.key = key;
+              devices[normMac] = existing;
+              devices[cleanMac] = existing;
               saveDevices(devices);
             }
 
-            console.log(`[Portal Login] Acesso AUTORIZADO para MAC: ${mac}`);
+            console.log(`[Portal Login] Acesso AUTORIZADO para MAC: ${normMac}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
               success: true,
@@ -1466,12 +1602,22 @@ const server = http.createServer(async (req, res) => {
           }
 
           // Para gerenciar playlists, garante que o dispositivo existe
-          if (!devices[mac]) {
-            const fallbackKey = String(Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
-            devices[mac] = { mac, key: fallbackKey, playlists: [], activated: true, createdAt: Date.now() };
+          let targetDevice = findDevice(devices, rawMac);
+          if (!targetDevice) {
+            const fallbackKey = String(Math.abs(normMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
+            const now = Date.now();
+            targetDevice = {
+              mac: normMac,
+              key: fallbackKey,
+              playlists: [],
+              registeredAt: now,
+              trialExpiresAt: now + (7 * 24 * 60 * 60 * 1000)
+            };
+            devices[normMac] = targetDevice;
+            devices[cleanMac] = targetDevice;
           }
-          if (!Array.isArray(devices[mac].playlists)) {
-            devices[mac].playlists = [];
+          if (!Array.isArray(targetDevice.playlists)) {
+            targetDevice.playlists = [];
           }
 
           if (pathname === '/api/device/playlist') {
@@ -1482,33 +1628,42 @@ const server = http.createServer(async (req, res) => {
               return;
             }
 
-            const existingIdx = devices[mac].playlists.findIndex(p => p.id === playlist.id);
+            const existingIdx = targetDevice.playlists.findIndex(p => p.id === playlist.id);
             if (existingIdx !== -1) {
-              devices[mac].playlists[existingIdx] = playlist;
+              targetDevice.playlists[existingIdx] = playlist;
             } else {
-              devices[mac].playlists.push(playlist);
+              targetDevice.playlists.push(playlist);
             }
+
+            devices[normMac] = targetDevice;
+            devices[cleanMac] = targetDevice;
             saveDevices(devices);
 
-            console.log(`[API] Playlist adicionada para MAC ${mac}: ${playlist.name}`);
+            console.log(`[API] Playlist adicionada para MAC ${normMac}: ${playlist.name}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, playlists: devices[mac].playlists }));
+            res.end(JSON.stringify({ success: true, playlists: targetDevice.playlists }));
             return;
           }
 
           if (pathname === '/api/device/delete-playlist') {
             const id = payload.id;
-            devices[mac].playlists = devices[mac].playlists.filter(p => p.id !== id);
+            targetDevice.playlists = targetDevice.playlists.filter(p => p.id !== id);
+
+            devices[normMac] = targetDevice;
+            devices[cleanMac] = targetDevice;
             saveDevices(devices);
 
-            console.log(`[API] Playlist ${id} removida para MAC ${mac}`);
+            console.log(`[API] Playlist ${id} removida para MAC ${normMac}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, playlists: devices[mac].playlists }));
+            res.end(JSON.stringify({ success: true, playlists: targetDevice.playlists }));
             return;
           }
 
           if (pathname === '/api/device/clear') {
-            devices[mac].playlists = [];
+            targetDevice.playlists = [];
+
+            devices[normMac] = targetDevice;
+            devices[cleanMac] = targetDevice;
             saveDevices(devices);
 
             res.writeHead(200, { 'Content-Type': 'application/json' });

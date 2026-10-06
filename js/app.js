@@ -261,8 +261,12 @@ const App = {
   },
 
   async checkPortalUpdatesSilently() {
-    const mac = localStorage.getItem('vion_mac_address');
+    const rawMac = localStorage.getItem('vion_mac_address');
+    const mac = this.normalizeMac(rawMac);
     if (!mac) return;
+    try {
+      await this.verifyLicenseNow(false);
+    } catch(e) {}
     const portalList = await this.queryPortalPlaylists(mac);
     if (portalList && portalList.url && portalList.url !== this.activePlaylistUrl) {
       console.log('Nova lista detectada no portal:', portalList.name);
@@ -290,6 +294,15 @@ const App = {
     this.clockInterval = setInterval(updateClock, 1000);
   },
 
+  normalizeMac(mac) {
+    if (!mac || typeof mac !== 'string') return '';
+    const clean = mac.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+    if (clean.length === 12) {
+      return clean.match(/.{1,2}/g).join(':');
+    }
+    return clean;
+  },
+
   setupDeviceInfo() {
     let mac = null;
     let key = null;
@@ -313,7 +326,7 @@ const App = {
       try {
         tizen.systeminfo.getPropertyValue('ETHERNET_NETWORK', (network) => {
           if (network && network.macAddress) {
-            mac = network.macAddress.toUpperCase();
+            mac = this.normalizeMac(network.macAddress);
             localStorage.setItem('vion_mac_address', mac);
             this.updateDeviceDisplay(mac, key);
           }
@@ -347,6 +360,8 @@ const App = {
       mac = macParts.join(':');
     }
 
+    mac = this.normalizeMac(mac);
+
     if (!key) {
       key = (Math.abs(mac.split(':').reduce((acc, part) => acc + parseInt(part, 16), 0) * 19) % 9000 + 1000).toString();
     }
@@ -360,6 +375,7 @@ const App = {
 
   registerDeviceWithServer(mac, key) {
     if (!mac) return;
+    const normMac = this.normalizeMac(mac);
     const endpoints = [
       '/api/device/register',
       'https://vion.gestorpro.app.br/api/device/register',
@@ -371,7 +387,7 @@ const App = {
         fetch(ep, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mac, key })
+          body: JSON.stringify({ mac: normMac, key })
         }).then(r => r.json()).then(data => {
           if (data && data.device) this.handleDeviceSyncData(data.device);
         }).catch(() => {});
@@ -387,8 +403,20 @@ const App = {
 
     localStorage.setItem('vion_license_active', isLicenseActive ? 'true' : 'false');
     localStorage.setItem('vion_license_plan', plan);
-    if (expiry) localStorage.setItem('vion_license_expiry', expiry.toString());
-    if (device.registeredAt) localStorage.setItem('vion_registered_at', device.registeredAt.toString());
+    if (expiry) {
+      localStorage.setItem('vion_license_expiry', expiry.toString());
+    } else {
+      localStorage.removeItem('vion_license_expiry');
+    }
+
+    // Trava de período de teste definitiva e imutável pelo servidor
+    if (device.registeredAt) {
+      localStorage.setItem('vion_registered_at', device.registeredAt.toString());
+    }
+    if (device.trialExpiresAt) {
+      const mac = this.normalizeMac(localStorage.getItem('vion_mac_address') || device.mac || 'default');
+      localStorage.setItem(`vion_trial_expire_${mac}`, device.trialExpiresAt.toString());
+    }
 
     this.updateTrialDisplay();
   },
@@ -408,7 +436,8 @@ const App = {
   },
 
   async verifyLicenseNow(showToasts = true) {
-    const mac = localStorage.getItem('vion_mac_address');
+    const rawMac = localStorage.getItem('vion_mac_address');
+    const mac = this.normalizeMac(rawMac);
     if (!mac) return false;
     if (showToasts) this.showToast('🔄 Consultando status da licença no servidor...');
     const endpoints = [
@@ -427,8 +456,10 @@ const App = {
             this.handleDeviceSyncData(data.device);
             if (!this.isDeviceExpired()) {
               if (this._expiredPollTimer) clearInterval(this._expiredPollTimer);
-              this.showToast('🎉 Parabéns! Aparelho ativado com sucesso!');
-              this.goToScreen('home');
+              if (showToasts) this.showToast('🎉 Parabéns! Aparelho ativado com sucesso!');
+              if (this.currentScreen === 'expired') {
+                this.goToScreen('home');
+              }
               return true;
             }
           }
@@ -494,12 +525,12 @@ const App = {
       }
     }
 
-    const mac = localStorage.getItem('vion_mac_address') || 'default';
+    const mac = this.normalizeMac(localStorage.getItem('vion_mac_address') || 'default');
     const trialKey = `vion_trial_expire_${mac}`;
     let expireTimestamp = parseInt(localStorage.getItem(trialKey), 10);
 
     const registeredAt = parseInt(localStorage.getItem('vion_registered_at'), 10);
-    if (registeredAt && !isNaN(registeredAt)) {
+    if (registeredAt && !isNaN(registeredAt) && (!expireTimestamp || isNaN(expireTimestamp))) {
       expireTimestamp = registeredAt + (7 * 24 * 60 * 60 * 1000);
       localStorage.setItem(trialKey, expireTimestamp.toString());
     } else if (!expireTimestamp || isNaN(expireTimestamp)) {
@@ -1256,21 +1287,30 @@ const App = {
 
   async syncPlaylistsFromPortal(notify = true, forceSync = false) {
     if (this.isSyncing) return;
-    const mac = localStorage.getItem('vion_mac_address');
+    const rawMac = localStorage.getItem('vion_mac_address');
+    const mac = this.normalizeMac(rawMac);
     if (!mac) return;
 
-    if (notify) this.showToast('Buscando atualizações no Portal...');
+    if (notify) this.showToast('🔄 Sincronizando licença e playlists...');
+
+    // Sempre verifica e sincroniza a licença imediatamente
+    try {
+      await this.verifyLicenseNow(false);
+    } catch(e) {}
+
     const first = await this.queryPortalPlaylists(mac);
     if (first && first.url) {
       if (!forceSync && this.activePlaylistUrl === first.url && this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0 && this.playlistData._schemaVersion === 25) {
         if (this.currentScreen === 'reseller-login') this.goToScreen('home');
-        if (notify) this.showToast('Playlist já está sincronizada e ativa.');
+        this.updateTrialDisplay();
+        if (notify) this.showToast('✔ Playlist e licença já estão ativas e atualizadas!');
         return;
       }
       if (notify) this.showToast(`Carregando "${first.name}" do Portal...`);
       await this.activatePlaylistByUrl(first.url, first.name, notify, false, forceSync);
     } else {
-      if (notify) this.showToast('Nenhuma playlist nova encontrada no portal.');
+      this.updateTrialDisplay();
+      if (notify) this.showToast('✔ Status e playlists sincronizados com sucesso!');
     }
   },
 

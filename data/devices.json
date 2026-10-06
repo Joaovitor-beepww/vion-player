@@ -17,14 +17,33 @@
   },
   "65:FA:A2:AA:77:2D": {
     "mac": "65:FA:A2:AA:77:2D",
-    "key": "9257",
+    "key": "6376",
     "playlists": [
       {
         "id": "1790821671061",
         "name": "teste",
         "url": "http://projetotourov2.pro/get.php?username=986876098201&password=156565804623&type=m3u_plus&output=mpegts"
       }
-    ]
+    ],
+    "activated": true,
+    "active": true,
+    "plan": "vitalicio",
+    "expiresAt": null
+  },
+  "65FAA2AA772D": {
+    "mac": "65:FA:A2:AA:77:2D",
+    "key": "6376",
+    "playlists": [
+      {
+        "id": "1790821671061",
+        "name": "teste",
+        "url": "http://projetotourov2.pro/get.php?username=986876098201&password=156565804623&type=m3u_plus&output=mpegts"
+      }
+    ],
+    "activated": true,
+    "active": true,
+    "plan": "vitalicio",
+    "expiresAt": null
   },
   "BB:1F:3D:E5:21:B0": {
     "mac": "BB:1F:3D:E5:21:B0",
