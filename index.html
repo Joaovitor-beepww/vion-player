@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-platform="tv" class="is-tv">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -30,7 +30,7 @@
 
         function apply() {
           var isTouch = detectTouch();
-          var isTv = tvToken || (/Android/i.test(ua) && !/Mobile/i.test(ua));
+          var isTv = !isTouch && (tvToken || (/Android/i.test(ua) && !/Mobile/i.test(ua)));
           docEl.classList.toggle('is-touch', isTouch);
           docEl.classList.toggle('is-tv', isTv);
           docEl.classList.toggle('is-pointer', !isTouch && !isTv);
@@ -44,6 +44,8 @@
         }
 
         apply();
+        window.addEventListener('resize', apply, { passive: true });
+        window.addEventListener('orientationchange', apply, { passive: true });
       } catch (e) { /* fail-safe */ }
     })();
   </script>

@@ -3154,9 +3154,14 @@ const App = {
         }
       });
     }
-    // Cursor invisivel em TV
-    document.documentElement.style.cursor = 'none';
-    document.documentElement.setAttribute('data-platform', 'tv');
+    // Cursor invisivel somente em TV
+    if (document.documentElement.classList.contains('is-tv')) {
+      document.documentElement.style.cursor = 'none';
+      document.documentElement.setAttribute('data-platform', 'tv');
+    } else {
+      document.documentElement.style.cursor = 'default';
+      document.documentElement.removeAttribute('data-platform');
+    }
   },
 
   // ===================================================================
