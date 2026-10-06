@@ -494,17 +494,14 @@ class TVVideoPlayer {
     }
 
     const startPlay = () => {
+      if (!this.miniVideo) return;
       this.miniVideo.muted = false;
       this.miniVideo.volume = 1.0;
       const p = this.miniVideo.play();
-      if (p !== undefined && typeof p.then === 'function') {
-        p.then(() => {
-          this.showMiniLoading(false);
-          this.miniVideo.muted = false;
-          this.miniVideo.volume = 1.0;
-        }).catch(e => {
+      if (p !== undefined && typeof p.catch === 'function') {
+        p.catch(e => {
           if (e && (e.name === 'AbortError' || (e.message && e.message.includes('interrupted')))) {
-            // Canal trocado pelo controle remoto: NÃO muta o áudio!
+            // Canal trocado pelo controle remoto: NÃO faz nada e NÃO muta o áudio!
             return;
           }
           console.warn('Autoplay mini player aviso:', e);
@@ -513,24 +510,23 @@ class TVVideoPlayer {
             const retry = this.miniVideo.play();
             if (retry && typeof retry.then === 'function') {
               retry.then(() => {
-                this.showMiniLoading(false);
                 setTimeout(() => {
                   try {
-                    this.miniVideo.muted = false;
-                    this.miniVideo.volume = 1.0;
+                    if (this.miniVideo) {
+                      this.miniVideo.muted = false;
+                      this.miniVideo.volume = 1.0;
+                    }
                   } catch (err) {}
                 }, 300);
               }).catch(() => {});
             }
           }
         });
-      } else {
-        this.showMiniLoading(false);
       }
     };
 
     // 1. Reprodução mpegts.js otimizada para canais IPTV (.ts) - SD, HD e FHD
-    const tryMpegts = (onFail, useWorker = true, hasAudio = true) => {
+    const tryMpegts = (onFail, useWorker = true) => {
       let mpegtsFailed = false;
       let mpegtsWatchdog = null;
 
@@ -551,7 +547,7 @@ class TVVideoPlayer {
           this.miniMpegts = null;
         }
         if (typeof onFail === 'function') onFail();
-        else this.showMiniLoading(false);
+        else this.showMiniLoading(false, '⚠️ Sinal indisponível no momento');
       };
 
       this._miniFallbackTrigger = cleanupAndFail;
@@ -562,13 +558,12 @@ class TVVideoPlayer {
             type: 'm2ts',
             isLive: true,
             url: cleanUrl,
-            cors: false,
-            hasAudio: hasAudio
+            cors: false
           }, {
             enableWorker: useWorker,
             lazyLoad: false,
-            enableStashBuffer: false,
-            stashInitialSize: 128 * 1024,
+            enableStashBuffer: true,
+            stashInitialSize: 384 * 1024,
             autoCleanupSourceBuffer: true,
             autoCleanupMaxBackwardDuration: 12,
             autoCleanupMinBackwardDuration: 6,
@@ -580,11 +575,12 @@ class TVVideoPlayer {
           this.miniMpegts.load();
           startPlay();
 
-          // Watchdog ágil: 3.5s no worker, 4.5s sem worker
-          const timeoutMs = useWorker ? 3500 : 4500;
+          // Watchdog: 6500ms no worker, 5500ms sem worker
+          // Permite tempo para handshake TCP + 384KB stash buffer + chegada do I-frame
+          const timeoutMs = useWorker ? 6500 : 5500;
           mpegtsWatchdog = setTimeout(() => {
             if (this.miniMpegts && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn(`mpegts (worker=${useWorker}, audio=${hasAudio}) não iniciou em ${timeoutMs}ms, acionando fallback`);
+              console.warn(`mpegts (worker=${useWorker}) não iniciou em ${timeoutMs}ms, acionando fallback`);
               cleanupAndFail();
             }
           }, timeoutMs);
@@ -606,12 +602,12 @@ class TVVideoPlayer {
           }, { once: true });
 
           this.miniMpegts.on(mpegts.Events.ERROR, (errType, errDetail) => {
-            console.warn(`mpegts (worker=${useWorker}, audio=${hasAudio}) erro fatal:`, errType, errDetail);
+            console.warn(`mpegts (worker=${useWorker}) erro fatal:`, errType, errDetail);
             cleanupAndFail();
           });
           return;
         } catch (e) {
-          console.warn(`mpegts (worker=${useWorker}, audio=${hasAudio}) falhou na inicialização:`, e);
+          console.warn(`mpegts (worker=${useWorker}) falhou na inicialização:`, e);
           cleanupAndFail();
           return;
         }
@@ -636,7 +632,7 @@ class TVVideoPlayer {
           this.miniHls = null;
         }
         if (typeof onFail === 'function') onFail();
-        else this.showMiniLoading(false);
+        else this.showMiniLoading(false, '⚠️ Sinal indisponível no momento');
       };
 
       this._miniFallbackTrigger = cleanupAndFail;
@@ -654,11 +650,11 @@ class TVVideoPlayer {
             highBufferWatchdogPeriod: 2,
             nudgeOffset: 0.2,
             nudgeMaxRetry: 3,
-            manifestLoadingTimeOut: 3500,
+            manifestLoadingTimeOut: 4500,
             manifestLoadingMaxRetry: 1,
-            levelLoadingTimeOut: 3500,
+            levelLoadingTimeOut: 4500,
             levelLoadingMaxRetry: 1,
-            fragLoadingTimeOut: 4000,
+            fragLoadingTimeOut: 4500,
             fragLoadingMaxRetry: 2
           });
 
@@ -667,16 +663,16 @@ class TVVideoPlayer {
 
           hlsWatchdog = setTimeout(() => {
             if (this.miniHls && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn('HLS timeout (4s), acionando fallback');
+              console.warn('HLS timeout (4500ms), acionando fallback');
               cleanupAndFail();
             }
-          }, 4000);
+          }, 4500);
 
           this.miniHls.on(Hls.Events.MANIFEST_PARSED, () => {
             startPlay();
           });
 
-          this.miniHls.on(Hls.Events.FRAG_LOADED, () => {
+          const onHlsReady = () => {
             clearTimeout(hlsWatchdog);
             this._miniFallbackTrigger = null;
             this.showMiniLoading(false);
@@ -684,7 +680,9 @@ class TVVideoPlayer {
               this.miniVideo.muted = false;
               this.miniVideo.volume = 1.0;
             }
-          });
+          };
+          this.miniHls.on(Hls.Events.FRAG_LOADED, onHlsReady);
+          this.miniVideo.addEventListener('playing', onHlsReady, { once: true });
 
           let netRetries = 0;
           this.miniHls.on(Hls.Events.ERROR, (event, data) => {
@@ -738,6 +736,7 @@ class TVVideoPlayer {
       let nativeStallTimer = setTimeout(() => {
         if (!hasPlayed && this.miniVideo && this.miniVideo.readyState < 2) {
           if (typeof onFail === 'function') onFail();
+          else this.showMiniLoading(false, '⚠️ Sinal indisponível no momento');
         }
       }, 3500);
 
@@ -760,27 +759,28 @@ class TVVideoPlayer {
           this.miniVideo.play().catch(() => {
             clearTimeout(nativeStallTimer);
             if (typeof onFail === 'function') onFail();
+            else this.showMiniLoading(false, '⚠️ Sinal indisponível no momento');
           });
         });
       }
     };
 
     // FLUXO DE REPRODUÇÃO RESILIENTE DE CANAIS AO VIVO:
-    // Estágio 1: mpegts com Worker + áudio (ultra-baixo uso de CPU)
-    // Estágio 2: mpegts inline/sem Worker + áudio (contorna restrições CORS de WebWorker)
-    // Estágio 3: HLS (.m3u8 transcodificado para AAC pelo servidor IPTV)
-    // Estágio 4: mpegts vídeo direto (hasAudio: false - garante que imagem NUNCA fique preta)
-    // Estágio 5: HTML5 direto (decodificador nativo do navegador/WebView)
+    // Estágio 1: mpegts com Worker (384KB buffer, TCP alinhado)
+    // Estágio 2: mpegts inline/sem Worker (contorna restrições de WebWorker)
+    // Estágio 3: HLS (.m3u8 alternativo)
+    // Estágio 4: HTML5 direto nativo
+    // Final: Mensagem de erro informativa caso todos os estágios falhem
     const startMpegtsChain = (finalFail) => {
       tryMpegts(() => {
         tryMpegts(() => {
           tryHls(m3u8Candidate, () => {
-            tryMpegts(() => {
-              tryNativeDirect(cleanUrl, finalFail);
-            }, false, false);
+            tryNativeDirect(cleanUrl, finalFail || (() => {
+              this.showMiniLoading(false, '⚠️ Canal temporariamente indisponível');
+            }));
           });
-        }, false, true);
-      }, true, true);
+        }, false); // sem worker
+      }, true); // com worker
     };
 
     if (isHls) {
@@ -791,8 +791,10 @@ class TVVideoPlayer {
 
     clearTimeout(this.miniLoadingTimer);
     this.miniLoadingTimer = setTimeout(() => {
-      this.showMiniLoading(false);
-    }, 7000);
+      if (this.miniVideo && this.miniVideo.readyState >= 2) {
+        this.showMiniLoading(false);
+      }
+    }, 15000);
   }
 
   /**
@@ -1078,9 +1080,18 @@ class TVVideoPlayer {
     this.loading.style.display = isLoading ? 'flex' : 'none';
   }
 
-  showMiniLoading(isLoading) {
+  showMiniLoading(isLoading, customText = null) {
     if (!this.miniLoading) return;
+    const span = this.miniLoading.querySelector('span');
+    const spinner = this.miniLoading.querySelector('.spinner-small');
     if (isLoading) {
+      if (span) span.textContent = customText || 'Conectando transmissão...';
+      if (spinner) spinner.style.display = 'block';
+      this.miniLoading.style.display = 'flex';
+      this.miniLoading.style.opacity = '1';
+    } else if (customText) {
+      if (span) span.textContent = customText;
+      if (spinner) spinner.style.display = 'none';
       this.miniLoading.style.display = 'flex';
       this.miniLoading.style.opacity = '1';
     } else {
@@ -1088,6 +1099,8 @@ class TVVideoPlayer {
       setTimeout(() => {
         if (this.miniLoading && this.miniLoading.style.opacity === '0') {
           this.miniLoading.style.display = 'none';
+          if (span) span.textContent = 'Conectando transmissão...';
+          if (spinner) spinner.style.display = 'block';
         }
       }, 200);
     }
