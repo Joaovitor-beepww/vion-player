@@ -526,7 +526,7 @@ class TVVideoPlayer {
     };
 
     // 1. Reprodução mpegts.js otimizada para canais IPTV (.ts) - SD, HD e FHD
-    const tryMpegts = (onFail, useWorker = true) => {
+    const tryMpegts = (onFail, useWorker = false) => {
       let mpegtsFailed = false;
       let mpegtsWatchdog = null;
 
@@ -560,14 +560,14 @@ class TVVideoPlayer {
             url: cleanUrl,
             cors: false
           }, {
-            enableWorker: useWorker,
+            enableWorker: false,
             lazyLoad: false,
-            enableStashBuffer: true,
-            stashInitialSize: 384 * 1024,
+            enableStashBuffer: false,
+            stashInitialSize: 128 * 1024,
             autoCleanupSourceBuffer: true,
-            autoCleanupMaxBackwardDuration: 12,
-            autoCleanupMinBackwardDuration: 6,
-            liveBufferLatencyChasing: false,
+            autoCleanupMaxBackwardDuration: 10,
+            autoCleanupMinBackwardDuration: 4,
+            liveBufferLatencyChasing: true,
             reuseRedirectedURL: true
           });
 
@@ -575,8 +575,8 @@ class TVVideoPlayer {
           this.miniMpegts.load();
           startPlay();
 
-          // Watchdog ágil (4.5s): tempo suficiente para handshake TCP e 384KB stash buffer
-          const timeoutMs = 4500;
+          // Watchdog seguro (7s): tempo adequado para handshake TCP e keyframe em canais HD/FHD
+          const timeoutMs = 7000;
           mpegtsWatchdog = setTimeout(() => {
             if (this.miniMpegts && this.miniVideo && this.miniVideo.readyState < 2) {
               console.warn(`mpegts não iniciou em ${timeoutMs}ms, acionando fallback`);
@@ -601,12 +601,15 @@ class TVVideoPlayer {
           }, { once: true });
 
           this.miniMpegts.on(mpegts.Events.ERROR, (errType, errDetail) => {
-            console.warn(`mpegts (worker=${useWorker}) erro fatal:`, errType, errDetail);
-            cleanupAndFail();
+            console.warn(`mpegts erro:`, errType, errDetail);
+            // Só interrompe se o canal não estiver reproduzindo ou erro for de rede fatal
+            if (!this.miniVideo || this.miniVideo.readyState < 2 || errType === mpegts.ErrorTypes.NETWORK_ERROR) {
+              cleanupAndFail();
+            }
           });
           return;
         } catch (e) {
-          console.warn(`mpegts (worker=${useWorker}) falhou na inicialização:`, e);
+          console.warn(`mpegts falhou na inicialização:`, e);
           cleanupAndFail();
           return;
         }
@@ -649,12 +652,12 @@ class TVVideoPlayer {
             highBufferWatchdogPeriod: 2,
             nudgeOffset: 0.2,
             nudgeMaxRetry: 3,
-            manifestLoadingTimeOut: 4500,
-            manifestLoadingMaxRetry: 1,
-            levelLoadingTimeOut: 4500,
-            levelLoadingMaxRetry: 1,
-            fragLoadingTimeOut: 4500,
-            fragLoadingMaxRetry: 2
+            manifestLoadingTimeOut: 6000,
+            manifestLoadingMaxRetry: 2,
+            levelLoadingTimeOut: 6000,
+            levelLoadingMaxRetry: 2,
+            fragLoadingTimeOut: 6000,
+            fragLoadingMaxRetry: 3
           });
 
           this.miniHls.loadSource(src);
@@ -662,10 +665,10 @@ class TVVideoPlayer {
 
           hlsWatchdog = setTimeout(() => {
             if (this.miniHls && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn('HLS timeout (4500ms), acionando fallback');
+              console.warn('HLS timeout (6000ms), acionando fallback');
               cleanupAndFail();
             }
-          }, 4500);
+          }, 6000);
 
           this.miniHls.on(Hls.Events.MANIFEST_PARSED, () => {
             startPlay();
@@ -737,7 +740,7 @@ class TVVideoPlayer {
           if (typeof onFail === 'function') onFail();
           else this.showMiniLoading(false, '⚠️ Sinal indisponível no momento');
         }
-      }, 3500);
+      }, 5000);
 
       const onNativePlaying = () => {
         hasPlayed = true;
@@ -765,7 +768,7 @@ class TVVideoPlayer {
     };
 
     // FLUXO DE REPRODUÇÃO RESILIENTE DE CANAIS AO VIVO:
-    // Estágio 1: mpegts (384KB buffer, TCP sincronizado)
+    // Estágio 1: mpegts (sem stash buffer, handshake TCP direto)
     // Estágio 2: HLS (.m3u8 alternativo gerado pelo servidor)
     // Estágio 3: HTML5 direto nativo
     // Final: Mensagem amigável caso o stream esteja fora do ar
@@ -776,7 +779,7 @@ class TVVideoPlayer {
             this.showMiniLoading(false, '⚠️ Sinal indisponível no momento');
           }));
         });
-      }, true);
+      }, false);
     };
 
     if (isHls) {

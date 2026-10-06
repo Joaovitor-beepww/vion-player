@@ -856,9 +856,6 @@ const App = {
     });
 
     // Modal de Detalhes de Filmes (Dream TV)
-    document.getElementById('btn-movie-play')?.addEventListener('click', () => {
-      this.playSelectedMovie();
-    });
     document.getElementById('btn-movie-close')?.addEventListener('click', () => {
       this.closeMovieDetails();
     });
@@ -2343,8 +2340,13 @@ const App = {
     this.selectedMovie = null;
   },
 
+  _lastPlayMovieTs: 0,
   playSelectedMovie() {
     if (!this.selectedMovie) return;
+    const now = Date.now();
+    if (now - this._lastPlayMovieTs < 1500) return;
+    this._lastPlayMovieTs = now;
+
     const item = this.selectedMovie;
     const realIndex = this.selectedMovieIndex || 0;
 
