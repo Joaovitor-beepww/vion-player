@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Trailer Player • Vion</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      background: #000;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .wrapper {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      display: block;
+    }
+    .error-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      gap: 16px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .error-icon {
+      font-size: 48px;
+    }
+    .error-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #facc15;
+    }
+    .error-desc {
+      font-size: 15px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .error-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 10px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .error-btn:hover, .error-btn:focus {
+      background: #b91c1c;
+      transform: scale(1.05);
+      outline: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper" id="player-wrapper">
+    <div class="error-container" id="error-container">
+      <div class="error-icon">🎬</div>
+      <div class="error-title">Prévia com restrição de exibição</div>
+      <div class="error-desc" id="error-text">O canal oficial deste vídeo desabilitou a incorporação em alguns reprodutores. Você pode assistir diretamente no YouTube.</div>
+      <a href="#" id="btn-fallback-yt" target="_blank" class="error-btn">
+        <span>▶</span> <span>Assistir no YouTube</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var videoId = params.get('v') || '';
+      var origin = (window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) 
+        ? window.location.origin 
+        : 'https://vion.gestorpro.app.br';
+
+      var wrapper = document.getElementById('player-wrapper');
+      var errContainer = document.getElementById('error-container');
+      var errBtn = document.getElementById('btn-fallback-yt');
+
+      if (!videoId) {
+        if (errContainer) {
+          errContainer.style.display = 'flex';
+          document.getElementById('error-text').textContent = 'Nenhum vídeo foi selecionado para reprodução.';
+          errBtn.style.display = 'none';
+        }
+        return;
+      }
+
+      errBtn.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(videoId);
+      errBtn.onclick = function(e) {
+        try {
+          if (window.parent && window.parent.AndroidDevice && typeof window.parent.AndroidDevice.openYoutube === 'function') {
+            e.preventDefault();
+            window.parent.AndroidDevice.openYoutube(videoId);
+          }
+        } catch (ignored) {}
+      };
+
+      // Criar iframe do YouTube com cabeçalhos e parâmetros de segurança completos
+      var iframe = document.createElement('iframe');
+      iframe.id = 'yt-embed-frame';
+      iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(videoId) +
+        '?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=' + encodeURIComponent(origin) +
+        '&widget_referrer=' + encodeURIComponent(origin);
+      iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+      iframe.setAttribute('allowfullscreen', 'true');
+      iframe.setAttribute('frameborder', '0');
+
+      wrapper.insertBefore(iframe, errContainer);
+
+      // Ouvir mensagens de erro da API do YouTube caso o vídeo tenha restrição de direitos pelo criador
+      window.addEventListener('message', function(e) {
+        try {
+          var data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+          if (data && (data.event === 'onError' || data.info === 101 || data.info === 150)) {
+            if (iframe) iframe.style.display = 'none';
+            if (errContainer) errContainer.style.display = 'flex';
+          }
+        } catch (ignored) {}
+      });
+    })();
+  </script>
+</body>
+</html>

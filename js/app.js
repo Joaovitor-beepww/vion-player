@@ -2748,8 +2748,35 @@ const App = {
     const titleEl = document.getElementById('trailer-title');
     if (!modal || !iframe) return;
     if (titleEl) titleEl.textContent = `Trailer • ${title}`;
-    iframe.src = `https://www.youtube.com/embed/${ytKey}?autoplay=1&controls=1&rel=0&showinfo=0`;
+
+    this._currentTrailerKey = ytKey;
+
+    const isHttp = window.location.protocol.startsWith('http');
+    const origin = (isHttp && window.location.origin && window.location.origin !== 'null') 
+      ? window.location.origin 
+      : 'https://vion.gestorpro.app.br';
+
+    // Se estiver em ambiente HTTP/HTTPS do mesmo domínio, carrega caminho relativo;
+    // senão (ex.: file:/// no Android TV), aponta para https://vion.gestorpro.app.br/trailer-embed.html
+    // que é interceptado localmente pelo WebView (instantâneo) e fornece a origem HTTPS oficial ao YouTube.
+    const embedUrl = isHttp
+      ? `trailer-embed.html?v=${encodeURIComponent(ytKey)}`
+      : `https://vion.gestorpro.app.br/trailer-embed.html?v=${encodeURIComponent(ytKey)}`;
+
+    iframe.src = embedUrl;
     modal.classList.add('active');
+
+    const btnExt = document.getElementById('btn-open-youtube-ext');
+    if (btnExt) {
+      btnExt.onclick = () => {
+        if (window.AndroidDevice && typeof AndroidDevice.openYoutube === 'function') {
+          AndroidDevice.openYoutube(ytKey);
+        } else {
+          window.open(`https://www.youtube.com/watch?v=${encodeURIComponent(ytKey)}`, '_blank');
+        }
+      };
+    }
+
     const btnClose = document.getElementById('btn-close-trailer');
     if (btnClose && window.RemoteControl) {
       RemoteControl.setFocus(btnClose);
@@ -2759,8 +2786,9 @@ const App = {
   closeTrailerModal() {
     const modal = document.getElementById('modal-trailer-player');
     const iframe = document.getElementById('trailer-iframe');
-    if (iframe) iframe.src = '';
+    if (iframe) iframe.src = 'about:blank';
     if (modal) modal.classList.remove('active');
+    this._currentTrailerKey = null;
     setTimeout(() => {
       const btnTrailer = document.getElementById('btn-movie-trailer') || document.getElementById('btn-series-trailer');
       if (btnTrailer && window.RemoteControl) {

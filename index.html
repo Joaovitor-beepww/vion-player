@@ -2,6 +2,7 @@
 <html lang="pt-BR" data-platform="tv" class="is-tv">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Vion Player - Smart Media Player</title>
   <link rel="icon" type="image/png" href="logo.png">
@@ -755,9 +756,12 @@
         <span>◀</span> <span>Fechar Trailer</span>
       </button>
       <span id="trailer-title" class="trailer-title">Trailer Oficial</span>
+      <button type="button" id="btn-open-youtube-ext" class="trailer-back-btn trailer-yt-btn focusable" tabindex="0">
+        <span>↗</span> <span>Abrir no YouTube</span>
+      </button>
     </div>
     <div class="trailer-video-wrapper">
-      <iframe id="trailer-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <iframe id="trailer-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     </div>
   </div>
 

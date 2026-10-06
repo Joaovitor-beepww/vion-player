@@ -7378,6 +7378,19 @@ html[data-platform="tv"] *,
   transform: scale(1.05) !important;
 }
 
+.trailer-yt-btn {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  margin-left: auto !important;
+}
+
+.trailer-yt-btn.focused,
+.trailer-yt-btn:hover {
+  background: #b91c1c !important;
+  box-shadow: 0 0 22px rgba(220, 38, 38, 0.75) !important;
+  transform: scale(1.05) !important;
+}
+
 .trailer-title {
   font-size: 20px !important;
   font-weight: 700 !important;
