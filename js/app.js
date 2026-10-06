@@ -1586,6 +1586,11 @@ const App = {
       r.classList.toggle('active-playing', idx === this.activeChannelIndex);
     });
 
+    if (this.player && this.player.miniVideo) {
+      this.player.miniVideo.muted = false;
+      this.player.miniVideo.volume = 1.0;
+    }
+
     this.player.playMiniStream(ch.url, ch.name, ch.category);
 
     if (unmuted && this.player && this.player.isMiniFullscreen) {
