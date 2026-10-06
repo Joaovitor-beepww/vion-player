@@ -345,18 +345,22 @@ const XtreamCodesEngine = {
     }
 
     // Movies (Filmes)
-    const featuredMovies = [];
-    const regularMovies = [];
+    const lancamentoMovies = [];
+    const maisAssistidosMovies = [];
+    const outrosComCapa = [];
+    const moviesSemCapa = [];
     const adultMovies = [];
     if (Array.isArray(vodStreams)) {
       vodStreams.forEach((st, idx) => {
         const cat = vodCatMap[st.category_id] || 'Outros';
         const ext = st.container_extension || 'mp4';
+        const rawIcon = (st.stream_icon || '').trim();
+        const logoUrl = normalizeImageUrl(rawIcon);
         const item = {
           id: `movie_${st.stream_id || idx}`,
           name: st.name || st.title || 'Filme',
           category: cat,
-          logo: normalizeImageUrl(st.stream_icon || ''),
+          logo: logoUrl,
           url: `${baseUrl}/movie/${username}/${password}/${st.stream_id}.${ext}`,
           type: 'movie',
           rating: parseFloat(st.rating || st.rating_5based || 0) || 0,
@@ -366,18 +370,33 @@ const XtreamCodesEngine = {
         if (item.isAdult) {
           adultMovies.push(item);
         } else {
+          const hasCover = !!(logoUrl && logoUrl.startsWith('http'));
           const catUpper = cat.toUpperCase();
-          if (catUpper.includes('LANÇAMENTO') || catUpper.includes('LANCAMENTO') || catUpper.includes('MAIS ASSISTIDO') || catUpper === '4K') {
-            featuredMovies.push(item);
+          const isLanc = catUpper.includes('LANÇAMENTO') || catUpper.includes('LANCAMENTO');
+          const isMais = catUpper.includes('MAIS ASSISTIDO') || catUpper.includes('POPULAR') || catUpper.includes('EM ALTA');
+
+          if (isLanc) {
+            lancamentoMovies.push(item);
+          } else if (isMais) {
+            maisAssistidosMovies.push(item);
+          } else if (hasCover) {
+            outrosComCapa.push(item);
           } else {
-            regularMovies.push(item);
+            moviesSemCapa.push(item);
           }
         }
       });
     }
 
-    // Na visualização "Todos", filmes recentes e lançamentos aparecem PRIMEIRO com posters oficiais TMDB!
-    const allRegularMovies = [...featuredMovies, ...regularMovies];
+    // Na visualização "Todos", filmes com capa de alta qualidade (Lançamentos, Mais Assistidos e Gerais) aparecem PRIMEIRO!
+    const allRegularMovies = [
+      ...lancamentoMovies.filter(m => m.logo && m.logo.startsWith('http')),
+      ...maisAssistidosMovies.filter(m => m.logo && m.logo.startsWith('http')),
+      ...outrosComCapa,
+      ...lancamentoMovies.filter(m => !m.logo || !m.logo.startsWith('http')),
+      ...maisAssistidosMovies.filter(m => !m.logo || !m.logo.startsWith('http')),
+      ...moviesSemCapa
+    ];
 
     // Series (Séries e Novelas)
     const featuredSeries = [];
@@ -583,6 +602,14 @@ const M3UParser = {
       ...Array.from(adultMovieCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))
     ];
 
+    // Ordena filmes regulares garantindo que itens com capa válida apareçam primeiro
+    const sortedRegularMovies = regularMovies.slice().sort((a, b) => {
+      const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
+      const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
+      if (aCover !== bCover) return aCover ? -1 : 1;
+      return 0;
+    });
+
     return {
       _schemaVersion: 25,
       channels: allItems,
@@ -591,7 +618,7 @@ const M3UParser = {
         categories: ['Todos', ...Array.from(liveCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))]
       },
       movies: {
-        channels: [...regularMovies, ...adultMovies],
+        channels: [...sortedRegularMovies, ...adultMovies],
         categories: sortedMovieCategories
       },
       series: {
@@ -874,6 +901,25 @@ const M3UParser = {
       }
       if (parsed.movies && parsed.movies.channels) {
         parsed.movies.channels.forEach(m => { if (m && m.logo) m.logo = normalizeImageUrl(m.logo); });
+        // Prioriza filmes com capas oficiais para a categoria "Todos"
+        parsed.movies.channels.sort((a, b) => {
+          if (a.isAdult !== b.isAdult) return a.isAdult ? 1 : -1;
+          const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
+          const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
+          if (aCover !== bCover) return aCover ? -1 : 1;
+          const aCat = (a.category || '').toUpperCase();
+          const bCat = (b.category || '').toUpperCase();
+          const aLanc = aCat.includes('LANÇAMENTO') || aCat.includes('LANCAMENTO');
+          const bLanc = bCat.includes('LANÇAMENTO') || bCat.includes('LANCAMENTO');
+          if (aLanc !== bLanc) return aLanc ? -1 : 1;
+          const aPop = aCat.includes('MAIS ASSISTIDO') || aCat.includes('POPULAR') || aCat.includes('EM ALTA');
+          const bPop = bCat.includes('MAIS ASSISTIDO') || bCat.includes('POPULAR') || bCat.includes('EM ALTA');
+          if (aPop !== bPop) return aPop ? -1 : 1;
+          const a4k = aCat.includes('4K') || aCat.includes('UHD');
+          const b4k = bCat.includes('4K') || bCat.includes('UHD');
+          if (a4k !== b4k) return a4k ? 1 : -1;
+          return 0;
+        });
       }
       if (parsed.series && parsed.series.channels) {
         parsed.series.channels.forEach(s => {
@@ -954,9 +1000,17 @@ const M3UParser = {
       ...Array.from(adultMovieCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))
     ];
 
+    // Ordena filmes regulares garantindo que itens com capa válida apareçam primeiro
+    const sortedRegularMovies = regularMovies.slice().sort((a, b) => {
+      const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
+      const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
+      if (aCover !== bCover) return aCover ? -1 : 1;
+      return 0;
+    });
+
     const sortedChannels = [
       ...liveItems,
-      ...regularMovies,
+      ...sortedRegularMovies,
       ...adultMovies,
       ...seriesItems
     ];
@@ -969,7 +1023,7 @@ const M3UParser = {
         categories: ['Todos', ...Array.from(liveCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))]
       },
       movies: {
-        channels: [...regularMovies, ...adultMovies],
+        channels: [...sortedRegularMovies, ...adultMovies],
         categories: sortedMovieCategories
       },
       series: {

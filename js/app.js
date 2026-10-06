@@ -43,14 +43,14 @@ const TmdbResolver = {
   cleanTitle(raw) {
     if (!raw) return '';
     let s = String(raw).trim();
-    // Remove "1 - ", "01. ", "01 - "
-    s = s.replace(/^\s*\d+\s*[-–—.:]\s*/i, '');
-    // Remove quality and audio tags
-    s = s.replace(/\b(?:4K|UHD|FHD|HD|SD|1080p|720p|HDR|HDR10|DV|H264|H265|HEVC|DUBLADO|LEGENDADO|NACIONAL|HYBRID)\b/gi, '');
-    // Remove brackets / parens
+    // Remove prefixos de IPTV como "4K | ", "FILMES | ", "CINE | ", "01 - "
+    s = s.replace(/^(?:(?:4K|FHD|HD|FILMES?|CINE|VOD|LANÇAMENTOS?|LANCAMENTOS?)\s*\|\s*|\d+\s*[-–—.:]\s*)/i, '');
+    // Remove tags de qualidade, codec e idioma
+    s = s.replace(/\b(?:4K|UHD|FHD|HD|SD|1080p|720p|HDR|HDR10|DV|H264|H265|HEVC|DUBLADO|LEGENDADO|NACIONAL|HYBRID|LEG|DUB)\b/gi, '');
+    // Remove colchetes e parênteses
     s = s.replace(/\[.*?\]|\(.*?\)/g, '');
-    s = s.replace(/[-–—_.]+/g, ' ');
-    return s.trim();
+    s = s.replace(/[-–—_.:|]+/g, ' ');
+    return s.replace(/\s+/g, ' ').trim();
   },
 
   async resolve(itemName, isSeries = false) {
@@ -75,8 +75,10 @@ const TmdbResolver = {
         const data = await res.json();
         if (data.results && data.results.length > 0) {
           const first = data.results[0];
-          const poster = first.poster_path ? `https://image.tmdb.org/t/p/w500${first.poster_path}` : null;
-          const backdrop = first.backdrop_path ? `https://image.tmdb.org/t/p/original${first.backdrop_path}` : null;
+          const rawPoster = first.poster_path ? `https://image.tmdb.org/t/p/w500${first.poster_path}` : null;
+          const rawBackdrop = first.backdrop_path ? `https://image.tmdb.org/t/p/original${first.backdrop_path}` : null;
+          const poster = rawPoster ? ((typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawPoster) : rawPoster) : null;
+          const backdrop = rawBackdrop ? ((typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawBackdrop) : rawBackdrop) : null;
           const meta = {
             poster,
             backdrop,
@@ -1774,7 +1776,11 @@ const App = {
       this.filteredItems = matches;
     } else if (type === 'recent') {
       if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Adicionados Recentemente`;
-      this.filteredItems = (sectionData.channels || []).slice(0, 100);
+      if (!sectionData._todosList || !sectionData._todosListSorted) {
+        this.selectVodCategory('Todos');
+        return;
+      }
+      this.filteredItems = (sectionData._todosList || sectionData.channels || []).slice(0, 100);
     } else if (type === 'continue') {
       if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Continuar Assistindo`;
       this.filteredItems = [];
@@ -1812,9 +1818,33 @@ const App = {
     const sectionData = this.getActiveSectionData();
     let baseList = [];
 
-    if (categoryName === 'Todos' || categoryName === 'Recently added') {
-      if (!sectionData._todosList) {
-        sectionData._todosList = (sectionData.channels || []).filter(c => !c.isAdult);
+    const isTodos = !categoryName || categoryName === 'Todos' || categoryName === 'Recently added' || categoryName.toLowerCase() === 'todos';
+
+    if (isTodos) {
+      if (!sectionData._todosList || !sectionData._todosListSorted) {
+        const nonAdult = (sectionData.channels || []).filter(c => !c.isAdult);
+        sectionData._todosList = nonAdult.slice().sort((a, b) => {
+          const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
+          const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
+          if (aCover !== bCover) return aCover ? -1 : 1;
+
+          const aCat = (a.category || '').toUpperCase();
+          const bCat = (b.category || '').toUpperCase();
+          const aLanc = aCat.includes('LANÇAMENTO') || aCat.includes('LANCAMENTO');
+          const bLanc = bCat.includes('LANÇAMENTO') || bCat.includes('LANCAMENTO');
+          if (aLanc !== bLanc) return aLanc ? -1 : 1;
+
+          const aPop = aCat.includes('MAIS ASSISTIDO') || aCat.includes('POPULAR') || aCat.includes('EM ALTA');
+          const bPop = bCat.includes('MAIS ASSISTIDO') || bCat.includes('POPULAR') || bCat.includes('EM ALTA');
+          if (aPop !== bPop) return aPop ? -1 : 1;
+
+          const a4k = aCat.includes('4K') || aCat.includes('UHD');
+          const b4k = bCat.includes('4K') || bCat.includes('UHD');
+          if (a4k !== b4k) return a4k ? 1 : -1;
+
+          return 0;
+        });
+        sectionData._todosListSorted = true;
       }
       baseList = sectionData._todosList;
     } else {
@@ -1909,8 +1939,25 @@ const App = {
       };
 
       img.onerror = () => {
-        img.classList.add('img-hidden');
-        img.style.display = 'none';
+        if (!img._triedTmdb) {
+          img._triedTmdb = true;
+          TmdbResolver.resolve(item.name, isSeries).then(meta => {
+            if (meta && meta.poster) {
+              const cleanPoster = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(meta.poster) : meta.poster;
+              item.logo = cleanPoster;
+              img.src = cleanPoster;
+            } else {
+              img.classList.add('img-hidden');
+              img.style.display = 'none';
+            }
+          }).catch(() => {
+            img.classList.add('img-hidden');
+            img.style.display = 'none';
+          });
+        } else {
+          img.classList.add('img-hidden');
+          img.style.display = 'none';
+        }
       };
 
       const cleanTitle = TmdbResolver.cleanTitle(item.name);
@@ -1918,7 +1965,8 @@ const App = {
       const cachedMeta = TmdbResolver._cache.get(cacheKey);
 
       if (cachedMeta && cachedMeta.poster) {
-        img.src = cachedMeta.poster;
+        const cachedPoster = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(cachedMeta.poster) : cachedMeta.poster;
+        img.src = cachedPoster;
         img.classList.remove('img-hidden');
         img.style.opacity = '1';
         img.style.display = 'block';
@@ -1957,14 +2005,17 @@ const App = {
         if (!item.logo || !item.logo.startsWith('http') || img.classList.contains('img-hidden')) {
           TmdbResolver.resolve(item.name, isSeries).then(meta => {
             if (meta && meta.poster) {
-              item.logo = meta.poster;
-              if (meta.backdrop && !item.backdrop) item.backdrop = meta.backdrop;
+              const cleanPoster = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(meta.poster) : meta.poster;
+              item.logo = cleanPoster;
+              if (meta.backdrop && !item.backdrop) {
+                item.backdrop = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(meta.backdrop) : meta.backdrop;
+              }
               if (meta.plot && !item.plot) item.plot = meta.plot;
               if (meta.rating && !item.rating) item.rating = meta.rating;
               img.classList.remove('img-hidden');
               img.style.display = 'block';
               img.style.opacity = '1';
-              img.src = meta.poster;
+              img.src = cleanPoster;
             }
           }).catch(() => {});
         }
@@ -2012,6 +2063,13 @@ const App = {
     const matched = sectionData.channels.filter(item => 
       item.name.toLowerCase().includes(q) || (item.category || '').toLowerCase().includes(q)
     );
+
+    matched.sort((a, b) => {
+      const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
+      const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
+      if (aCover !== bCover) return aCover ? -1 : 1;
+      return 0;
+    });
 
     this.filteredItems = matched;
     const badgeEl = document.getElementById('vod-count-badge');
