@@ -562,12 +562,12 @@ class TVVideoPlayer {
           }, {
             enableWorker: false,
             lazyLoad: false,
-            enableStashBuffer: false,
-            stashInitialSize: 128 * 1024,
+            enableStashBuffer: true,
+            stashInitialSize: 384 * 1024,
             autoCleanupSourceBuffer: true,
-            autoCleanupMaxBackwardDuration: 10,
-            autoCleanupMinBackwardDuration: 4,
-            liveBufferLatencyChasing: true,
+            autoCleanupMaxBackwardDuration: 30,
+            autoCleanupMinBackwardDuration: 15,
+            liveBufferLatencyChasing: false,
             reuseRedirectedURL: true
           });
 
@@ -575,8 +575,8 @@ class TVVideoPlayer {
           this.miniMpegts.load();
           startPlay();
 
-          // Watchdog seguro (7s): tempo adequado para handshake TCP e keyframe em canais HD/FHD
-          const timeoutMs = 7000;
+          // Watchdog seguro (8s): tempo adequado para handshake TCP e keyframe em canais HD/FHD
+          const timeoutMs = 8000;
           mpegtsWatchdog = setTimeout(() => {
             if (this.miniMpegts && this.miniVideo && this.miniVideo.readyState < 2) {
               console.warn(`mpegts não iniciou em ${timeoutMs}ms, acionando fallback`);
@@ -644,10 +644,10 @@ class TVVideoPlayer {
           this.miniHls = new Hls({
             enableWorker: false,
             lowLatencyMode: false,
-            backBufferLength: 6,
-            maxBufferLength: 8,
-            maxMaxBufferLength: 14,
-            maxBufferSize: 16 * 1024 * 1024,
+            backBufferLength: 30,
+            maxBufferLength: 20,
+            maxMaxBufferLength: 40,
+            maxBufferSize: 32 * 1024 * 1024,
             maxBufferHole: 0.5,
             highBufferWatchdogPeriod: 2,
             nudgeOffset: 0.2,
