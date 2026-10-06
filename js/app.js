@@ -2189,6 +2189,7 @@ const App = {
         const firstEp = initialEps[0] || { url: seriesGroup.url, name: seriesGroup.name };
         const seriesTitle = seriesGroup.name || 'Série';
         const epTitle = firstEp.cleanTitle || 'Episódio 01';
+        if (overlay) overlay.classList.remove('active');
         if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
           AndroidDevice.openPlayer(firstEp.url, `${seriesTitle} - ${epTitle}`, seriesTitle, true);
           return;
@@ -2265,6 +2266,8 @@ const App = {
       item.addEventListener('click', () => {
         const seriesTitle = (this.activeSeries && this.activeSeries.name) ? this.activeSeries.name : 'Série';
         const epTitle = ep.cleanTitle || `Episódio ${epNum}`;
+        const overlay = document.getElementById('modal-series-details');
+        if (overlay) overlay.classList.remove('active');
         if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
           AndroidDevice.openPlayer(ep.url, `${seriesTitle} - ${epTitle}`, seriesTitle, true);
           return;
@@ -2378,6 +2381,12 @@ const App = {
     const modal = document.getElementById('modal-movie-details');
     if (modal) modal.classList.remove('active');
     this.selectedMovie = null;
+    setTimeout(() => {
+      const activeCard = document.querySelector('#vod-grid .vod-poster-card.focused') || document.querySelector('#vod-grid .vod-poster-card');
+      if (activeCard && window.RemoteControl) {
+        RemoteControl.setFocus(activeCard);
+      }
+    }, 60);
   },
 
   _lastPlayMovieTs: 0,
@@ -2389,6 +2398,10 @@ const App = {
 
     const item = this.selectedMovie;
     const realIndex = this.selectedMovieIndex || 0;
+
+    // Fecha o modal de detalhes do filme para não cobrir o player com tela preta
+    const modal = document.getElementById('modal-movie-details');
+    if (modal) modal.classList.remove('active');
 
     if (window.AndroidDevice && typeof AndroidDevice.openPlayer === 'function') {
       AndroidDevice.openPlayer(item.url, item.name, item.category, true);
@@ -2597,14 +2610,20 @@ const App = {
       return;
     }
 
-    // 1. Fecha diálogo de confirmação se estiver aberto (corrigido id: modal-tv-dialog)
+    // 1. Se estiver no player de vídeo HTML5 em tela cheia, fecha o player com prioridade absoluta
+    if (this.currentScreen === 'player') {
+      this.closePlayer();
+      return;
+    }
+
+    // 2. Fecha diálogo de confirmação se estiver aberto (corrigido id: modal-tv-dialog)
     const confirmOverlay = document.getElementById('modal-tv-dialog');
     if (confirmOverlay && confirmOverlay.classList.contains('active')) {
       this.closeDialog();
       return;
     }
 
-    // 2. Fecha modal de filme ou série se estiver aberto
+    // 3. Fecha modal de filme ou série se estiver aberto
     const movieModal = document.getElementById('modal-movie-details');
     if (movieModal && movieModal.classList.contains('active')) {
       this.closeMovieDetails();
@@ -2614,12 +2633,6 @@ const App = {
     const seriesModal = document.getElementById('modal-series-details');
     if (seriesModal && seriesModal.classList.contains('active')) {
       this.closeSeriesModal();
-      return;
-    }
-
-    // 3. Se estiver no player de vídeo HTML5 em tela cheia, fecha o player
-    if (this.currentScreen === 'player') {
-      this.closePlayer();
       return;
     }
 

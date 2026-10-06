@@ -3173,9 +3173,17 @@ body .sig-motto {
    =================================================================== */
 #screen-player {
   padding: 0;
-  background: transparent !important;
-  position: relative;
+  background: #000000 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 5000 !important;
   overflow: hidden;
+}
+
+#screen-player.active {
+  display: flex !important;
 }
 
 .player-tap-zone {
@@ -3191,7 +3199,7 @@ body .sig-motto {
   width: 100vw;
   height: 100vh;
   object-fit: contain;
-  background: transparent;
+  background: #000000;
   z-index: 5;
 }
 
