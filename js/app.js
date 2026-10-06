@@ -1647,7 +1647,7 @@ const App = {
 
     const headingEl = document.getElementById('vod-section-heading');
     if (headingEl) {
-      headingEl.textContent = type === 'movies' ? 'Movies | Recently Added' : 'Series | Recently Added';
+      headingEl.textContent = type === 'movies' ? 'Filmes | Adicionados Recentemente' : 'Séries | Adicionados Recentemente';
     }
 
     // Calcula a contagem de cada categoria (memoizado para performance instantânea)
@@ -1729,17 +1729,17 @@ const App = {
     const headingEl = document.getElementById('vod-section-heading');
 
     if (type === 'favorites') {
-      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Movies' : 'Series'} | Favorites`;
+      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Favoritos`;
       const favs = this.getFavorites().filter(f => f.type === this.activeSection);
       const favKeys = new Set(favs.map(f => f.url || f.name));
       let matches = (sectionData.channels || []).filter(c => favKeys.has(c.url || c.name));
       if (matches.length === 0) matches = favs;
       this.filteredItems = matches;
     } else if (type === 'recent') {
-      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Movies' : 'Series'} | Recently Added`;
+      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Adicionados Recentemente`;
       this.filteredItems = (sectionData.channels || []).slice(0, 100);
     } else if (type === 'continue') {
-      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Movies' : 'Series'} | Continue Watching`;
+      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Continuar Assistindo`;
       this.filteredItems = [];
     }
 
@@ -1933,6 +1933,11 @@ const App = {
         }
       };
       card.addEventListener('focus', fetchTmdbOnFocus, { passive: true });
+
+      // Se a capa estiver ausente ou inválida, busca automaticamente no TMDB em segundo plano
+      if (!item.logo || !item.logo.startsWith('http')) {
+        setTimeout(fetchTmdbOnFocus, Math.min(idx * 70, 2000));
+      }
 
       // Atualiza o fundo da tela com o pôster/fanart do filme ou série em foco
       const updateVodBackdrop = () => {

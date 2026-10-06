@@ -575,12 +575,11 @@ class TVVideoPlayer {
           this.miniMpegts.load();
           startPlay();
 
-          // Watchdog: 6500ms no worker, 5500ms sem worker
-          // Permite tempo para handshake TCP + 384KB stash buffer + chegada do I-frame
-          const timeoutMs = useWorker ? 6500 : 5500;
+          // Watchdog ágil (4.5s): tempo suficiente para handshake TCP e 384KB stash buffer
+          const timeoutMs = 4500;
           mpegtsWatchdog = setTimeout(() => {
             if (this.miniMpegts && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn(`mpegts (worker=${useWorker}) não iniciou em ${timeoutMs}ms, acionando fallback`);
+              console.warn(`mpegts não iniciou em ${timeoutMs}ms, acionando fallback`);
               cleanupAndFail();
             }
           }, timeoutMs);
@@ -766,21 +765,18 @@ class TVVideoPlayer {
     };
 
     // FLUXO DE REPRODUÇÃO RESILIENTE DE CANAIS AO VIVO:
-    // Estágio 1: mpegts com Worker (384KB buffer, TCP alinhado)
-    // Estágio 2: mpegts inline/sem Worker (contorna restrições de WebWorker)
-    // Estágio 3: HLS (.m3u8 alternativo)
-    // Estágio 4: HTML5 direto nativo
-    // Final: Mensagem de erro informativa caso todos os estágios falhem
+    // Estágio 1: mpegts (384KB buffer, TCP sincronizado)
+    // Estágio 2: HLS (.m3u8 alternativo gerado pelo servidor)
+    // Estágio 3: HTML5 direto nativo
+    // Final: Mensagem amigável caso o stream esteja fora do ar
     const startMpegtsChain = (finalFail) => {
       tryMpegts(() => {
-        tryMpegts(() => {
-          tryHls(m3u8Candidate, () => {
-            tryNativeDirect(cleanUrl, finalFail || (() => {
-              this.showMiniLoading(false, '⚠️ Canal temporariamente indisponível');
-            }));
-          });
-        }, false); // sem worker
-      }, true); // com worker
+        tryHls(m3u8Candidate, () => {
+          tryNativeDirect(cleanUrl, finalFail || (() => {
+            this.showMiniLoading(false, '⚠️ Sinal indisponível no momento');
+          }));
+        });
+      }, true);
     };
 
     if (isHls) {
@@ -794,7 +790,7 @@ class TVVideoPlayer {
       if (this.miniVideo && this.miniVideo.readyState >= 2) {
         this.showMiniLoading(false);
       }
-    }, 15000);
+    }, 8000);
   }
 
   /**
@@ -814,6 +810,14 @@ class TVVideoPlayer {
 
     this.isMiniFullscreen = true;
     box.classList.add('fullscreen-mode');
+
+    // Remove e esconde imediatamente a opção/badge de Tela Cheia para não ficar sobreposta ao vídeo
+    const expandBtn = document.getElementById('btn-expand-fullscreen');
+    if (expandBtn) {
+      expandBtn.classList.remove('focused');
+      expandBtn.style.display = 'none';
+      if (document.activeElement === expandBtn) expandBtn.blur();
+    }
 
     // Desmuta áudio imediatamente para a experiência de TV em tela cheia
     if (this.miniVideo) {
@@ -922,6 +926,11 @@ class TVVideoPlayer {
     this.isMiniFullscreen = false;
     box.classList.remove('fullscreen-mode');
     this.showMiniFullscreenOsd(false);
+
+    const expandBtn = document.getElementById('btn-expand-fullscreen');
+    if (expandBtn) {
+      expandBtn.style.display = '';
+    }
 
     // Devolve o foco ao item que estava selecionado antes da tela cheia
     const backBtn = document.getElementById('btn-mini-fs-back');

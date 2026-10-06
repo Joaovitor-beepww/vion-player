@@ -2016,8 +2016,15 @@ body .sig-motto {
   background: #000 !important;
 }
 
-.mini-player-box.fullscreen-mode .mini-player-overlay {
+.mini-player-box.fullscreen-mode .mini-player-overlay,
+.mini-player-box.fullscreen-mode #btn-expand-fullscreen,
+.mini-player-box.fullscreen-mode .fullscreen-badge,
+.mini-player-box.fullscreen-mode .mini-player-overlay.focused,
+.mini-player-box.fullscreen-mode .mini-player-overlay.focusable.focused {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .mini-fs-osd {
@@ -6786,18 +6793,15 @@ html[data-platform="tv"] *,
   padding: 18px 12px !important;
   z-index: 5 !important;
   box-sizing: border-box !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
 }
 
-/* Botão Voltar ao Início na Sidebar */
+/* Botão Voltar ao Início na Sidebar removido */
 .vod-sidebar-back-btn {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 10px 14px !important;
-  margin-bottom: 12px !important;
-  border-radius: 8px !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  display: none !important;
+}
   color: #ffffff !important;
   font-size: 14px !important;
   font-weight: 700 !important;
@@ -6916,12 +6920,10 @@ html[data-platform="tv"] *,
 }
 
 .vod-categories-scroll {
-  flex: 1 !important;
-  overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 5px !important;
-  padding-right: 4px !important;
+  overflow: visible !important;
 }
 
 /* Área de Conteúdo da Direita (Imagem 2) */
