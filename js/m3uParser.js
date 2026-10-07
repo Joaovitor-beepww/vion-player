@@ -202,17 +202,23 @@ const XtreamCodesEngine = {
   },
 
   async fetchJson(url) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
-    try {
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
+    const fetchPromise = async () => {
+      let res;
+      try {
+        res = await fetch(url);
+      } catch (e) {
+        console.warn('Bloqueio CORS em Xtream, usando proxy...', e);
+        res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const proxyData = await res.json();
+        return JSON.parse(proxyData.contents);
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
-    } catch (e) {
-      clearTimeout(timeout);
-      throw e;
-    }
+    };
+
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de 20s')), 20000));
+    return Promise.race([fetchPromise(), timeoutPromise]);
   },
 
   async fetchAll(url, onProgress = () => {}) {
@@ -489,8 +495,8 @@ const XtreamCodesEngine = {
               name: ep.title || `Episódio ${ep.episode_num}`,
               season: parseInt(sNum) || 1,
               episode: parseInt(ep.episode_num) || 1,
-              logo: ep.info?.movie_image || ep.info?.cover_big || seriesGroup.logo || '',
-              plot: ep.info?.plot || '',
+              logo: (ep.info ? ep.info.movie_image : null) || (ep.info ? ep.info.cover_big : null) || seriesGroup.logo || '',
+              plot: (ep.info ? ep.info.plot : null) || '',
               url: `${baseUrl}/series/${username}/${password}/${ep.id}.${ext}`,
               type: 'series'
             };
@@ -956,8 +962,8 @@ const M3UParser = {
     let channels = parsed.channels || [];
     if (parsed.series && parsed.series.rawEpisodes && parsed.series.rawEpisodes.length > 0) {
       channels = [
-        ...(parsed.live?.channels || []),
-        ...(parsed.movies?.channels || []),
+        ...((parsed.live ? parsed.live.channels : null) || []),
+        ...((parsed.movies ? parsed.movies.channels : null) || []),
         ...parsed.series.rawEpisodes
       ];
     }
@@ -1069,7 +1075,13 @@ const M3UParser = {
     }
     try {
       onProgress(20, 'Baixando playlist M3U...', 'Conectando ao link...');
-      const response = await fetch(url);
+      let response;
+      try {
+        response = await fetch(url);
+      } catch (e) {
+        console.warn('Bloqueio CORS ou Mixed Content detectado, usando proxy...', e);
+        response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+      }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
