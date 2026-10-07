@@ -470,9 +470,6 @@
       </div>
 
       <div class="live-top-right">
-        <button id="btn-back-from-live" class="modern-header-back-btn" tabindex="-1" style="display: none !important;">
-          <span>◀</span> <span>Voltar ao Início</span>
-        </button>
         <span id="live-digital-clock" class="digital-clock">20:00</span>
       </div>
     </header>
@@ -516,15 +513,16 @@
             <span class="fullscreen-badge">⛶ Tela Cheia<span class="kbd-hint"> [OK]</span></span>
           </div>
 
-          <!-- Barra superior da Tela Cheia de Canal Ao Vivo (Visível com botão Voltar e some ao toque) -->
+          <!-- Barra superior da Tela Cheia de Canal Ao Vivo -->
           <div id="mini-fs-topbar" class="mini-fs-topbar">
-            <button type="button" id="btn-mini-fs-back" class="mini-fs-back-btn focusable" tabindex="0">
-              ◀ Voltar aos Canais
-            </button>
-            <button type="button" id="btn-mini-fs-quick-guide" class="mini-fs-back-btn focusable" tabindex="0" style="margin-left: 10px;">
+            <!-- Guia de Canais no canto superior esquerdo -->
+            <button type="button" id="btn-mini-fs-quick-guide" class="mini-fs-back-btn focusable" tabindex="0">
               <span>☰</span> <span>Guia de Canais</span>
             </button>
-            <div class="mini-fs-topbar-info">
+            <button type="button" id="btn-mini-fs-back" class="mini-fs-back-btn focusable" tabindex="0" style="margin-left: 10px;">
+              <span>◀</span> <span>Minimizar</span>
+            </button>
+            <div class="mini-fs-topbar-info" style="margin-left: auto;">
               <span id="mini-fs-topbar-title" class="mini-fs-topbar-title">Canal Ao Vivo</span>
               <div class="mini-fs-badge"><span class="pulse-dot-red"></span> AO VIVO</div>
             </div>

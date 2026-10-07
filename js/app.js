@@ -3448,7 +3448,12 @@ const App = {
 
     // 4. Se o mini player estiver expandido em tela cheia (canal ao vivo)
     if (this.player && this.player.isMiniFullscreen) {
-      this.player.collapseMiniFullscreen();
+      const quickGuide = document.getElementById('mini-fs-quick-guide');
+      if (quickGuide && quickGuide.classList.contains('active')) {
+        this.player.toggleQuickGuide(false);
+      } else {
+        this.player.collapseMiniFullscreen();
+      }
       return;
     }
 
