@@ -205,14 +205,13 @@ const XtreamCodesEngine = {
     const fetchPromise = async () => {
       let res;
       try {
-        // Tentar forçar HTTPS para evitar Mixed Content antes de usar o proxy
         let urlToTry = url;
         if (url.startsWith('http://') && window.location.protocol === 'https:') {
           urlToTry = url.replace('http://', 'https://');
         }
         res = await fetch(urlToTry);
       } catch (e) {
-        console.warn('Bloqueio CORS ou HTTPS falhou, usando proxy...', e);
+        console.warn('Bloqueio CORS em Xtream, usando proxy...', e);
         res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const proxyData = await res.json();
