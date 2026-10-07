@@ -704,13 +704,13 @@ class TVVideoPlayer {
             maxBufferHole: 0.5,
             highBufferWatchdogPeriod: 2,
             nudgeOffset: 0.2,
-            nudgeMaxRetry: 3,
-            manifestLoadingTimeOut: 6000,
-            manifestLoadingMaxRetry: 2,
-            levelLoadingTimeOut: 6000,
-            levelLoadingMaxRetry: 2,
-            fragLoadingTimeOut: 6000,
-            fragLoadingMaxRetry: 3
+            nudgeMaxRetry: 5,
+            manifestLoadingTimeOut: 12000,
+            manifestLoadingMaxRetry: 4,
+            levelLoadingTimeOut: 12000,
+            levelLoadingMaxRetry: 4,
+            fragLoadingTimeOut: 12000,
+            fragLoadingMaxRetry: 5
           });
 
           this.miniHls.loadSource(src);
@@ -718,10 +718,10 @@ class TVVideoPlayer {
 
           hlsWatchdog = setTimeout(() => {
             if (this.miniHls && this.miniVideo && this.miniVideo.readyState < 2) {
-              console.warn('HLS timeout (6000ms), acionando fallback');
+              console.warn('HLS timeout (12000ms), acionando fallback');
               cleanupAndFail();
             }
-          }, 6000);
+          }, 12000);
 
           this.miniHls.on(Hls.Events.MANIFEST_PARSED, () => {
             startPlay();
@@ -745,7 +745,7 @@ class TVVideoPlayer {
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
                   netRetries++;
-                  if (netRetries <= 1) {
+                  if (netRetries <= 3) {
                     try { this.miniHls.startLoad(); } catch (e) { cleanupAndFail(); }
                   } else {
                     cleanupAndFail();
@@ -908,22 +908,20 @@ class TVVideoPlayer {
     }
 
     // Ao clicar ou tocar na tela cheia:
-    // Abre/fecha o Guia Rápido diretamente.
+    // Mostra o OSD (nome do canal + botão do guia). O Guia só abre nos 3 pontinhos.
     if (box && !box._hasFsToggle) {
       box._hasFsToggle = true;
       const handleToggle = (e) => {
         if (!this.isMiniFullscreen) return;
         if (e.target && e.target.closest('.mini-fs-back-btn, .quick-guide-sidebar')) return;
-        this.toggleQuickGuide();
-        this.showMiniFullscreenOsd(true);
+        this.toggleMiniFullscreenOsd();
       };
       box.addEventListener('click', handleToggle);
       box.addEventListener('touchend', (e) => {
         if (!this.isMiniFullscreen) return;
         if (e.target && e.target.closest('.mini-fs-back-btn, .quick-guide-sidebar')) return;
         e.preventDefault();
-        this.toggleQuickGuide();
-        this.showMiniFullscreenOsd(true);
+        this.toggleMiniFullscreenOsd();
       });
       if (this.miniVideo) {
         this.miniVideo.addEventListener('click', handleToggle);
@@ -1009,6 +1007,13 @@ class TVVideoPlayer {
   // ===================================================================
   // MINI-GUIA RÁPIDO LATERAL DE CANAIS EM TELA CHEIA (TIVIMATE STYLE)
   // ===================================================================
+  resetQuickGuideTimer() {
+    clearTimeout(this.quickGuideTimer);
+    this.quickGuideTimer = setTimeout(() => {
+      this.toggleQuickGuide(false);
+    }, 10000); // Some após 10 segundos sem interação
+  }
+
   toggleQuickGuide(forceState = null) {
     const guideEl = document.getElementById('mini-fs-quick-guide');
     if (!guideEl) return;
@@ -1018,6 +1023,7 @@ class TVVideoPlayer {
     if (!shouldOpen) {
       guideEl.classList.remove('active');
       this._quickGuideState = 'categories';
+      clearTimeout(this.quickGuideTimer);
       const backBtn = document.getElementById('btn-mini-fs-quick-guide');
       if (backBtn && typeof RemoteControl !== 'undefined') {
         RemoteControl.setFocus(backBtn, false);
@@ -1029,6 +1035,7 @@ class TVVideoPlayer {
     guideEl.classList.add('active');
     this._quickGuideState = 'categories';
     this.renderQuickGuideCategories();
+    this.resetQuickGuideTimer();
   }
 
   quickGuideGoBack() {
@@ -1282,8 +1289,17 @@ class TVVideoPlayer {
     if (window.Hls && Hls.isSupported() && isRealM3u8) {
       this.hls = new Hls({
         enableWorker: false,
-        lowLatencyMode: true,
-        backBufferLength: 60
+        lowLatencyMode: false,
+        backBufferLength: 60,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        nudgeMaxRetry: 5,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 4,
+        levelLoadingTimeOut: 10000,
+        levelLoadingMaxRetry: 4,
+        fragLoadingTimeOut: 10000,
+        fragLoadingMaxRetry: 5
       });
 
       this.hls.loadSource(cleanUrl);
@@ -1294,13 +1310,21 @@ class TVVideoPlayer {
         setTimeout(() => this.showLoading(false), 500);
       });
 
+      let netRetries = 0;
       this.hls.on(Hls.Events.ERROR, (event, data) => {
         if (data.fatal) {
-          console.warn('HLS erro fatal, caindo para reprodução nativa HTML5:', data.type);
-          this.hls.destroy();
-          this.hls = null;
-          this.video.src = vodCandidateUrl;
-          startPlayFullscreen();
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && netRetries < 3) {
+            netRetries++;
+            this.hls.startLoad();
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            this.hls.recoverMediaError();
+          } else {
+            console.warn('HLS erro fatal, caindo para reprodução nativa HTML5:', data.type);
+            this.hls.destroy();
+            this.hls = null;
+            this.video.src = vodCandidateUrl;
+            startPlayFullscreen();
+          }
         }
       });
     } else {

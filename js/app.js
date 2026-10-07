@@ -1931,19 +1931,27 @@ const App = {
 
     this.player.playMiniStream(ch.url, ch.name, ch.category);
 
-    if (unmuted && this.player && this.player.isMiniFullscreen) {
-      if (this.player.miniVideo) {
+    if (this.player && this.player.isMiniFullscreen) {
+      if (unmuted && this.player.miniVideo) {
         this.player.miniVideo.muted = false;
       }
       const osdTitle = document.getElementById('mini-fs-title');
       const osdCat = document.getElementById('mini-fs-cat');
       const osdNum = document.getElementById('mini-fs-num');
+      const osdTopTitle = document.getElementById('mini-fs-topbar-title');
+      
       if (osdTitle) osdTitle.textContent = ch.name;
-      if (osdCat) osdCat.textContent = ch.category;
+      if (osdCat) osdCat.textContent = ch.category || '';
       if (osdNum) osdNum.textContent = `Canal ${this.activeChannelIndex + 1}`;
+      if (osdTopTitle) osdTopTitle.textContent = ch.name;
+      
       this.player.showMiniFullscreenOsd(true);
       clearTimeout(this.player.miniFsOsdTimer);
-      this.player.miniFsOsdTimer = setTimeout(() => this.player.showMiniFullscreenOsd(false), 4000);
+      this.player.miniFsOsdTimer = setTimeout(() => {
+        if (this.player && typeof this.player.showMiniFullscreenOsd === 'function') {
+          this.player.showMiniFullscreenOsd(false);
+        }
+      }, 4000);
     }
   },
 

@@ -261,6 +261,7 @@ const RemoteControl = {
       const isGuideOpen = quickGuide && quickGuide.classList.contains('active');
 
       if (isGuideOpen) {
+        if (typeof App.player.resetQuickGuideTimer === 'function') App.player.resetQuickGuideTimer();
         if (this.isBackKey(code, e) || this.KEYS.LEFT.includes(code)) {
           e.preventDefault();
           if (App.player.quickGuideGoBack && App.player.quickGuideGoBack()) {
