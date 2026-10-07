@@ -1102,12 +1102,12 @@ function initHubDashboard() {
   if (btnHamburger) btnHamburger.addEventListener('click', () => {
     const isMobile = window.innerWidth <= 860;
     if (isMobile) {
-      const isOpen = if (sidebar) sidebar.classList.contains('mobile-open');
+      const isOpen = sidebar ? sidebar.classList.contains('mobile-open') : false;
       if (isOpen) closeMobileSidebar();
       else openMobileSidebar();
     } else {
       const grid = document.querySelector('.hub-body-grid');
-      const isCollapsed = if (grid) grid.classList.toggle('sidebar-collapsed');
+      const isCollapsed = grid ? grid.classList.toggle('sidebar-collapsed') : false;
       try {
         localStorage.setItem('vion_hub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
       } catch(e) {}
@@ -2182,7 +2182,7 @@ function initProfileModal() {
   const form = document.getElementById('form-edit-profile');
   const alertBox = document.getElementById('profile-alert-box');
 
-  [btnClose, btnCancel].forEach(b => if (b) b.addEventListener('click', () => {
+  [btnClose, btnCancel].forEach(b => b && b.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   }));
 
@@ -2218,7 +2218,7 @@ function initAddSubModal() {
     if (modal) modal.style.display = 'flex';
   });
 
-  [btnClose, btnCancel].forEach(b => if (b) b.addEventListener('click', () => {
+  [btnClose, btnCancel].forEach(b => b && b.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   }));
 
