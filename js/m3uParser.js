@@ -205,9 +205,14 @@ const XtreamCodesEngine = {
     const fetchPromise = async () => {
       let res;
       try {
-        res = await fetch(url);
+        // Tentar forçar HTTPS para evitar Mixed Content antes de usar o proxy
+        let urlToTry = url;
+        if (url.startsWith('http://') && window.location.protocol === 'https:') {
+          urlToTry = url.replace('http://', 'https://');
+        }
+        res = await fetch(urlToTry);
       } catch (e) {
-        console.warn('Bloqueio CORS em Xtream, usando proxy...', e);
+        console.warn('Bloqueio CORS ou HTTPS falhou, usando proxy...', e);
         res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const proxyData = await res.json();
@@ -1077,7 +1082,11 @@ const M3UParser = {
       onProgress(20, 'Baixando playlist M3U...', 'Conectando ao link...');
       let response;
       try {
-        response = await fetch(url);
+        let urlToTry = url;
+        if (url.startsWith('http://') && window.location.protocol === 'https:') {
+          urlToTry = url.replace('http://', 'https://');
+        }
+        response = await fetch(urlToTry);
       } catch (e) {
         console.warn('Bloqueio CORS ou Mixed Content detectado, usando proxy...', e);
         response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
