@@ -1,0 +1,39 @@
+          <button class="pill-btn focusable btn-item-disconnect" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">🗑️ Excluir</button>
+        </div>
+      \;
+
+      item.querySelector('.btn-item-disconnect')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openDialog('Excluir Playlist?', \Deseja realmente excluir "\" da TV e do site?\, async () => {
+          try {
+            // Remove do servidor
+            if (p.id) {
+              await fetch('https://vion.gestorpro.app.br/api/device/delete-playlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mac, id: p.id })
+              }).catch(()=>{});
+            }
+
+            // Remove da lista local
+            let localPlaylists = JSON.parse(localStorage.getItem(\ion_playlists_\\) || '[]');
+            localPlaylists = localPlaylists.filter(x => x.id !== p.id && x.url !== p.url);
+            localStorage.setItem(\ion_playlists_\\, JSON.stringify(localPlaylists));
+
+            if (this.activePlaylistUrl === p.url || localPlaylists.length === 0) {
+              await TVStorage.remove('cached_playlist');
+              await TVStorage.remove('cached_playlist_time');
+              localStorage.removeItem('vion_has_playlist');
+              localStorage.removeItem('vion_active_playlist_url');
+              localStorage.removeItem('vion_active_playlist_name');
+              this.playlistData = null;
+              this.activePlaylistUrl = null;
+            }
+
+            this.showToast('Playlist excluída com sucesso!');
+            this.openPlaylistsManager(); // recarrega a lista
+          } catch(err) {
+            this.showToast('Erro ao excluir playlist.');
+          }
+        });
+      });

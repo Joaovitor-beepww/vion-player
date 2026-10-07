@@ -1,6 +1,6 @@
-﻿/* ===================================================================
-   VION PLAYER - PORTAL WEB DE ATIVAÃ‡ÃƒO & UPLOAD DE PLAYLIST
-   Inspirado no design de portais lÃ­deres (TiviPlayer, Super Play, IBO Player)
+/* ===================================================================
+   VION PLAYER - PORTAL WEB DE ATIVAÇÃO & UPLOAD DE PLAYLIST
+   Inspirado no design de portais líderes (TiviPlayer, Super Play, IBO Player)
    =================================================================== */
 
 :root {
@@ -9,7 +9,7 @@
   --bg-card-hover: #171e2e;
   --border-color: #20293d;
   
-  /* Cores de Destaque Ouro/Ã‚mbar (estilo TiviPlayer / Super Play) */
+  /* Cores de Destaque Ouro/Âmbar (estilo TiviPlayer / Super Play) */
   --primary-gold: #f59e0b;
   --primary-gold-hover: #d97706;
   --gold-glow: rgba(245, 158, 11, 0.25);
@@ -38,7 +38,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Banner de Topo (Comunidade do Telegram - igual Ã  imagem) */
+/* Banner de Topo (Comunidade do Telegram - igual à imagem) */
 .top-notice-bar {
   background: var(--primary-gold);
   color: #000;
@@ -57,7 +57,7 @@ body {
   background: var(--primary-gold-hover);
 }
 
-/* Efeito de iluminaÃ§Ã£o radial de fundo */
+/* Efeito de iluminação radial de fundo */
 .bg-glow-spotlight {
   position: fixed;
   top: 50%;
@@ -71,7 +71,7 @@ body {
 }
 
 /* ===================================================================
-   NAVBAR (CABEÃ‡ALHO)
+   NAVBAR (CABEÇALHO)
    =================================================================== */
 .navbar {
   position: sticky;
@@ -235,7 +235,7 @@ body {
 }
 
 /* ===================================================================
-   CONTEÃšDO PRINCIPAL (SEÃ‡Ã•ES)
+   CONTEÚDO PRINCIPAL (SEÇÕES)
    =================================================================== */
 .main-wrapper {
   flex: 1;
@@ -265,7 +265,7 @@ body {
 }
 
 /* ===================================================================
-   TELA DE LOGIN (IdÃªntica Ã  Imagem 1 do TiviPlayer)
+   TELA DE LOGIN (Idêntica à Imagem 1 do TiviPlayer)
    =================================================================== */
 .login-card {
   background: #0f141f;
@@ -301,7 +301,7 @@ body {
 }
 
 /* ===================================================================
-   TELA DE GERENCIAR PLAYLISTS (IdÃªntica Ã  Imagem 2 do TiviPlayer)
+   TELA DE GERENCIAR PLAYLISTS (Idêntica à Imagem 2 do TiviPlayer)
    =================================================================== */
 .manage-card {
   background: #0f141f;
@@ -378,7 +378,6 @@ body {
   border: 1px solid var(--border-color);
   min-width: 60px;
   text-align: center;
-  flex-shrink: 0;
 }
 
 .playlist-url {
@@ -387,7 +386,8 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
+  max-width: 480px;
+  font-family: monospace;
 }
 
 .playlist-actions {
@@ -500,7 +500,7 @@ body {
 }
 
 /* ===================================================================
-   SEÃ‡ÃƒO 1: HERO HOME
+   SEÇÃO 1: HERO HOME
    =================================================================== */
 .hero-content {
   text-align: center;
@@ -659,7 +659,7 @@ body {
 }
 
 /* ===================================================================
-   CAMPOS DE FORMULÃRIO GLOBAIS
+   CAMPOS DE FORMULÁRIO GLOBAIS
    =================================================================== */
 .form-group {
   margin-bottom: 20px;
@@ -750,7 +750,7 @@ body {
 }
 
 /* ===================================================================
-   SEÃ‡ÃƒO 3: PREÃ‡OS E ATIVAÃ‡ÃƒO
+   SEÇÃO 3: PREÇOS E ATIVAÇÃO
    =================================================================== */
 .pricing-grid {
   display: grid;
@@ -816,7 +816,7 @@ body {
 }
 
 /* ===================================================================
-   BOTÃ•ES FLUTUANTES (TELEGRAM / WHATSAPP)
+   BOTÕES FLUTUANTES (TELEGRAM / WHATSAPP)
    =================================================================== */
 .floating-contacts {
   position: fixed;
@@ -874,7 +874,7 @@ body {
   animation: fadeIn 0.3s ease;
 }
 
-/* Layout Responsivo (Sidebar + ConteÃºdo Principal) */
+/* Layout Responsivo (Sidebar + Conteúdo Principal) */
 .reseller-body-layout {
   display: flex;
   gap: 24px;
@@ -913,7 +913,7 @@ body {
   }
 }
 
-/* MOBILE E TABLETS (< 992px): Menu vira gaveta retrÃ¡til suave */
+/* MOBILE E TABLETS (< 992px): Menu vira gaveta retrátil suave */
 @media (max-width: 991px) {
   .reseller-body-layout {
     display: block;
@@ -1004,7 +1004,7 @@ body {
   color: var(--primary-gold);
 }
 
-/* Box de CrÃ©ditos no Drawer */
+/* Box de Créditos no Drawer */
 .drawer-credits-box {
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid var(--border-color);
@@ -1210,7 +1210,7 @@ body {
 }
 
 /* ===================================================================
-   CARDS DE ESTATÃSTICAS (IdÃªnticos aos Prints 1 e 5)
+   CARDS DE ESTATÍSTICAS (Idênticos aos Prints 1 e 5)
    =================================================================== */
 .reseller-stats-grid {
   display: flex;
@@ -1312,7 +1312,7 @@ body {
   color: var(--text-white);
 }
 
-/* BotÃ£o de Destaque Amarelo Grande (ex: + Ativar dispositivo) */
+/* Botão de Destaque Amarelo Grande (ex: + Ativar dispositivo) */
 .btn-reseller-action-hero {
   width: 100%;
   background: var(--primary-gold);
@@ -1348,7 +1348,7 @@ body {
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
 }
 
-/* Barra de Pesquisa com BotÃ£o Buscar e Reload (Prints 2 e 3) */
+/* Barra de Pesquisa com Botão Buscar e Reload (Prints 2 e 3) */
 .reseller-search-row {
   display: flex;
   gap: 8px;
@@ -1595,7 +1595,7 @@ body {
    NOVO SISTEMA DE REVENDEDOR & PARCEIROS (ESTILO IMAGENS 1, 2, 3, 4 E 5)
    =================================================================== */
 
-/* Permitir que o section-reseller ocupe toda a largura disponÃ­vel */
+/* Permitir que o section-reseller ocupe toda a largura disponível */
 #section-reseller {
   max-width: 1320px;
   width: 100%;
@@ -1647,7 +1647,7 @@ body {
   opacity: 0.85;
 }
 
-/* Indicador de passos (cÃ­rculos 1 e 2) */
+/* Indicador de passos (círculos 1 e 2) */
 .step-wizard-indicator {
   display: flex;
   align-items: center;
@@ -1766,7 +1766,7 @@ body {
   font-size: 18px;
 }
 
-/* Campo de senha com botÃ£o de olho */
+/* Campo de senha com botão de olho */
 .partner-underline-group.password-group input {
   padding-right: 36px;
 }
@@ -1887,7 +1887,7 @@ body {
   display: block;
 }
 
-/* BotÃ£o de aÃ§Ã£o (PRÃ“XIMO / REGISTRAR) */
+/* Botão de ação (PRÓXIMO / REGISTRAR) */
 .partner-action-wrap {
   text-align: center;
   margin-top: 14px;
@@ -2144,7 +2144,7 @@ body {
   flex-direction: column;
 }
 
-/* Topbar idÃªntica Ã  Imagem 4 & 5 */
+/* Topbar idêntica à Imagem 4 & 5 */
 .hub-topbar {
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
@@ -2417,7 +2417,7 @@ body {
   font-size: 11px;
 }
 
-/* Ãrea Principal das Sub-Abas */
+/* Área Principal das Sub-Abas */
 .hub-main-stage {
   background: #f4f4f7;
   padding: 32px 36px;
@@ -2660,7 +2660,7 @@ body {
 
 /* ===================================================================
    MODO REVENDEDOR TELA CHEIA (100% FULLSCREEN - SEM QUADRADO FLUTUANTE)
-   Quando o usuÃ¡rio entra na aba de Revendedor, a interface ocupa 100%
+   Quando o usuário entra na aba de Revendedor, a interface ocupa 100%
    da largura e altura da tela, ocultando as barras do portal.
    =================================================================== */
 body.is-reseller-mode {
@@ -2880,8 +2880,8 @@ body.is-reseller-mode .hub-sidebar .hub-nav-btn {
 }
 
 /* ===================================================================
-   SLIM ICON-RAIL TOGGLE (Quando o usuÃ¡rio clica no hambÃºrguer â˜°)
-   Comportamento 100% idÃªntico ao Super Play (Imagem 3)
+   SLIM ICON-RAIL TOGGLE (Quando o usuário clica no hambúrguer ☰)
+   Comportamento 100% idêntico ao Super Play (Imagem 3)
    =================================================================== */
 body.is-reseller-mode .hub-body-grid.sidebar-collapsed {
   grid-template-columns: 68px 1fr !important;
@@ -2936,7 +2936,7 @@ body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-nav-btn.active {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* RodapÃ© colapsado */
+/* Rodapé colapsado */
 body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar-footer {
   padding: 12px 0 !important;
   display: flex !important;
@@ -2978,7 +2978,7 @@ body.is-reseller-mode .hub-body-grid.sidebar-collapsed .hub-sidebar-footer .vers
   color: #64748b !important;
 }
 
-/* ConteÃºdo Principal (Main Stage) - Nunca esmaga */
+/* Conteúdo Principal (Main Stage) - Nunca esmaga */
 body.is-reseller-mode .hub-main-stage {
   height: 100% !important;
   overflow-y: auto !important;
@@ -3016,7 +3016,7 @@ body.is-reseller-mode .hub-main-stage {
   align-items: center;
 }
 
-/* FormulÃ¡rio de Cadastro de CÃ³digos Responsivo */
+/* Formulário de Cadastro de Códigos Responsivo */
 .partner-create-grid {
   display: grid;
   grid-template-columns: 200px 1.4fr 1.4fr auto;
@@ -3042,7 +3042,7 @@ body.is-reseller-mode .hub-main-stage {
 }
 
 /* ===================================================================
-   RESPONSIVIDADE PARA DISPOSITIVOS MÃ“VEIS / TELAS ESTREITAS (<= 860px)
+   RESPONSIVIDADE PARA DISPOSITIVOS MÓVEIS / TELAS ESTREITAS (<= 860px)
    =================================================================== */
 @media (max-width: 860px) {
   body.is-reseller-mode .hub-body-grid {
@@ -3050,7 +3050,7 @@ body.is-reseller-mode .hub-main-stage {
     position: relative !important;
   }
 
-  /* No mobile, a sidebar Ã© uma gaveta deslizante elegante (Drawer) */
+  /* No mobile, a sidebar é uma gaveta deslizante elegante (Drawer) */
   body.is-reseller-mode .hub-sidebar {
     position: fixed !important;
     top: 0 !important;
@@ -3121,7 +3121,7 @@ body.is-reseller-mode .hub-main-stage {
   }
 }
 
-/* BotÃ£o Elegante Voltar ao Portal */
+/* Botão Elegante Voltar ao Portal */
 .btn-reseller-back-portal {
   position: absolute;
   top: 24px;
@@ -3162,13 +3162,13 @@ body.is-reseller-mode .hub-main-stage {
   color: #fbbf24 !important;
 }
 
-/* Modais flutuantes com z-index de prioridade mÃ¡xima */
+/* Modais flutuantes com z-index de prioridade máxima */
 .modal-overlay {
   z-index: 2000 !important;
 }
 
 /* ===================================================================
-   ESTILOS DE PAGAMENTO PIX AUTOMÃTICO (MERCADO PAGO)
+   ESTILOS DE PAGAMENTO PIX AUTOMÁTICO (MERCADO PAGO)
    =================================================================== */
 .pix-spinner {
   width: 44px;
@@ -3217,7 +3217,7 @@ body.is-reseller-mode .hub-main-stage {
 }
 
 /* ===================================================================
-   MENU GAVETA MOBILE (DRAWER) & BOTÃƒO HAMBURGER
+   MENU GAVETA MOBILE (DRAWER) & BOTÃO HAMBURGER
    =================================================================== */
 .btn-mobile-toggle {
   display: none;
@@ -3389,7 +3389,7 @@ body.mobile-menu-open {
    RESPONSIVIDADE COMPLETA PARA CELULAR & TABLET (MOBILE OVERHAUL)
    =================================================================== */
 @media (max-width: 868px) {
-  /* PrevenÃ§Ã£o de quebra e rolagem horizontal */
+  /* Prevenção de quebra e rolagem horizontal */
   html, body {
     overflow-x: hidden !important;
     max-width: 100vw !important;
@@ -3430,7 +3430,7 @@ body.mobile-menu-open {
     display: none !important;
   }
 
-  /* Exibe o botÃ£o Hamburger */
+  /* Exibe o botão Hamburger */
   .btn-mobile-toggle {
     display: flex !important;
   }
@@ -3554,7 +3554,7 @@ body.mobile-menu-open {
     justify-content: flex-end !important;
   }
 
-  /* 6. PreÃ§os e AtivaÃ§Ã£o */
+  /* 6. Preços e Ativação */
   .portal-card {
     padding: 22px 14px !important;
     border-radius: 16px !important;
@@ -3572,7 +3572,7 @@ body.mobile-menu-open {
     transform: none !important;
   }
 
-  /* 7. Ãrea do Revendedor - Cadastro de Parceiro */
+  /* 7. Área do Revendedor - Cadastro de Parceiro */
   .partner-flow-box {
     padding: 22px 14px !important;
     border-radius: 16px !important;
@@ -3605,7 +3605,7 @@ body.mobile-menu-open {
     font-size: 15px !important;
   }
 
-  /* 8. Ãrea do Revendedor - Login Cinema */
+  /* 8. Área do Revendedor - Login Cinema */
   .cinema-login-wrap {
     padding: 14px 10px !important;
     min-height: auto !important;
@@ -3638,7 +3638,7 @@ body.mobile-menu-open {
     font-size: 14.5px !important;
   }
 
-  /* 9. Ãrea do Revendedor - Painel Hub Mobile */
+  /* 9. Área do Revendedor - Painel Hub Mobile */
   .reseller-hub-layout {
     padding: 0 !important;
   }
@@ -3986,7 +3986,7 @@ body.mobile-menu-open {
     width: 100% !important;
   }
 
-  /* Cards de AdministraÃ§Ã£o (Mercado Pago, NotificaÃ§Ãµes, etc.) */
+  /* Cards de Administração (Mercado Pago, Notificações, etc.) */
   .hub-admin-card {
     padding: 16px 14px !important;
     border-radius: 12px !important;
@@ -4082,7 +4082,7 @@ body.mobile-menu-open {
     height: 160px !important;
   }
 
-  /* 11. RodapÃ© */
+  /* 11. Rodapé */
   .portal-footer {
     padding: 26px 14px !important;
   }
@@ -4092,5 +4092,4 @@ body.mobile-menu-open {
     align-items: center !important;
   }
 }
-
 

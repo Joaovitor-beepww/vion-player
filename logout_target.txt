@@ -1,0 +1,36 @@
+  logoutAccount() {
+    this.openDialog('Sair da Conta?', 'Deseja realmente desconectar a conta e remover a lista ativa deste dispositivo?', async () => {
+      try {
+        await TVStorage.remove('cached_playlist');
+        await TVStorage.remove('cached_playlist_time');
+      } catch (e) {}
+      const mac = localStorage.getItem('vion_mac_address');
+      if (mac) {
+        localStorage.removeItem(`vion_playlists_${mac}`);
+      }
+      localStorage.removeItem('vion_has_playlist');
+      localStorage.removeItem('vion_saved_provider_code');
+      localStorage.removeItem('vion_saved_provider_user');
+      localStorage.removeItem('vion_saved_provider_pass');
+      localStorage.removeItem('vion_provider_pass');
+      localStorage.removeItem('vion_active_playlist_url');
+      localStorage.removeItem('vion_active_playlist_name');
+
+      this.playlistData = null;
+      this.activePlaylistUrl = null;
+      if (this.player) {
+        this.player.stopMini();
+        this.player.close();
+      }
+
+      const codeInput = document.getElementById('input-reseller-code');
+      const userInput = document.getElementById('input-reseller-user');
+      const passInput = document.getElementById('input-reseller-pass');
+      if (codeInput) codeInput.value = '';
+      if (userInput) userInput.value = '';
+      if (passInput) passInput.value = '';
+
+      this.showToast('✅ Conta desconectada com sucesso.');
+      this.goToScreen('reseller-login');
+    });
+  },
