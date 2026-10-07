@@ -97,8 +97,8 @@ function initNavigation() {
     // Fecha menu gaveta mobile se estiver aberto
     const mobileDrawer = document.getElementById('mobile-nav-drawer');
     const mobileOverlay = document.getElementById('mobile-nav-overlay');
-    if (mobileDrawer) mobileDrawer.classList.remove('open');
-    if (mobileOverlay) mobileOverlay.classList.remove('open');
+    mobileDrawer?.classList.remove('open');
+    mobileOverlay?.classList.remove('open');
     document.body.classList.remove('mobile-menu-open');
 
     window.location.hash = targetTab;
@@ -120,20 +120,20 @@ function initNavigation() {
   const mobileClose = document.getElementById('btn-mobile-close');
 
   const closeMobileMenu = () => {
-    if (mobileDrawer) mobileDrawer.classList.remove('open');
-    if (mobileOverlay) mobileOverlay.classList.remove('open');
+    mobileDrawer?.classList.remove('open');
+    mobileOverlay?.classList.remove('open');
     document.body.classList.remove('mobile-menu-open');
   };
 
   const openMobileMenu = () => {
-    if (mobileDrawer) mobileDrawer.classList.add('open');
-    if (mobileOverlay) mobileOverlay.classList.add('open');
+    mobileDrawer?.classList.add('open');
+    mobileOverlay?.classList.add('open');
     document.body.classList.add('mobile-menu-open');
   };
 
-  if (mobileToggle) mobileToggle.addEventListener('click', openMobileMenu);
-  if (mobileClose) mobileClose.addEventListener('click', closeMobileMenu);
-  if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileMenu);
+  mobileToggle?.addEventListener('click', openMobileMenu);
+  mobileClose?.addEventListener('click', closeMobileMenu);
+  mobileOverlay?.addEventListener('click', closeMobileMenu);
 
   document.querySelectorAll('.mobile-nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
@@ -145,14 +145,12 @@ function initNavigation() {
   });
 
   // Botões na Home
-  var _el_btn_hero_activate = document.getElementById('btn-hero-activate');
-    if (_el_btn_hero_activate) _el_btn_hero_activate.addEventListener('click', (e) => {
+  document.getElementById('btn-hero-activate')?.addEventListener('click', (e) => {
     e.preventDefault();
     switchTab('activation');
   });
 
-  var _el_btn_hero_upload = document.getElementById('btn-hero-upload');
-    if (_el_btn_hero_upload) _el_btn_hero_upload.addEventListener('click', (e) => {
+  document.getElementById('btn-hero-upload')?.addEventListener('click', (e) => {
     e.preventDefault();
     // Se já estiver logado, vai direto para Gerenciar Playlists, senão vai para Login
     const currentMac = localStorage.getItem('vion_current_session');
@@ -164,15 +162,13 @@ function initNavigation() {
   });
 
   // Botão Entrar na Navbar
-  var _el_btn_nav_login = document.getElementById('btn-nav-login');
-    if (_el_btn_nav_login) _el_btn_nav_login.addEventListener('click', (e) => {
+  document.getElementById('btn-nav-login')?.addEventListener('click', (e) => {
     e.preventDefault();
     switchTab('login');
   });
 
   // Botão Sair na Navbar
-  var _el_btn_nav_logout = document.getElementById('btn-nav-logout');
-    if (_el_btn_nav_logout) _el_btn_nav_logout.addEventListener('click', (e) => {
+  document.getElementById('btn-nav-logout')?.addEventListener('click', (e) => {
     e.preventDefault();
     logoutDevice();
   });
@@ -202,7 +198,7 @@ function initLoginSystem() {
   const loginAlert = document.getElementById('login-alert');
 
   // Validação dinâmica do MAC Address enquanto digita (com máscara XX:XX:XX:XX:XX:XX)
-  if (macInput) macInput.addEventListener('input', (e) => {
+  macInput?.addEventListener('input', (e) => {
     let val = e.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
     if (val.length > 12) val = val.substring(0, 12);
 
@@ -227,12 +223,12 @@ function initLoginSystem() {
   });
 
   // Chave do Dispositivo (máximo 6 dígitos)
-  if (keyInput) keyInput.addEventListener('input', (e) => {
+  keyInput?.addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, '').substring(0, 6);
   });
 
   // Ação de Login Estrito (apenas MAC e Key existentes)
-  if (form) form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const mac = macInput.value.trim().toUpperCase();
@@ -390,7 +386,7 @@ function initPlaylistManager() {
 
   let currentType = 'm3u';
 
-  if (tabM3U) tabM3U.addEventListener('click', () => {
+  tabM3U?.addEventListener('click', () => {
     currentType = 'm3u';
     tabM3U.classList.add('active');
     tabXtream.classList.remove('active');
@@ -398,7 +394,7 @@ function initPlaylistManager() {
     fieldXtream.style.display = 'none';
   });
 
-  if (tabXtream) tabXtream.addEventListener('click', () => {
+  tabXtream?.addEventListener('click', () => {
     currentType = 'xtream';
     tabXtream.classList.add('active');
     tabM3U.classList.remove('active');
@@ -407,7 +403,7 @@ function initPlaylistManager() {
   });
 
   // Abrir Modal de Adição
-  if (btnAdd) btnAdd.addEventListener('click', () => {
+  btnAdd?.addEventListener('click', () => {
     document.getElementById('modal-title').textContent = 'Adicionar Playlist';
     document.getElementById('playlist-edit-id').value = '';
     document.getElementById('input-playlist-name').value = '';
@@ -419,11 +415,11 @@ function initPlaylistManager() {
     modal.classList.remove('active');
   }
 
-  if (btnClose) btnClose.addEventListener('click', closeModal);
-  if (btnCancel) btnCancel.addEventListener('click', closeModal);
+  btnClose?.addEventListener('click', closeModal);
+  btnCancel?.addEventListener('click', closeModal);
 
   // Salvar Playlist (Adicionar ou Editar)
-  if (formPlaylist) formPlaylist.addEventListener('submit', (e) => {
+  formPlaylist?.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const currentMac = localStorage.getItem('vion_current_session');
@@ -716,7 +712,7 @@ function initPartnerRegistration() {
 
   // Alternar para tela de Login (Imagem 3)
   [linkToLogin, btnTopLogin].forEach(el => {
-    if (el) el.addEventListener('click', (e) => {
+    el?.addEventListener('click', (e) => {
       e.preventDefault();
       showResellerView('login');
     });
@@ -746,7 +742,7 @@ function initPartnerRegistration() {
   const phoneInput = document.getElementById('reg-phone-number');
 
   function updatePhonePlaceholder() {
-    const val = (phoneCodeSelect ? phoneCodeSelect.value : '') || '+55';
+    const val = phoneCodeSelect?.value || '+55';
     if (phoneInput) {
       if (val === '+55') phoneInput.placeholder = '(11) 99999-9999';
       else if (val === '+1') phoneInput.placeholder = '(555) 000-0000';
@@ -757,7 +753,7 @@ function initPartnerRegistration() {
     }
   }
 
-  if (phoneCodeSelect) phoneCodeSelect.addEventListener('change', () => {
+  phoneCodeSelect?.addEventListener('change', () => {
     const val = phoneCodeSelect.value;
     if (val === '+55') phoneFlagIcon.textContent = '🇧🇷';
     else if (val === '+1') phoneFlagIcon.textContent = '🇺🇸';
@@ -768,8 +764,8 @@ function initPartnerRegistration() {
   });
 
   // Máscara automática de telefone para o Brasil
-  if (phoneInput) phoneInput.addEventListener('input', (e) => {
-    const val = (phoneCodeSelect ? phoneCodeSelect.value : '') || '+55';
+  phoneInput?.addEventListener('input', (e) => {
+    const val = phoneCodeSelect?.value || '+55';
     if (val === '+55') {
       let v = e.target.value.replace(/\D/g, '');
       if (v.length > 11) v = v.slice(0, 11);
@@ -787,13 +783,13 @@ function initPartnerRegistration() {
   updatePhonePlaceholder();
 
   // AVANÇAR: ETAPA 1 -> ETAPA 2 (Imagem 1 -> Imagem 2)
-  if (step1Form) step1Form.addEventListener('submit', async (e) => {
+  step1Form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const company = (document.getElementById('reg-company') ? document.getElementById('reg-company').value : null).trim();
-    const firstName = (document.getElementById('reg-first-name') ? document.getElementById('reg-first-name').value : null).trim();
-    const lastName = (document.getElementById('reg-last-name') ? document.getElementById('reg-last-name').value : null).trim();
-    const email = (document.getElementById('reg-email') ? document.getElementById('reg-email').value : null).trim().toLowerCase();
-    const password = (document.getElementById('reg-password') ? document.getElementById('reg-password').value : null).trim();
+    const company = document.getElementById('reg-company')?.value.trim();
+    const firstName = document.getElementById('reg-first-name')?.value.trim();
+    const lastName = document.getElementById('reg-last-name')?.value.trim();
+    const email = document.getElementById('reg-email')?.value.trim().toLowerCase();
+    const password = document.getElementById('reg-password')?.value.trim();
 
     if (!company || !firstName || !lastName || !email || !password) {
       showAlert(alertStep1, 'Por favor, preencha todos os campos da etapa 1.', 'error');
@@ -818,9 +814,9 @@ function initPartnerRegistration() {
     if (alertStep1) alertStep1.style.display = 'none';
 
     // Transição visual: Círculo 1 marcado, Círculo 2 ativo (Estilo Imagem 2)
-    if (circle1) circle1.classList.remove('active');
-    if (circle1) circle1.classList.add('completed');
-    if (circle2) circle2.classList.add('active');
+    circle1?.classList.remove('active');
+    circle1?.classList.add('completed');
+    circle2?.classList.add('active');
 
     step1Form.style.display = 'none';
     if (step2Form) {
@@ -830,30 +826,30 @@ function initPartnerRegistration() {
   });
 
   // VOLTAR: ETAPA 2 -> ETAPA 1
-  if (btnBack) btnBack.addEventListener('click', (e) => {
+  btnBack?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (circle2) circle2.classList.remove('active');
-    if (circle1) circle1.classList.remove('completed');
-    if (circle1) circle1.classList.add('active');
+    circle2?.classList.remove('active');
+    circle1?.classList.remove('completed');
+    circle1?.classList.add('active');
 
     if (step2Form) step2Form.style.display = 'none';
     if (step1Form) step1Form.style.display = 'flex';
   });
 
   // REGISTRAR: ETAPA 2 (Imagem 2)
-  if (step2Form) step2Form.addEventListener('submit', async (e) => {
+  step2Form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const company = (document.getElementById('reg-company') ? document.getElementById('reg-company').value : null).trim();
-    const firstName = (document.getElementById('reg-first-name') ? document.getElementById('reg-first-name').value : null).trim();
-    const lastName = (document.getElementById('reg-last-name') ? document.getElementById('reg-last-name').value : null).trim();
-    const email = (document.getElementById('reg-email') ? document.getElementById('reg-email').value : null).trim().toLowerCase();
-    const password = (document.getElementById('reg-password') ? document.getElementById('reg-password').value : null).trim();
+    const company = document.getElementById('reg-company')?.value.trim();
+    const firstName = document.getElementById('reg-first-name')?.value.trim();
+    const lastName = document.getElementById('reg-last-name')?.value.trim();
+    const email = document.getElementById('reg-email')?.value.trim().toLowerCase();
+    const password = document.getElementById('reg-password')?.value.trim();
 
-    const country = (document.getElementById('reg-country') ? document.getElementById('reg-country').value : null) || 'Brasil';
-    const address = (document.getElementById('reg-address') ? document.getElementById('reg-address').value : null).trim();
-    const phoneCode = (document.getElementById('reg-phone-code') ? document.getElementById('reg-phone-code').value : null) || '+55';
-    const phoneNumber = (document.getElementById('reg-phone-number') ? document.getElementById('reg-phone-number').value : null).trim();
+    const country = document.getElementById('reg-country')?.value || 'Brasil';
+    const address = document.getElementById('reg-address')?.value.trim();
+    const phoneCode = document.getElementById('reg-phone-code')?.value || '+55';
+    const phoneNumber = document.getElementById('reg-phone-number')?.value.trim();
     const cleanDigits = phoneNumber.replace(/\D/g, '');
 
     if (!address || !phoneNumber) {
@@ -903,7 +899,7 @@ function initPartnerRegistration() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        showAlert(alertStep2, (data ? data.error : null) || 'Este e-mail já está cadastrado no sistema. Por favor, faça login.', 'error');
+        showAlert(alertStep2, data?.error || 'Este e-mail já está cadastrado no sistema. Por favor, faça login.', 'error');
         return;
       }
 
@@ -941,12 +937,12 @@ function initCinemaLogin() {
   const linkToReg = document.getElementById('link-goto-register-from-login');
   const linkForgot = document.getElementById('cinema-link-forgot');
 
-  if (linkToReg) linkToReg.addEventListener('click', (e) => {
+  linkToReg?.addEventListener('click', (e) => {
     e.preventDefault();
     showResellerView('register');
   });
 
-  if (linkForgot) linkForgot.addEventListener('click', async (e) => {
+  linkForgot?.addEventListener('click', async (e) => {
     e.preventDefault();
     const emailPrompt = prompt('Digite seu e-mail de login para redefinir a senha:');
     if (!emailPrompt || !emailPrompt.trim()) return;
@@ -975,10 +971,10 @@ function initCinemaLogin() {
     }
   });
 
-  if (form) form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const user = ((userInput ? userInput.value : '') || '').trim();
-    const pass = ((passInput ? passInput.value : '') || '').trim();
+    const user = (userInput?.value || '').trim();
+    const pass = (passInput?.value || '').trim();
 
     if (!user || !pass) {
       showAlert(alertBox, 'Informe seu e-mail e senha cadastrados.', 'error');
@@ -997,7 +993,7 @@ function initCinemaLogin() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        showAlert(alertBox, (data ? data.error : null) || 'E-mail ou senha incorretos.', 'error');
+        showAlert(alertBox, data?.error || 'E-mail ou senha incorretos.', 'error');
         return;
       }
 
@@ -1033,61 +1029,55 @@ function initHubDashboard() {
   const sidebar = document.getElementById('hub-sidebar');
 
   // Toggle do Dropdown Menu da Imagem 5
-  if (dropdownTrigger) dropdownTrigger.addEventListener('click', (e) => {
+  dropdownTrigger?.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (dropdownMenu) dropdownMenu.classList.toggle('active');
+    dropdownMenu?.classList.toggle('active');
   });
 
   document.addEventListener('click', (e) => {
-    if (dropdownMenu && !(dropdownTrigger ? dropdownTrigger.contains : null)(e.target)) {
+    if (dropdownMenu && !dropdownTrigger?.contains(e.target)) {
       dropdownMenu.classList.remove('active');
     }
   });
 
   // Ações do Dropdown Menu (Imagem 5)
-  var _el_menu_buy_credits = document.getElementById('menu-buy-credits');
-    if (_el_menu_buy_credits) _el_menu_buy_credits.addEventListener('click', () => {
-    if (dropdownMenu) dropdownMenu.classList.remove('active');
+  document.getElementById('menu-buy-credits')?.addEventListener('click', () => {
+    dropdownMenu?.classList.remove('active');
     openDirectBuyModal();
   });
 
-  var _el_btn_hero_buy_credits = document.getElementById('btn-hero-buy-credits');
-    if (_el_btn_hero_buy_credits) _el_btn_hero_buy_credits.addEventListener('click', () => {
+  document.getElementById('btn-hero-buy-credits')?.addEventListener('click', () => {
     openDirectBuyModal();
   });
 
-  var _el_btn_history_buy_more = document.getElementById('btn-history-buy-more');
-    if (_el_btn_history_buy_more) _el_btn_history_buy_more.addEventListener('click', () => {
+  document.getElementById('btn-history-buy-more')?.addEventListener('click', () => {
     openDirectBuyModal();
   });
 
-  var _el_menu_edit_profile = document.getElementById('menu-edit-profile');
-    if (_el_menu_edit_profile) _el_menu_edit_profile.addEventListener('click', () => {
-    if (dropdownMenu) dropdownMenu.classList.remove('active');
+  document.getElementById('menu-edit-profile')?.addEventListener('click', () => {
+    dropdownMenu?.classList.remove('active');
     openProfileModal();
   });
 
-  var _el_menu_logout = document.getElementById('menu-logout');
-    if (_el_menu_logout) _el_menu_logout.addEventListener('click', () => {
-    if (dropdownMenu) dropdownMenu.classList.remove('active');
+  document.getElementById('menu-logout')?.addEventListener('click', () => {
+    dropdownMenu?.classList.remove('active');
     handleResellerLogout();
   });
 
   // Atualizar dados no topo
-  var _el_btn_hub_refresh_credits = document.getElementById('btn-hub-refresh-credits');
-    if (_el_btn_hub_refresh_credits) _el_btn_hub_refresh_credits.addEventListener('click', () => {
+  document.getElementById('btn-hub-refresh-credits')?.addEventListener('click', () => {
     refreshHubDashboard();
   });
 
   // Toggle do Menu Lateral (Hambúrguer ☰) sem quebrar o layout
   function openMobileSidebar() {
-    if (sidebar) sidebar.classList.add('mobile-open');
+    sidebar?.classList.add('mobile-open');
     const backdrop = document.getElementById('hub-sidebar-backdrop');
     if (backdrop) backdrop.classList.add('active');
   }
 
   function closeMobileSidebar() {
-    if (sidebar) sidebar.classList.remove('mobile-open');
+    sidebar?.classList.remove('mobile-open');
     const backdrop = document.getElementById('hub-sidebar-backdrop');
     if (backdrop) backdrop.classList.remove('active');
   }
@@ -1099,25 +1089,23 @@ function initHubDashboard() {
     hubGrid.classList.add('sidebar-collapsed');
   }
 
-  if (btnHamburger) btnHamburger.addEventListener('click', () => {
+  btnHamburger?.addEventListener('click', () => {
     const isMobile = window.innerWidth <= 860;
     if (isMobile) {
-      const isOpen = sidebar ? sidebar.classList.contains('mobile-open') : false;
+      const isOpen = sidebar?.classList.contains('mobile-open');
       if (isOpen) closeMobileSidebar();
       else openMobileSidebar();
     } else {
       const grid = document.querySelector('.hub-body-grid');
-      const isCollapsed = grid ? grid.classList.toggle('sidebar-collapsed') : false;
+      const isCollapsed = grid?.classList.toggle('sidebar-collapsed');
       try {
         localStorage.setItem('vion_hub_sidebar_collapsed', isCollapsed ? 'true' : 'false');
       } catch(e) {}
     }
   });
 
-  var _el_hub_sidebar_backdrop = document.getElementById('hub-sidebar-backdrop');
-    if (_el_hub_sidebar_backdrop) _el_hub_sidebar_backdrop.addEventListener('click', closeMobileSidebar);
-  var _el_btn_close_mobile_drawer = document.getElementById('btn-close-mobile-drawer');
-    if (_el_btn_close_mobile_drawer) _el_btn_close_mobile_drawer.addEventListener('click', closeMobileSidebar);
+  document.getElementById('hub-sidebar-backdrop')?.addEventListener('click', closeMobileSidebar);
+  document.getElementById('btn-close-mobile-drawer')?.addEventListener('click', closeMobileSidebar);
 
   // Navegação entre sub-abas da Sidebar
   const navBtns = document.querySelectorAll('.hub-nav-btn');
@@ -1229,7 +1217,7 @@ function initDirectBuyCredits() {
   const modal = document.getElementById('modal-buy-credits');
   const btnClose = document.getElementById('btn-close-buy-modal');
 
-  if (btnClose) btnClose.addEventListener('click', () => {
+  btnClose?.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   });
 
@@ -1290,7 +1278,7 @@ async function openCheckoutView(amount, price) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: 'credits',
-        email: (session ? session.email : null) || 'contato@vionplayer.app',
+        email: session?.email || 'contato@vionplayer.app',
         amount: price,
         credits: amount,
         description: `Recarga de ${amount} Créditos - Vion Player`
@@ -1310,7 +1298,7 @@ async function openCheckoutView(amount, price) {
       <div style="padding: 30px 20px; text-align: center;">
         <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
         <p style="color: #ef4444; font-weight: 600; font-size: 15px; margin-bottom: 16px;">
-          ${(paymentData ? paymentData.error : null) || 'Não foi possível gerar a chave PIX no momento.'}
+          ${paymentData?.error || 'Não foi possível gerar a chave PIX no momento.'}
         </p>
         <button type="button" class="btn btn-secondary" onclick="initDirectBuyCreditsModalRestore()">
           ← Voltar para Escolha de Pacotes
@@ -1390,8 +1378,7 @@ async function openCheckoutView(amount, price) {
   `;
 
   // Botão Copiar
-  var _el_btn_copy_pix_code = document.getElementById('btn-copy-pix-code');
-    if (_el_btn_copy_pix_code) _el_btn_copy_pix_code.addEventListener('click', () => {
+  document.getElementById('btn-copy-pix-code')?.addEventListener('click', () => {
     navigator.clipboard.writeText(qrCode);
     const btn = document.getElementById('btn-copy-pix-code');
     if (btn) btn.innerHTML = '<span>✅</span> Código PIX Copiado com Sucesso!';
@@ -1435,8 +1422,7 @@ async function openCheckoutView(amount, price) {
   };
 
   // Botão de Simulação (se disponível)
-  var _el_btn_simulate_pix_success = document.getElementById('btn-simulate-pix-success');
-    if (_el_btn_simulate_pix_success) _el_btn_simulate_pix_success.addEventListener('click', async () => {
+  document.getElementById('btn-simulate-pix-success')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-simulate-pix-success');
     if (btn) btn.innerHTML = '⏳ Confirmando liberação...';
     try {
@@ -1583,8 +1569,8 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
   // Auto-formatação de MAC Address (ex: 00:1A:79...) + Verificação em tempo real
   const macInput = document.getElementById('input-device-pay-mac');
   const statusHint = document.getElementById('device-mac-status-hint');
-  if (macInput) macInput.focus();
-  if (macInput) macInput.addEventListener('input', async (e) => {
+  macInput?.focus();
+  macInput?.addEventListener('input', async (e) => {
     let val = e.target.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
     if (val.length > 12) val = val.substring(0, 12);
     const parts = val.match(/.{1,2}/g) || [];
@@ -1615,15 +1601,14 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
   }
 
   // Prosseguir para gerar o PIX
-  var _el_btn_device_pay_proceed = document.getElementById('btn-device-pay-proceed');
-    if (_el_btn_device_pay_proceed) _el_btn_device_pay_proceed.addEventListener('click', async () => {
-    let mac = ((macInput ? macInput.value : '') || '').trim().toUpperCase();
+  document.getElementById('btn-device-pay-proceed')?.addEventListener('click', async () => {
+    let mac = (macInput?.value || '').trim().toUpperCase();
 
     // Validação básica do MAC
     const cleanMac = mac.replace(/[^0-9A-F]/g, '');
     if (cleanMac.length !== 12) {
       alert('Por favor, informe um endereço MAC válido contendo 12 dígitos (ex: 00:1A:79:B4:C2:5D).');
-      if (macInput) macInput.focus();
+      macInput?.focus();
       return;
     }
 
@@ -1633,7 +1618,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
       const checkData = await checkRes.json();
       if (!checkRes.ok || !checkData.success) {
         alert(`❌ Dispositivo não encontrado!\n\nO endereço MAC "${mac}" ainda não foi registrado no sistema.\n\nPor favor, abra o aplicativo Vion Player na sua TV pelo menos uma vez para que o seu aparelho seja reconhecido antes de realizar a ativação, ou verifique se digitou o MAC corretamente.`);
-        if (macInput) macInput.focus();
+        macInput?.focus();
         return;
       }
     } catch(err) {
@@ -1683,7 +1668,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
         <div style="padding: 30px 20px; text-align: center;">
           <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
           <p style="color: #ef4444; font-weight: 600; font-size: 15px; margin-bottom: 16px;">
-            ${(payData ? payData.error : null) || 'Não foi possível gerar a chave PIX no momento.'}
+            ${payData?.error || 'Não foi possível gerar a chave PIX no momento.'}
           </p>
           <button type="button" class="btn btn-secondary" onclick="openDevicePaymentModal('${planType}', ${price}, '${planTitle}')">
             ← Tentar Novamente
@@ -1757,8 +1742,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
     `;
 
     // Botão Copiar
-    var _el_btn_copy_device_pix_code = document.getElementById('btn-copy-device-pix-code');
-    if (_el_btn_copy_device_pix_code) _el_btn_copy_device_pix_code.addEventListener('click', () => {
+    document.getElementById('btn-copy-device-pix-code')?.addEventListener('click', () => {
       navigator.clipboard.writeText(qrCode);
       const btn = document.getElementById('btn-copy-device-pix-code');
       if (btn) btn.innerHTML = '<span>✅</span> Código PIX Copiado com Sucesso!';
@@ -1790,8 +1774,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
     };
 
     // Botão Simular (se disponível)
-    var _el_btn_simulate_device_pix_success = document.getElementById('btn-simulate-device-pix-success');
-    if (_el_btn_simulate_device_pix_success) _el_btn_simulate_device_pix_success.addEventListener('click', async () => {
+    document.getElementById('btn-simulate-device-pix-success')?.addEventListener('click', async () => {
       const btn = document.getElementById('btn-simulate-device-pix-success');
       if (btn) btn.innerHTML = '⏳ Confirmando liberação...';
       try {
@@ -1852,10 +1835,10 @@ function renderHubDevices(query = '') {
         <button type="button" class="btn-del-device" style="background: transparent; border: none; color: #ef4444; font-size: 16px; cursor: pointer;" title="Excluir">✕</button>
       </td>
     `;
-    (tr.querySelector('.btn-receipt-row') ? tr.querySelector('.btn-receipt-row').addEventListener : null)('click', () => {
+    tr.querySelector('.btn-receipt-row')?.addEventListener('click', () => {
       openActivationReceiptModal(d.mac, d.comment || 'Cliente', d.plan || '1year', d.expiresAt, d.date || Date.now());
     });
-    (tr.querySelector('.btn-del-device') ? tr.querySelector('.btn-del-device').addEventListener : null)('click', () => {
+    tr.querySelector('.btn-del-device')?.addEventListener('click', () => {
       if (confirm(`Remover dispositivo MAC ${d.mac}?`)) {
         session.activations = session.activations.filter(x => x.mac !== d.mac);
         saveResellerSession(session);
@@ -2052,36 +2035,36 @@ function initActivateDeviceModal() {
   const macInput = document.getElementById('input-activate-mac');
 
   // Máscara e auto-formatação dinâmica para MAC no painel de revenda (XX:XX:XX:XX:XX:XX)
-  if (macInput) macInput.addEventListener('input', (e) => {
+  macInput?.addEventListener('input', (e) => {
     let val = e.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
     if (val.length > 12) val = val.substring(0, 12);
     const parts = val.match(/.{1,2}/g) || [];
     e.target.value = parts.join(':');
   });
 
-  if (btnOpen) btnOpen.addEventListener('click', () => {
+  btnOpen?.addEventListener('click', () => {
     if (modal) modal.style.display = 'flex';
   });
 
-  if (btnClose) btnClose.addEventListener('click', () => {
+  btnClose?.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   });
 
-  if (btnCancel) btnCancel.addEventListener('click', () => {
+  btnCancel?.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   });
 
-  if (form) form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const rawMac = (macInput ? macInput.value : '').trim() || '';
+    const rawMac = macInput?.value.trim() || '';
     const normMac = normalizeMac(rawMac);
     const cleanMac = rawMac.replace(/[^0-9A-Fa-f]/g, '');
-    const comment = (document.getElementById('input-activate-comment') ? document.getElementById('input-activate-comment').value : null).trim() || 'Cliente';
-    const plan = (document.getElementById('select-activate-plan') ? document.getElementById('select-activate-plan').value : null) || '1year';
+    const comment = document.getElementById('input-activate-comment')?.value.trim() || 'Cliente';
+    const plan = document.getElementById('select-activate-plan')?.value || '1year';
 
     if (cleanMac.length !== 12 || !normMac) {
       showAlert(alertBox, 'Por favor, informe um endereço MAC válido contendo 12 dígitos (ex: 00:1A:79:B4:C2:5D).', 'error');
-      if (macInput) macInput.focus();
+      macInput?.focus();
       return;
     }
 
@@ -2104,7 +2087,7 @@ function initActivateDeviceModal() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        showAlert(alertBox, (data ? data.error : null) || 'Erro ao processar ativação no servidor.', 'error');
+        showAlert(alertBox, data?.error || 'Erro ao processar ativação no servidor.', 'error');
         return;
       }
       if (data.reseller) {
@@ -2182,18 +2165,18 @@ function initProfileModal() {
   const form = document.getElementById('form-edit-profile');
   const alertBox = document.getElementById('profile-alert-box');
 
-  [btnClose, btnCancel].forEach(b => b && b.addEventListener('click', () => {
+  [btnClose, btnCancel].forEach(b => b?.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   }));
 
-  if (form) form.addEventListener('submit', (e) => {
+  form?.addEventListener('submit', (e) => {
     e.preventDefault();
     const session = getResellerSession();
-    session.firstName = (document.getElementById('profile-first-name') ? document.getElementById('profile-first-name').value : null).trim();
-    session.lastName = (document.getElementById('profile-last-name') ? document.getElementById('profile-last-name').value : null).trim();
-    session.company = (document.getElementById('profile-company') ? document.getElementById('profile-company').value : null).trim();
-    session.phone = (document.getElementById('profile-phone') ? document.getElementById('profile-phone').value : null).trim();
-    session.country = (document.getElementById('profile-country') ? document.getElementById('profile-country').value : null).trim();
+    session.firstName = document.getElementById('profile-first-name')?.value.trim();
+    session.lastName = document.getElementById('profile-last-name')?.value.trim();
+    session.company = document.getElementById('profile-company')?.value.trim();
+    session.phone = document.getElementById('profile-phone')?.value.trim();
+    session.country = document.getElementById('profile-country')?.value.trim();
 
     saveResellerSession(session);
     refreshHubDashboard();
@@ -2214,20 +2197,20 @@ function initAddSubModal() {
   const form = document.getElementById('modal-add-sub-form');
   const alertBox = document.getElementById('sub-alert-box');
 
-  if (btnOpen) btnOpen.addEventListener('click', () => {
+  btnOpen?.addEventListener('click', () => {
     if (modal) modal.style.display = 'flex';
   });
 
-  [btnClose, btnCancel].forEach(b => b && b.addEventListener('click', () => {
+  [btnClose, btnCancel].forEach(b => b?.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   }));
 
-  if (form) form.addEventListener('submit', (e) => {
+  form?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = (document.getElementById('input-sub-name') ? document.getElementById('input-sub-name').value : null).trim();
-    const email = (document.getElementById('input-sub-email') ? document.getElementById('input-sub-email').value : null).trim();
-    const phone = (document.getElementById('input-sub-phone') ? document.getElementById('input-sub-phone').value : null).trim();
-    const credits = parseInt((document.getElementById('input-sub-credits') ? document.getElementById('input-sub-credits').value : null) || '5', 10);
+    const name = document.getElementById('input-sub-name')?.value.trim();
+    const email = document.getElementById('input-sub-email')?.value.trim();
+    const phone = document.getElementById('input-sub-phone')?.value.trim();
+    const credits = parseInt(document.getElementById('input-sub-credits')?.value || '5', 10);
 
     const session = getResellerSession();
     if ((session.credits || 0) < credits) {
@@ -2319,7 +2302,7 @@ async function renderPortalPartnerships(filterText = '') {
 
     // Evento de Alternar Ativo/Desativado
     const btnToggle = tr.querySelector('.btn-partner-toggle-state');
-    if (btnToggle) btnToggle.addEventListener('click', async () => {
+    btnToggle?.addEventListener('click', async () => {
       try {
         await fetch('/api/partnerships', {
           method: 'POST',
@@ -2342,7 +2325,7 @@ async function renderPortalPartnerships(filterText = '') {
 
     // Evento de Exclusão
     const btnDelete = tr.querySelector('.btn-partner-delete-state');
-    if (btnDelete) btnDelete.addEventListener('click', async () => {
+    btnDelete?.addEventListener('click', async () => {
       if (!confirm(`Tem certeza que deseja excluir o código de parceria "${p.code}"? Clientes não conseguirão mais usá-lo na TV.`)) {
         return;
       }
@@ -2371,16 +2354,15 @@ async function renderPortalPartnerships(filterText = '') {
 
 function initPartnershipsSection() {
   // Formulário de Cadastro de Código
-  var _el_portal_form_create_partner = document.getElementById('portal-form-create-partner');
-    if (_el_portal_form_create_partner) _el_portal_form_create_partner.addEventListener('submit', async (e) => {
+  document.getElementById('portal-form-create-partner')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const codeInput = document.getElementById('portal-partner-code');
     const serverInput = document.getElementById('portal-partner-server');
     const nameInput = document.getElementById('portal-partner-name');
 
-    const rawCode = ((codeInput ? codeInput.value : '') || '').trim().toUpperCase().replace(/\s+/g, '');
-    let server = ((serverInput ? serverInput.value : '') || '').trim().replace(/\/+$/, '');
-    const name = ((nameInput ? nameInput.value : '') || '').trim() || rawCode;
+    const rawCode = (codeInput?.value || '').trim().toUpperCase().replace(/\s+/g, '');
+    let server = (serverInput?.value || '').trim().replace(/\/+$/, '');
+    const name = (nameInput?.value || '').trim() || rawCode;
 
     if (!rawCode || !server) {
       alert('Informe o código e o servidor / DNS.');
@@ -2432,16 +2414,15 @@ function initPartnershipsSection() {
   // Busca de Parcerias
   const inputSearch = document.getElementById('input-search-partners');
   const btnSearch = document.getElementById('btn-search-partners');
-  if (btnSearch) btnSearch.addEventListener('click', () => {
+  btnSearch?.addEventListener('click', () => {
     renderPortalPartnerships(inputSearch ? inputSearch.value.trim() : '');
   });
-  if (inputSearch) inputSearch.addEventListener('keydown', (e) => {
+  inputSearch?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') renderPortalPartnerships(e.target.value.trim());
   });
 
   // Recarregar
-  var _el_btn_reload_partners = document.getElementById('btn-reload-partners');
-    if (_el_btn_reload_partners) _el_btn_reload_partners.addEventListener('click', () => {
+  document.getElementById('btn-reload-partners')?.addEventListener('click', () => {
     renderPortalPartnerships();
   });
 
@@ -2480,9 +2461,9 @@ function initMpAdminSettings() {
   window.loadMpStatus = loadMpStatus;
   loadMpStatus();
 
-  if (form) form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const token = (input ? input.value : '').trim();
+    const token = input?.value.trim();
     if (!token) return alert('Por favor, digite o Access Token do Mercado Pago.');
 
     const btn = document.getElementById('btn-save-mp-settings');
@@ -2584,11 +2565,11 @@ function initActivationReceiptModal() {
   const modal = document.getElementById('modal-receipt');
   const btnClose = document.getElementById('btn-close-receipt-modal');
 
-  if (btnClose) btnClose.addEventListener('click', () => {
+  btnClose?.addEventListener('click', () => {
     if (modal) modal.style.display = 'none';
   });
 
-  if (modal) modal.addEventListener('click', (e) => {
+  modal?.addEventListener('click', (e) => {
     if (e.target === modal) modal.style.display = 'none';
   });
 }
@@ -2670,10 +2651,10 @@ function initNotificationSettings() {
       const data = await res.json();
       if (data.success) {
         // Prioriza valor existente (servidor ou cache local), NUNCA apaga
-        const finalToken = (data.telegramBotToken || (tgTokenInput ? tgTokenInput.value : '') || local.telegramBotToken || '').trim();
-        const finalChatId = (data.telegramChatId || (tgChatIdInput ? tgChatIdInput.value : '') || local.telegramChatId || '').trim();
-        const finalPhone = (data.callMeBotPhone || (cmbPhoneInput ? cmbPhoneInput.value : '') || local.callMeBotPhone || '').trim();
-        const finalKey = (data.callMeBotApiKey || (cmbKeyInput ? cmbKeyInput.value : '') || local.callMeBotApiKey || '').trim();
+        const finalToken = (data.telegramBotToken || tgTokenInput?.value || local.telegramBotToken || '').trim();
+        const finalChatId = (data.telegramChatId || tgChatIdInput?.value || local.telegramChatId || '').trim();
+        const finalPhone = (data.callMeBotPhone || cmbPhoneInput?.value || local.callMeBotPhone || '').trim();
+        const finalKey = (data.callMeBotApiKey || cmbKeyInput?.value || local.callMeBotApiKey || '').trim();
 
         if (tgTokenInput && finalToken) tgTokenInput.value = finalToken;
         if (tgChatIdInput && finalChatId) tgChatIdInput.value = finalChatId;
@@ -2717,15 +2698,15 @@ function initNotificationSettings() {
   window.loadNotifySettings = loadNotifySettings;
   loadNotifySettings();
 
-  if (form) form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     let local = {};
     try { local = JSON.parse(localStorage.getItem('vion_notify_settings') || '{}'); } catch(e) {}
 
-    const tokenVal = ((tgTokenInput ? tgTokenInput.value : '') || local.telegramBotToken || '').trim();
-    const chatIdVal = ((tgChatIdInput ? tgChatIdInput.value : '') || local.telegramChatId || '').trim();
-    const phoneVal = ((cmbPhoneInput ? cmbPhoneInput.value : '') || local.callMeBotPhone || '').trim();
-    const keyVal = ((cmbKeyInput ? cmbKeyInput.value : '') || local.callMeBotApiKey || '').trim();
+    const tokenVal = (tgTokenInput?.value || local.telegramBotToken || '').trim();
+    const chatIdVal = (tgChatIdInput?.value || local.telegramChatId || '').trim();
+    const phoneVal = (cmbPhoneInput?.value || local.callMeBotPhone || '').trim();
+    const keyVal = (cmbKeyInput?.value || local.callMeBotApiKey || '').trim();
 
     if (!tokenVal && !chatIdVal && !phoneVal) {
       alert('⚠️ Por favor, informe ao menos o Bot Token e Chat ID do Telegram.');
@@ -2773,7 +2754,7 @@ function initNotificationSettings() {
     }
   });
 
-  if (btnTest) btnTest.addEventListener('click', async () => {
+  btnTest?.addEventListener('click', async () => {
     btnTest.textContent = 'Enviando...';
     try {
       const res = await fetch('/api/admin/notify-test', {
