@@ -1652,46 +1652,25 @@ const App = {
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
           <button class="pill-btn focusable btn-item-reload" tabindex="0" style="padding:8px 18px;font-size:13px;background:#ffffff;color:#000;font-weight:700;">🔄 Recarregar</button>
-          <button class="pill-btn focusable btn-item-disconnect" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">🗑️ Excluir</button>
+          <button class="pill-btn focusable btn-item-disconnect" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">🚪 Desconectar</button>
         </div>
-      \;
+      `;
 
-      item.querySelector('.btn-item-disconnect')?.addEventListener('click', (e) => {
+      // Botão Recarregar
+      var _qs_btn_item_reload = item.querySelector('.btn-item-reload'); if (_qs_btn_item_reload) _qs_btn_item_reload.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.openDialog('Excluir Playlist?', \Deseja realmente excluir "\" da TV e do site?\, async () => {
-          try {
-            // Remove do servidor
-            if (p.id) {
-              await fetch('https://vion.gestorpro.app.br/api/device/delete-playlist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mac, id: p.id })
-              }).catch(()=>{});
-            }
-
-            // Remove da lista local
-            let localPlaylists = JSON.parse(localStorage.getItem(\ion_playlists_\\) || '[]');
-            localPlaylists = localPlaylists.filter(x => x.id !== p.id && x.url !== p.url);
-            localStorage.setItem(\ion_playlists_\\, JSON.stringify(localPlaylists));
-
-            if (this.activePlaylistUrl === p.url || localPlaylists.length === 0) {
-              await TVStorage.remove('cached_playlist');
-              await TVStorage.remove('cached_playlist_time');
-              localStorage.removeItem('vion_has_playlist');
-              localStorage.removeItem('vion_active_playlist_url');
-              localStorage.removeItem('vion_active_playlist_name');
-              this.playlistData = null;
-              this.activePlaylistUrl = null;
-            }
-
-            this.showToast('Playlist excluída com sucesso!');
-            this.openPlaylistsManager(); // recarrega a lista
-          } catch(err) {
-            this.showToast('Erro ao excluir playlist.');
-          }
-        });
+        if (p.url && p.url !== 'cached') {
+          this.activatePlaylistByUrl(p.url, p.name, true, false, true);
+        } else {
+          this.syncPlaylistsFromPortal(true, true);
+        }
       });
 
+      // Botão Desconectar
+      var _qs_btn_item_disconnect = item.querySelector('.btn-item-disconnect'); if (_qs_btn_item_disconnect) _qs_btn_item_disconnect.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.logoutAccount();
+      });
 
       container.appendChild(item);
     });
@@ -3399,22 +3378,10 @@ const App = {
         await TVStorage.remove('cached_playlist');
         await TVStorage.remove('cached_playlist_time');
       } catch (e) {}
-      
       const mac = localStorage.getItem('vion_mac_address');
       if (mac) {
-        const localPlaylists = JSON.parse(localStorage.getItem(\ion_playlists_\\) || '[]');
-        for (const p of localPlaylists) {
-          if (p.id) {
-            await fetch('https://vion.gestorpro.app.br/api/device/delete-playlist', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mac, id: p.id })
-            }).catch(()=>{});
-          }
-        }
-        localStorage.removeItem(\ion_playlists_\\);
+        localStorage.removeItem(`vion_playlists_${mac}`);
       }
-      
       localStorage.removeItem('vion_has_playlist');
       localStorage.removeItem('vion_saved_provider_code');
       localStorage.removeItem('vion_saved_provider_user');
@@ -3431,13 +3398,16 @@ const App = {
       }
 
       const codeInput = document.getElementById('input-reseller-code');
+      const userInput = document.getElementById('input-reseller-user');
+      const passInput = document.getElementById('input-reseller-pass');
       if (codeInput) codeInput.value = '';
+      if (userInput) userInput.value = '';
+      if (passInput) passInput.value = '';
 
-      this.goToScreen('home');
-      this.showToast('Conta e listas excluídas definitivamente!');
+      this.showToast('✅ Conta desconectada com sucesso.');
+      this.goToScreen('reseller-login');
     });
   },
-
 
   _lastBackTs: 0,
   handleBack() {
@@ -4011,7 +3981,7 @@ const App = {
     }
   },
 
-﻿  // ===================================================================
+  // ===================================================================
   // FAVORITOS (Tecla Verde/Amarela do controle remoto)
   // ===================================================================
   getFavorites() {
@@ -4029,10 +3999,10 @@ const App = {
     const idx = favs.findIndex(f => (f.url || f.name) === key);
     if (idx >= 0) {
       favs.splice(idx, 1);
-      this.showToast(\Removido dos Favoritos: \\);
+      this.showToast(`Removido dos Favoritos: ${item.name}`);
     } else {
       favs.push({ name: item.name, url: item.url, logo: item.logo, category: item.category, type: this.activeSection });
-      this.showToast(\⭐ Adicionado aos Favoritos: \\);
+      this.showToast(`⭐ Adicionado aos Favoritos: ${item.name}`);
     }
     this.saveFavorites(favs);
     this.renderFavoritesBadges();
@@ -4087,7 +4057,7 @@ const App = {
     }
     this.filteredItems = liveFavs;
     this.renderLiveChannelsList(liveFavs);
-    this.showToast(\⭐ \ canais favoritos\);
+    this.showToast(`⭐ ${liveFavs.length} canais favoritos`);
   },
 
   // ===================================================================
@@ -4124,13 +4094,12 @@ const App = {
       const pill = document.createElement('div');
       pill.className = 'calendar-pill focusable' + (i === 0 ? ' active-cal' : '');
       pill.setAttribute('tabindex', '0');
-      pill.innerHTML = \<span class="cal-day">\</span><span class="cal-wday">\</span>\;
+      pill.innerHTML = `<span class="cal-day">${d.getDate()}</span><span class="cal-wday">${days[d.getDay()]}</span>`;
       cal.appendChild(pill);
     }
   },
 
   showToast(message) {
-
 
     const toast = document.getElementById('toast-notice');
     const msgEl = document.getElementById('toast-message');

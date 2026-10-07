@@ -1,4 +1,5 @@
-  // ===================================================================
+﻿with open('favorites_block.txt', 'w', encoding='utf-8') as f:
+    f.write('''  // ===================================================================
   // FAVORITOS (Tecla Verde/Amarela do controle remoto)
   // ===================================================================
   getFavorites() {
@@ -116,4 +117,4 @@
     }
   },
 
-  showToast(message) {
+  showToast(message) {''')
