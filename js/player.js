@@ -294,12 +294,12 @@ class TVVideoPlayer {
     }
 
     // 7. Navegação de canais (Live TV)
-    this.btnPrevChannel?.addEventListener('click', (e) => {
+    if (this.btnPrevChannel) this.btnPrevChannel.addEventListener('click', (e) => {
       e.stopPropagation();
       this.previousChannel();
     });
 
-    this.btnNextChannel?.addEventListener('click', (e) => {
+    if (this.btnNextChannel) this.btnNextChannel.addEventListener('click', (e) => {
       e.stopPropagation();
       this.nextChannel();
     });

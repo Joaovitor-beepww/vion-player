@@ -196,7 +196,7 @@ const TmdbResolver = {
         });
       }
 
-      const durationMinutes = isSeries ? (data.episode_run_time?.[0] || 45) : (data.runtime || 0);
+      const durationMinutes = isSeries ? ((data.episode_run_time ? data.episode_run_time[0] : null) || 45) : (data.runtime || 0);
 
       const result = {
         genres,
@@ -396,10 +396,9 @@ const App = {
     ];
     for (const url of apiUrls) {
       try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 2500);
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(timer);
+        const fetchPromise = fetch(url);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2500));
+        const res = await Promise.race([fetchPromise, timeoutPromise]);
         if (res.ok) {
           const data = await res.json();
           if (data && data.device) {
@@ -860,10 +859,10 @@ const App = {
       this.playlistData = M3UParser.reorganizeCachedData(this.playlistData);
     }
 
-    const liveCount = (this.playlistData.live?.channels?.length || 0);
-    const movieCount = (this.playlistData.movies?.channels?.length || 0);
+    const liveCount = ((this.playlistData.live && this.playlistData.live.channels ? this.playlistData.live.channels.length : 0) || 0);
+    const movieCount = ((this.playlistData.movies && this.playlistData.movies.channels ? this.playlistData.movies.channels.length : 0) || 0);
     // Para Séries, mostra o número REAL de séries agrupadas (e não 248 mil episódios!)
-    const seriesCount = (this.playlistData.series?.channels?.length || 0);
+    const seriesCount = ((this.playlistData.series && this.playlistData.series.channels ? this.playlistData.series.channels.length : 0) || 0);
 
     const elLive = document.getElementById('dash-count-live');
     if (elLive) elLive.textContent = `${liveCount.toLocaleString('pt-BR')} Canais`;
@@ -948,18 +947,18 @@ const App = {
 
   bindEvents() {
     // 1. Alternador de Abas de Login (Xtream Codes vs Link M3U)
-    document.getElementById('tab-login-xtream')?.addEventListener('click', () => {
-      document.getElementById('tab-login-xtream')?.classList.add('active');
-      document.getElementById('tab-login-m3u')?.classList.remove('active');
+    var _el_tab_login_xtream = document.getElementById('tab-login-xtream'); if (_el_tab_login_xtream) _el_tab_login_xtream.addEventListener('click', () => {
+      var _elC_tab_login_xtream = document.getElementById('tab-login-xtream'); if (_elC_tab_login_xtream) _elC_tab_login_xtream.classList.add('active');
+      var _elC_tab_login_m3u = document.getElementById('tab-login-m3u'); if (_elC_tab_login_m3u) _elC_tab_login_m3u.classList.remove('active');
       const xtreamForm = document.getElementById('reseller-login-form');
       const m3uForm = document.getElementById('m3u-login-form');
       if (xtreamForm) xtreamForm.style.display = 'block';
       if (m3uForm) m3uForm.style.display = 'none';
     });
 
-    document.getElementById('tab-login-m3u')?.addEventListener('click', () => {
-      document.getElementById('tab-login-m3u')?.classList.add('active');
-      document.getElementById('tab-login-xtream')?.classList.remove('active');
+    var _el_tab_login_m3u = document.getElementById('tab-login-m3u'); if (_el_tab_login_m3u) _el_tab_login_m3u.addEventListener('click', () => {
+      var _elC_tab_login_m3u = document.getElementById('tab-login-m3u'); if (_elC_tab_login_m3u) _elC_tab_login_m3u.classList.add('active');
+      var _elC_tab_login_xtream = document.getElementById('tab-login-xtream'); if (_elC_tab_login_xtream) _elC_tab_login_xtream.classList.remove('active');
       const xtreamForm = document.getElementById('reseller-login-form');
       const m3uForm = document.getElementById('m3u-login-form');
       if (xtreamForm) xtreamForm.style.display = 'none';
@@ -968,25 +967,25 @@ const App = {
 
     // Login do Provedor (Xtream Codes)
     const form = document.getElementById('reseller-login-form');
-    form?.addEventListener('submit', (e) => {
+    if (form) form.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleProviderLogin();
     });
 
     // Login com Link M3U Direto
     const m3uForm = document.getElementById('m3u-login-form');
-    m3uForm?.addEventListener('submit', (e) => {
+    if (m3uForm) m3uForm.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleM3uLogin();
     });
 
     // 2. Pular e Ir para o Início
-    document.getElementById('btn-skip-login')?.addEventListener('click', () => {
+    var _el_btn_skip_login = document.getElementById('btn-skip-login'); if (_el_btn_skip_login) _el_btn_skip_login.addEventListener('click', () => {
       this.goToScreen('home');
     });
 
     // Alternar visibilidade da senha na tela de login
-    document.getElementById('btn-toggle-login-pass')?.addEventListener('click', (e) => {
+    var _el_btn_toggle_login_pass = document.getElementById('btn-toggle-login-pass'); if (_el_btn_toggle_login_pass) _el_btn_toggle_login_pass.addEventListener('click', (e) => {
       e.preventDefault();
       const passInput = document.getElementById('input-reseller-pass');
       const eyeBtn = document.getElementById('btn-toggle-login-pass');
@@ -1001,7 +1000,7 @@ const App = {
     });
 
     // Ajuda na tela de login
-    document.getElementById('link-login-help')?.addEventListener('click', (e) => {
+    var _el_link_login_help = document.getElementById('link-login-help'); if (_el_link_login_help) _el_link_login_help.addEventListener('click', (e) => {
       e.preventDefault();
       this.showToast('Use as credenciais do seu provedor ou escaneie o QR Code para gerenciar pelo site.');
     });
@@ -1019,12 +1018,12 @@ const App = {
     } catch (e) {}
 
     // Ir para Login a partir de Configurações
-    document.getElementById('btn-goto-login')?.addEventListener('click', () => {
+    var _el_btn_goto_login = document.getElementById('btn-goto-login'); if (_el_btn_goto_login) _el_btn_goto_login.addEventListener('click', () => {
       this.goToScreen('reseller-login');
     });
 
     // Alterar PIN de Controle Parental a partir de Configurações
-    document.getElementById('btn-settings-parental-pin')?.addEventListener('click', () => {
+    var _el_btn_settings_parental_pin = document.getElementById('btn-settings-parental-pin'); if (_el_btn_settings_parental_pin) _el_btn_settings_parental_pin.addEventListener('click', () => {
       ParentalControl.openPinModal(true);
     });
 
@@ -1045,18 +1044,18 @@ const App = {
     });
 
     // Botão Cancelar PIN Parental
-    document.getElementById('btn-parental-pin-cancel')?.addEventListener('click', (e) => {
+    var _el_btn_parental_pin_cancel = document.getElementById('btn-parental-pin-cancel'); if (_el_btn_parental_pin_cancel) _el_btn_parental_pin_cancel.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       ParentalControl.closePinModal();
     });
 
     // 3. Topo Dashboard: Reload & Exit
-    document.getElementById('btn-top-reload')?.addEventListener('click', () => {
+    var _el_btn_top_reload = document.getElementById('btn-top-reload'); if (_el_btn_top_reload) _el_btn_top_reload.addEventListener('click', () => {
       this.syncPlaylistsFromPortal(true, true);
     });
 
-    document.getElementById('btn-top-exit')?.addEventListener('click', () => {
+    var _el_btn_top_exit = document.getElementById('btn-top-exit'); if (_el_btn_top_exit) _el_btn_top_exit.addEventListener('click', () => {
       this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
         if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
           AndroidDevice.exitApp();
@@ -1069,7 +1068,7 @@ const App = {
     });
 
     // Botão de Favoritos na tela ao vivo
-    document.getElementById('btn-live-favorites')?.addEventListener('click', () => {
+    var _el_btn_live_favorites = document.getElementById('btn-live-favorites'); if (_el_btn_live_favorites) _el_btn_live_favorites.addEventListener('click', () => {
       this.openFavoritesSection();
     });
 
@@ -1089,20 +1088,20 @@ const App = {
     });
 
     // Botões de Voltar
-    document.getElementById('btn-back-from-live')?.addEventListener('click', () => {
+    var _el_btn_back_from_live = document.getElementById('btn-back-from-live'); if (_el_btn_back_from_live) _el_btn_back_from_live.addEventListener('click', () => {
       this.player.stopMini();
       this.goToScreen('home');
     });
 
-    document.getElementById('btn-back-from-vod')?.addEventListener('click', () => {
+    var _el_btn_back_from_vod = document.getElementById('btn-back-from-vod'); if (_el_btn_back_from_vod) _el_btn_back_from_vod.addEventListener('click', () => {
       this.goToScreen('home');
     });
 
-    document.getElementById('btn-back-from-playlists')?.addEventListener('click', () => {
+    var _el_btn_back_from_playlists = document.getElementById('btn-back-from-playlists'); if (_el_btn_back_from_playlists) _el_btn_back_from_playlists.addEventListener('click', () => {
       this.goToScreen('home');
     });
 
-    document.getElementById('btn-back-from-settings')?.addEventListener('click', () => {
+    var _el_btn_back_from_settings = document.getElementById('btn-back-from-settings'); if (_el_btn_back_from_settings) _el_btn_back_from_settings.addEventListener('click', () => {
       if (this.isDeviceExpired()) {
         this.goToScreen('expired');
       } else {
@@ -1111,15 +1110,15 @@ const App = {
     });
 
     // Botões da Tela de Licença Expirada (#screen-expired)
-    document.getElementById('btn-expired-check')?.addEventListener('click', () => {
+    var _el_btn_expired_check = document.getElementById('btn-expired-check'); if (_el_btn_expired_check) _el_btn_expired_check.addEventListener('click', () => {
       this.verifyLicenseNow(true);
     });
 
-    document.getElementById('btn-expired-settings')?.addEventListener('click', () => {
+    var _el_btn_expired_settings = document.getElementById('btn-expired-settings'); if (_el_btn_expired_settings) _el_btn_expired_settings.addEventListener('click', () => {
       this.goToScreen('settings');
     });
 
-    document.getElementById('btn-expired-exit')?.addEventListener('click', () => {
+    var _el_btn_expired_exit = document.getElementById('btn-expired-exit'); if (_el_btn_expired_exit) _el_btn_expired_exit.addEventListener('click', () => {
       this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
         if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
           AndroidDevice.exitApp();
@@ -1131,20 +1130,20 @@ const App = {
       });
     });
 
-    document.getElementById('btn-reload-playlists-tv')?.addEventListener('click', () => {
+    var _el_btn_reload_playlists_tv = document.getElementById('btn-reload-playlists-tv'); if (_el_btn_reload_playlists_tv) _el_btn_reload_playlists_tv.addEventListener('click', () => {
       this.syncPlaylistsFromPortal(true, true);
     });
 
-    document.getElementById('btn-logout-account-tv')?.addEventListener('click', () => {
+    var _el_btn_logout_account_tv = document.getElementById('btn-logout-account-tv'); if (_el_btn_logout_account_tv) _el_btn_logout_account_tv.addEventListener('click', () => {
       this.logoutAccount();
     });
 
     // Expansão para Tela Cheia a partir do Mini-Player
-    document.getElementById('btn-expand-fullscreen')?.addEventListener('click', (e) => {
+    var _el_btn_expand_fullscreen = document.getElementById('btn-expand-fullscreen'); if (_el_btn_expand_fullscreen) _el_btn_expand_fullscreen.addEventListener('click', (e) => {
       e.stopPropagation();
       this.expandMiniToFullscreen();
     });
-    document.getElementById('mini-player-container')?.addEventListener('click', (e) => {
+    var _el_mini_player_container = document.getElementById('mini-player-container'); if (_el_mini_player_container) _el_mini_player_container.addEventListener('click', (e) => {
       // Se clicou no botão voltar da tela cheia ou se já está em tela cheia, não dispara expansão!
       if (e.target && e.target.closest('#btn-mini-fs-back, .mini-fs-topbar')) return;
       if (!this.player || !this.player.isMiniFullscreen) {
@@ -1153,36 +1152,36 @@ const App = {
     });
 
     // Modal de Séries - Fechar e Navegação de Temporadas
-    document.getElementById('btn-close-series-modal')?.addEventListener('click', () => {
+    var _el_btn_close_series_modal = document.getElementById('btn-close-series-modal'); if (_el_btn_close_series_modal) _el_btn_close_series_modal.addEventListener('click', () => {
       this.closeSeriesModal();
     });
-    document.getElementById('modal-series-details')?.addEventListener('click', (e) => {
+    var _el_modal_series_details = document.getElementById('modal-series-details'); if (_el_modal_series_details) _el_modal_series_details.addEventListener('click', (e) => {
       if (e.target.id === 'modal-series-details') {
         this.closeSeriesModal();
       }
     });
 
     // Modal de Detalhes de Filmes (Dream TV)
-    document.getElementById('btn-movie-close')?.addEventListener('click', () => {
+    var _el_btn_movie_close = document.getElementById('btn-movie-close'); if (_el_btn_movie_close) _el_btn_movie_close.addEventListener('click', () => {
       this.closeMovieDetails();
     });
-    document.getElementById('modal-movie-details')?.addEventListener('click', (e) => {
+    var _el_modal_movie_details = document.getElementById('modal-movie-details'); if (_el_modal_movie_details) _el_modal_movie_details.addEventListener('click', (e) => {
       if (e.target.id === 'modal-movie-details') {
         this.closeMovieDetails();
       }
     });
 
     // Modal de Trailer
-    document.getElementById('btn-close-trailer')?.addEventListener('click', () => {
+    var _el_btn_close_trailer = document.getElementById('btn-close-trailer'); if (_el_btn_close_trailer) _el_btn_close_trailer.addEventListener('click', () => {
       this.closeTrailerModal();
     });
 
-    document.getElementById('btn-season-prev')?.addEventListener('click', () => {
+    var _el_btn_season_prev = document.getElementById('btn-season-prev'); if (_el_btn_season_prev) _el_btn_season_prev.addEventListener('click', () => {
       const tabs = document.getElementById('series-seasons-tabs');
       if (tabs) tabs.scrollBy({ left: -260, behavior: 'smooth' });
     });
 
-    document.getElementById('btn-season-next')?.addEventListener('click', () => {
+    var _el_btn_season_next = document.getElementById('btn-season-next'); if (_el_btn_season_next) _el_btn_season_next.addEventListener('click', () => {
       const tabs = document.getElementById('series-seasons-tabs');
       if (tabs) tabs.scrollBy({ left: 260, behavior: 'smooth' });
     });
@@ -1191,12 +1190,12 @@ const App = {
     const liveSearchInput = document.getElementById('input-live-search');
     const liveClearBtn = document.getElementById('btn-clear-live-search');
 
-    liveSearchInput?.addEventListener('input', (e) => {
+    if (liveSearchInput) liveSearchInput.addEventListener('input', (e) => {
       const q = e.target.value.trim();
       if (liveClearBtn) liveClearBtn.style.display = q ? 'flex' : 'none';
       if (!q) {
         // Ao limpar a busca, mostra todos os canais da categoria ativa sem mudar o player
-        const liveData = this.playlistData?.live || { channels: [] };
+        const liveData = (this.playlistData ? this.playlistData.live : null) || { channels: [] };
         this.filteredItems = liveData.channels.filter(c => this.activeCategory === 'Todos' || c.category === this.activeCategory);
         this.renderLiveChannelsList(this.filteredItems);
         return;
@@ -1204,11 +1203,11 @@ const App = {
       this.filterLiveChannelsBySearch(q);
     });
 
-    liveClearBtn?.addEventListener('click', () => {
+    if (liveClearBtn) liveClearBtn.addEventListener('click', () => {
       if (liveSearchInput) {
         liveSearchInput.value = '';
         liveClearBtn.style.display = 'none';
-        const liveData = this.playlistData?.live || { channels: [] };
+        const liveData = (this.playlistData ? this.playlistData.live : null) || { channels: [] };
         this.filteredItems = liveData.channels.filter(c => this.activeCategory === 'Todos' || c.category === this.activeCategory);
         this.renderLiveChannelsList(this.filteredItems);
         liveSearchInput.focus();
@@ -1219,7 +1218,7 @@ const App = {
     const vodSearchInput = document.getElementById('input-vod-search');
     const vodClearBtn = document.getElementById('btn-clear-vod-search');
 
-    vodSearchInput?.addEventListener('input', (e) => {
+    if (vodSearchInput) vodSearchInput.addEventListener('input', (e) => {
       const q = e.target.value.trim();
       if (vodClearBtn) vodClearBtn.style.display = q ? 'flex' : 'none';
       if (!q) {
@@ -1240,7 +1239,7 @@ const App = {
       this.filterVodBySearch(q);
     });
 
-    vodClearBtn?.addEventListener('click', () => {
+    if (vodClearBtn) vodClearBtn.addEventListener('click', () => {
       if (vodSearchInput) {
         vodSearchInput.value = '';
         vodClearBtn.style.display = 'none';
@@ -1260,16 +1259,16 @@ const App = {
     });
 
     // Desconectar Provedor / Sair da Conta
-    document.getElementById('btn-clear-playlist')?.addEventListener('click', () => {
+    var _el_btn_clear_playlist = document.getElementById('btn-clear-playlist'); if (_el_btn_clear_playlist) _el_btn_clear_playlist.addEventListener('click', () => {
       this.logoutAccount();
     });
 
     // Diálogo Customizado
-    document.getElementById('btn-dialog-cancel')?.addEventListener('click', () => {
+    var _el_btn_dialog_cancel = document.getElementById('btn-dialog-cancel'); if (_el_btn_dialog_cancel) _el_btn_dialog_cancel.addEventListener('click', () => {
       this.closeDialog();
     });
 
-    document.getElementById('btn-dialog-confirm')?.addEventListener('click', () => {
+    var _el_btn_dialog_confirm = document.getElementById('btn-dialog-confirm'); if (_el_btn_dialog_confirm) _el_btn_dialog_confirm.addEventListener('click', () => {
       if (typeof this.dialogCallback === 'function') {
         this.dialogCallback();
       }
@@ -1278,7 +1277,7 @@ const App = {
 
     // Rolagem infinita para a grade VOD
     const vodGrid = document.getElementById('vod-grid');
-    vodGrid?.addEventListener('scroll', () => {
+    if (vodGrid) vodGrid.addEventListener('scroll', () => {
       if (vodGrid.scrollTop + vodGrid.clientHeight >= vodGrid.scrollHeight - 500) {
         this.renderMoreVodItems();
       }
@@ -1413,8 +1412,8 @@ const App = {
   handleM3uLogin() {
     const nameInput = document.getElementById('input-m3u-name');
     const urlInput = document.getElementById('input-m3u-url');
-    const name = (nameInput?.value.trim()) || 'Minha Lista M3U';
-    const url = (urlInput?.value.trim()) || '';
+    const name = ((nameInput ? nameInput.value.trim() : "")) || 'Minha Lista M3U';
+    const url = ((urlInput ? urlInput.value.trim() : "")) || '';
 
     if (!url) {
       this.showToast('Por favor, informe a URL da playlist M3U.');
@@ -1529,9 +1528,9 @@ const App = {
         await M3UParser.saveToCache(parsed);
         this.updateDashboardCounters();
 
-        const liveCount = parsed.live?.channels?.length || 0;
-        const movieCount = parsed.movies?.channels?.length || 0;
-        const seriesCount = parsed.series?.channels?.length || 0;
+        const liveCount = (parsed.live && parsed.live.channels ? parsed.live.channels.length : 0) || 0;
+        const movieCount = (parsed.movies && parsed.movies.channels ? parsed.movies.channels.length : 0) || 0;
+        const seriesCount = (parsed.series && parsed.series.channels ? parsed.series.channels.length : 0) || 0;
 
         onProgress(100, '✔ Sincronização Concluída!', `${liveCount} canais • ${movieCount} filmes • ${seriesCount} séries`);
 
@@ -1656,7 +1655,7 @@ const App = {
       `;
 
       // Botão Recarregar
-      item.querySelector('.btn-item-reload')?.addEventListener('click', (e) => {
+      var _qs_btn_item_reload = item.querySelector('.btn-item-reload'); if (_qs_btn_item_reload) _qs_btn_item_reload.addEventListener('click', (e) => {
         e.stopPropagation();
         if (p.url && p.url !== 'cached') {
           this.activatePlaylistByUrl(p.url, p.name, true, false, true);
@@ -1666,7 +1665,7 @@ const App = {
       });
 
       // Botão Desconectar
-      item.querySelector('.btn-item-disconnect')?.addEventListener('click', (e) => {
+      var _qs_btn_item_disconnect = item.querySelector('.btn-item-disconnect'); if (_qs_btn_item_disconnect) _qs_btn_item_disconnect.addEventListener('click', (e) => {
         e.stopPropagation();
         this.logoutAccount();
       });
@@ -3277,7 +3276,7 @@ const App = {
 
     // Sincroniza progresso salvo no player nativo do Android
     if (this.nowPlayingVod) {
-      const url = this.nowPlayingVod.item?.url || this.nowPlayingVod.episode?.url;
+      const url = (this.nowPlayingVod.item ? this.nowPlayingVod.item.url : null) || (this.nowPlayingVod.episode ? this.nowPlayingVod.episode.url : null);
       if (url && window.AndroidDevice && typeof AndroidDevice.getSavedPlayback === 'function') {
         try {
           const raw = AndroidDevice.getSavedPlayback(url);
@@ -3901,7 +3900,7 @@ const App = {
       const seriesGroup = nowPlaying.seriesGroup;
       const ep = nowPlaying.episode;
       const seasonNum = String(nowPlaying.seasonNum || '1');
-      const epIdx = Number(nowPlaying.epIdx ?? 0);
+      const epIdx = Number(nowPlaying.epIdx !== undefined ? nowPlaying.epIdx : 0);
       if (!seriesGroup || !ep) return;
 
       const epKey = (ep.url || ep.name || '').trim();
