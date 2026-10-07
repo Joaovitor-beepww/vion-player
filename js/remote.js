@@ -263,6 +263,9 @@ const RemoteControl = {
       if (isGuideOpen) {
         if (this.isBackKey(code, e) || this.KEYS.LEFT.includes(code)) {
           e.preventDefault();
+          if (App.player.quickGuideGoBack && App.player.quickGuideGoBack()) {
+            return;
+          }
           App.player.toggleQuickGuide(false);
           return;
         }

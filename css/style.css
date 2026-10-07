@@ -8228,7 +8228,7 @@ html[data-platform="tv"] *,
   top: 0;
   left: 0;
   bottom: 0;
-  width: 420px;
+  width: 290px;
   background: rgba(10, 14, 24, 0.94);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
@@ -8866,3 +8866,23 @@ html[data-platform="tv"] *,
 
 }
 /* FIM RESPONSIVO MOBILE */
+
+/* ===================================================================
+   OTIMIZAÇÕES FINAIS PARA CANAIS AO VIVO
+   Conforme pedido: remover botão minimizar, ocultar topo, preencher tela
+   =================================================================== */
+
+.superplay-live-topbar {
+  display: none !important;
+}
+
+.superplay-live-layout {
+  height: 100vh !important;
+  padding: 10px !important;
+  gap: 14px !important;
+  margin: 0 !important;
+}
+
+#btn-mini-fs-back {
+  display: none !important;
+}

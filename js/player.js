@@ -908,20 +908,22 @@ class TVVideoPlayer {
     }
 
     // Ao clicar ou tocar na tela cheia:
-    // Se a barra/HUD estiver visível, ela some imediatamente e o canal continua rodando sem interrupção!
-    // Se estiver oculta, ela reaparece imediatamente com o botão Voltar!
+    // Abre/fecha o Guia Rápido diretamente.
     if (box && !box._hasFsToggle) {
       box._hasFsToggle = true;
       const handleToggle = (e) => {
         if (!this.isMiniFullscreen) return;
-        if (e.target && e.target.closest('#btn-mini-fs-back, .mini-fs-back-btn')) return;
-        this.toggleMiniFullscreenOsd();
+        if (e.target && e.target.closest('.mini-fs-back-btn, .quick-guide-sidebar')) return;
+        this.toggleQuickGuide();
+        this.showMiniFullscreenOsd(true);
       };
       box.addEventListener('click', handleToggle);
       box.addEventListener('touchend', (e) => {
         if (!this.isMiniFullscreen) return;
-        if (e.target && e.target.closest('#btn-mini-fs-back, .mini-fs-back-btn')) return;
-        this.toggleMiniFullscreenOsd();
+        if (e.target && e.target.closest('.mini-fs-back-btn, .quick-guide-sidebar')) return;
+        e.preventDefault();
+        this.toggleQuickGuide();
+        this.showMiniFullscreenOsd(true);
       });
       if (this.miniVideo) {
         this.miniVideo.addEventListener('click', handleToggle);
@@ -1015,7 +1017,8 @@ class TVVideoPlayer {
 
     if (!shouldOpen) {
       guideEl.classList.remove('active');
-      const backBtn = document.getElementById('btn-mini-fs-back');
+      this._quickGuideState = 'categories';
+      const backBtn = document.getElementById('btn-mini-fs-quick-guide');
       if (backBtn && typeof RemoteControl !== 'undefined') {
         RemoteControl.setFocus(backBtn, false);
       }
@@ -1024,7 +1027,60 @@ class TVVideoPlayer {
 
     // Abre o mini-guia lateral
     guideEl.classList.add('active');
-    this.renderQuickGuideChannels();
+    this._quickGuideState = 'categories';
+    this.renderQuickGuideCategories();
+  }
+
+  quickGuideGoBack() {
+    if (this._quickGuideState === 'channels') {
+      this._quickGuideState = 'categories';
+      this.renderQuickGuideCategories();
+      return true;
+    }
+    return false;
+  }
+
+  renderQuickGuideCategories() {
+    const listEl = document.getElementById('quick-guide-channels-list');
+    const catBadge = document.getElementById('quick-guide-current-cat');
+    if (!listEl) return;
+
+    if (catBadge) catBadge.textContent = "Categorias";
+    listEl.innerHTML = '';
+
+    const liveData = (window.App && App.playlistData && App.playlistData.live) ? App.playlistData.live : { categories: ['Todos'] };
+    const cats = liveData.categories && liveData.categories.length > 0 ? liveData.categories : ['Todos'];
+    const activeCat = (window.App && App.activeCategory) ? App.activeCategory : 'Todos';
+
+    let activeIdx = 0;
+    cats.forEach((cat, idx) => {
+      if (cat === activeCat) activeIdx = idx;
+      const row = document.createElement('div');
+      row.className = `quick-ch-row focusable ${cat === activeCat ? 'active' : ''}`;
+      row.setAttribute('tabindex', '0');
+      
+      row.innerHTML = `
+        <div class="quick-ch-info" style="justify-content: center; padding-left: 10px;">
+          <span class="quick-ch-name" style="font-size: 15px; font-weight: 700;">📁 ${cat}</span>
+        </div>
+      `;
+
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.App) {
+          App.selectLiveCategory(cat, null, false);
+          this._quickGuideState = 'channels';
+          this.renderQuickGuideChannels();
+        }
+      });
+      listEl.appendChild(row);
+    });
+
+    const activeRow = listEl.children[activeIdx];
+    if (activeRow) {
+      activeRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (typeof RemoteControl !== 'undefined') RemoteControl.setFocus(activeRow, false);
+    }
   }
 
   renderQuickGuideChannels() {
@@ -1039,6 +1095,22 @@ class TVVideoPlayer {
     if (catBadge) catBadge.textContent = catName;
 
     listEl.innerHTML = '';
+    
+    // Botão Voltar para Categorias
+    const backRow = document.createElement('div');
+    backRow.className = 'quick-ch-row focusable';
+    backRow.setAttribute('tabindex', '0');
+    backRow.innerHTML = `
+      <div class="quick-ch-info" style="justify-content: center; text-align: center; color: #facc15;">
+        <span class="quick-ch-name" style="font-size: 14px;">◀ Voltar às Categorias</span>
+      </div>
+    `;
+    backRow.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.quickGuideGoBack();
+    });
+    listEl.appendChild(backRow);
+
     channels.forEach((ch, idx) => {
       const row = document.createElement('div');
       row.className = `quick-ch-row focusable ${idx === activeIdx ? 'active' : ''}`;
