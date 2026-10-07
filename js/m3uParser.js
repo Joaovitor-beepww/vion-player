@@ -208,10 +208,7 @@ const XtreamCodesEngine = {
         res = await fetch(url);
       } catch (e) {
         console.warn('Bloqueio CORS em Xtream, usando proxy...', e);
-        res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const proxyData = await res.json();
-        return JSON.parse(proxyData.contents);
+        res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
@@ -1080,7 +1077,7 @@ const M3UParser = {
         response = await fetch(url);
       } catch (e) {
         console.warn('Bloqueio CORS ou Mixed Content detectado, usando proxy...', e);
-        response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+        response = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
       }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
