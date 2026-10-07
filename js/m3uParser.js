@@ -1081,14 +1081,19 @@ const M3UParser = {
       onProgress(20, 'Baixando playlist M3U...', 'Conectando ao link...');
       let response;
       try {
-        let urlToTry = url;
-        if (url.startsWith('http://') && window.location.protocol === 'https:') {
-          urlToTry = url.replace('http://', 'https://');
-        }
-        response = await fetch(urlToTry);
+        response = await fetch(url);
       } catch (e) {
-        console.warn('Bloqueio CORS ou Mixed Content detectado, usando proxy...', e);
-        response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+        if (url.startsWith('http://')) {
+          try {
+            response = await fetch(url.replace('http://', 'https://'));
+          } catch (e2) {
+            console.warn('Bloqueio CORS ou Mixed Content. Usando proxy...', e2);
+            response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+          }
+        } else {
+          console.warn('Bloqueio CORS. Usando proxy...', e);
+          response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+        }
       }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
