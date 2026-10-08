@@ -1191,6 +1191,42 @@ function refreshHubDashboard() {
   const flagEl = document.getElementById('hub-flag-badge');
   const masterBtn = document.getElementById('hub-nav-partners');
 
+  // Adiciona botão explícito de injetar créditos se for Master
+  if (isMaster) {
+    const btnHeroBuy = document.getElementById('btn-hero-buy-credits');
+    if (btnHeroBuy && !document.getElementById('btn-admin-cheat')) {
+      const adminBtn = document.createElement('button');
+      adminBtn.id = 'btn-admin-cheat';
+      adminBtn.className = 'btn-hub-action-gold';
+      adminBtn.style.background = '#22c55e';
+      adminBtn.style.borderColor = '#22c55e';
+      adminBtn.style.marginLeft = '10px';
+      adminBtn.innerHTML = '<span>➕</span> Injetar Créditos (Admin)';
+      adminBtn.addEventListener('click', () => {
+        const currentSession = getResellerSession();
+        const amountStr = prompt(`ADICIONAR CRÉDITOS (Admin)\nSaldo atual: ${currentSession.credits}\nDigite a quantidade a ADICIONAR:`);
+        if (amountStr) {
+          const amount = parseInt(amountStr, 10);
+          if (!isNaN(amount)) {
+            currentSession.credits += amount;
+            if (!currentSession.creditHistory) currentSession.creditHistory = [];
+            currentSession.creditHistory.push({
+              id: 'manual_' + Date.now(),
+              type: 'manual',
+              amount: amount,
+              desc: `Adição manual (Admin)`,
+              date: Date.now()
+            });
+            saveResellerSession(currentSession);
+            refreshHubDashboard();
+            alert(`Sucesso! Foram adicionados ${amount} créditos à sua conta.`);
+          }
+        }
+      });
+      btnHeroBuy.parentNode.insertBefore(adminBtn, btnHeroBuy.nextSibling);
+    }
+  }
+
   if (nameEl) nameEl.textContent = session.firstName ? `${session.firstName} ${session.lastName || ''}`.trim() : (isMaster ? 'João Vitor' : 'Revendedor');
   if (creditsEl) creditsEl.textContent = session.credits || 0;
   if (flagEl) flagEl.textContent = session.country === 'Estados Unidos' ? '🇺🇸' : (session.country === 'Portugal' ? '🇵🇹' : '🇧🇷');
