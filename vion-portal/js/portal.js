@@ -1040,6 +1040,32 @@ function initHubDashboard() {
     }
   });
 
+  // CHEAT CODE DO ADMIN: Clicar no valor total de créditos no card permite editar o saldo.
+  const credTotalElement = document.getElementById('card-cred-total');
+  credTotalElement?.addEventListener('click', () => {
+    if (!resellerData) return;
+    if (resellerData.isMaster) {
+      const amountStr = prompt(`ADICIONAR CRÉDITOS (Admin)\nSaldo atual: ${resellerData.credits}\nDigite a quantidade a ADICIONAR (ex: 50, 100, 1000):`);
+      if (amountStr) {
+        const amount = parseInt(amountStr, 10);
+        if (!isNaN(amount)) {
+          resellerData.credits += amount;
+          if (!resellerData.creditHistory) resellerData.creditHistory = [];
+          resellerData.creditHistory.push({
+            id: 'manual_' + Date.now(),
+            type: 'manual',
+            amount: amount,
+            desc: `Adição manual (Admin)`,
+            date: Date.now()
+          });
+          saveResellerSession(resellerData);
+          refreshHubDashboard();
+          alert(`Sucesso! Foram adicionados ${amount} créditos à sua conta.`);
+        }
+      }
+    }
+  });
+
   // Ações do Dropdown Menu (Imagem 5)
   document.getElementById('menu-buy-credits')?.addEventListener('click', () => {
     dropdownMenu?.classList.remove('active');
@@ -2043,7 +2069,24 @@ function initActivateDeviceModal() {
   });
 
   btnOpen?.addEventListener('click', () => {
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+      const selectPlan = document.getElementById('select-activate-plan');
+      const noticeCurrent = document.getElementById('notice-current-credits');
+      const noticeAfter = document.getElementById('notice-after-credits');
+      
+      const updateModalCreditUI = () => {
+        if (!resellerData) return;
+        const current = resellerData.credits || 0;
+        const cost = parseInt(selectPlan?.options[selectPlan.selectedIndex]?.dataset.cost || '1', 10);
+        if (noticeCurrent) noticeCurrent.textContent = current;
+        if (noticeAfter) noticeAfter.textContent = current - cost;
+        if (noticeAfter) noticeAfter.parentElement.style.color = (current - cost) < 0 ? '#ef4444' : 'var(--success)';
+      };
+
+      selectPlan?.addEventListener('change', updateModalCreditUI);
+      updateModalCreditUI();
+      modal.style.display = 'flex';
+    }
   });
 
   btnClose?.addEventListener('click', () => {
