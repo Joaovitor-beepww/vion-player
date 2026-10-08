@@ -1,0 +1,173 @@
+fetchSeriesEpisodes(seriesGroup) {
+    if (!seriesGroup || !seriesGroup.isXtream || !seriesGroup.credentials || !seriesGroup.seriesId) {
+      return seriesGroup ? (seriesGroup.seasons || {}) : {};
+    }
+    const { baseUrl, username, password } = seriesGroup.credentials;
+    const url = `${baseUrl}/player_api.php?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&action=get_series_info&series_id=${seriesGroup.seriesId}`;
+    try {
+      const data = await this.fetchJson(url);
+      if (data && data.episodes) {
+        const seasons = {};
+        Object.keys(data.episodes).forEach(sNum => {
+          const epList = data.episodes[sNum] || [];
+          seasons[sNum] = epList.map(ep => {
+            const ext = ep.container_extension || 'mp4';
+            return {
+              id: ep.id,
+              name: ep.title || `Episódio ${ep.episode_num}`,
+              season: parseInt(sNum) || 1,
+              episode: parseInt(ep.episode_num) || 1,
+              logo: (ep.info ? ep.info.movie_image : null) || (ep.info ? ep.info.cover_big : null) || seriesGroup.logo || '',
+              plot: (ep.info ? ep.info.plot : null) || '',
+              url: `${baseUrl}/series/${username}/${password}/${ep.id}.${ext}`,
+              type: 'series'
+            };
+          });
+        });
+        seriesGroup.seasons = seasons;
+        return seasons;
+      }
+    } catch (e) {
+      console.warn('Erro ao obter episódios da série Xtream:', e);
+    }
+    return seriesGroup.seasons || {};
+  }
+};
+
+const M3UParser = {
+  DEMO_PLAYLIST: '',
+
+  /**
+   * Converte o texto M3U e particiona com precisão:
+   * live: { channels, categories }
+   * movies: { channels, categories }
+   * series: { channels, categories }
+   */
+  parse(rawText) {
+    if (!rawText || !rawText.trim()) {
+      return {
+        _schemaVersion: 6,
+        channels: [],
+        live: { channels: [], categories: ['Todos'] },
+        movies: { channels: [], categories: ['Todos'] },
+        series: { channels: [], rawEpisodes: [], categories: ['Todos'] }
+      };
+    }
+
+    const liveItems = [];
+    const movieItems = [];
+    const seriesItems = [];
+
+    const liveCatSet = new Set();
+    const movieCatSet = new Set();
+    const seriesCatSet = new Set();
+
+    let currentItem = null;
+    let pos = 0;
+    const len = rawText.length;
+
+    while (pos < len) {
+      let nextPos = rawText.indexOf('\n', pos);
+      if (nextPos === -1) nextPos = len;
+      let line = rawText.substring(pos, nextPos).trim();
+      pos = nextPos + 1;
+
+      if (!line) continue;
+
+      if (line.startsWith('#EXTINF:')) {
+        currentItem = this.parseExtInf(line);
+      } else if (!line.startsWith('#') && currentItem) {
+        currentItem.url = line;
+
+        if (!currentItem.category) {
+          currentItem.category = 'Outros';
+        }
+
+        // Filtra itens de demonstração
+        const uLower = currentItem.url.toLowerCase();
+        if (uLower === 'demo' || uLower.includes('blender.org') || uLower.includes('test-streams.mux.dev') || uLower.includes('tears-of-steel')) {
+          currentItem = null;
+          continue;
+        }
+
+        // Classificação inteligente de Tipo (live, movie, series)
+        const type = this.classifyItem(currentItem);
+        currentItem.type = type;
+
+        allItems.push(currentItem);
+
+        if (type === 'movie') {
+          movieItems.push(currentItem);
+          movieCatSet.add(currentItem.category);
+        } else if (type === 'series') {
+          seriesItems.push(currentItem);
+          seriesCatSet.add(currentItem.category);
+        } else {
+          liveItems.push(currentItem);
+          liveCatSet.add(currentItem.category);
+        }
+
+        currentItem = null;
+      }
+    }
+
+    const groupedSeries = this.groupSeries(seriesItems);
+
+    // Isola conteúdo adulto (+18) dos filmes familiares/regulares
+    const regularMovies = [];
+    const adultMovies = [];
+    const regularMovieCatSet = new Set();
+    const adultMovieCatSet = new Set();
+
+    movieItems.forEach(item => {
+      if (this.isAdultItem(item)) {
+        item.isAdult = true;
+        adultMovies.push(item);
+        adultMovieCatSet.add(item.category || 'Adultos +18');
+      } else {
+        item.isAdult = false;
+        regularMovies.push(item);
+        regularMovieCatSet.add(item.category || 'Outros');
+      }
+    });
+
+    const sortedMovieCategories = [
+      'Todos',
+      ...Array.from(regularMovieCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+      ...Array.from(adultMovieCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    ];
+
+    // Ordena filmes regulares garantindo que itens compatíveis e com capa válida apareçam primeiro
+    const sortedRegularMovies = regularMovies.slice().sort((a, b) => {
+      const aCat = (a.category || '').toUpperCase();
+      const bCat = (b.category || '').toUpperCase();
+      const aName = (a.name || '').toUpperCase();
+      const bName = (b.name || '').toUpperCase();
+      const a4k = aCat.includes('4K') || aCat.includes('UHD') || aCat.includes('2160P') || aName.includes('4K') || aName.includes('UHD') || aName.includes('2160P');
+      const b4k = bCat.includes('4K') || bCat.includes('UHD') || bCat.includes('2160P') || bName.includes('4K') || bName.includes('UHD') || bName.includes('2160P');
+      if (a4k !== b4k) return a4k ? 1 : -1;
+
+      const aCover = !!(a.logo && typeof a.logo === 'string' && a.logo.trim().startsWith('http'));
+      const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
+      if (aCover !== bCover) return aCover ? -1 : 1;
+      return 0;
+    });
+
+    return {
+      _schemaVersion: 25,
+      channels: allItems,
+      live: {
+        channels: liveItems,
+        categories: ['Todos', ...Array.from(liveCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))]
+      },
+      movies: {
+        channels: [...sortedRegularMovies, ...adultMovies],
+        categories: sortedMovieCategories
+      },
+      series: {
+        channels: groupedSeries,
+        rawEpisodes: seriesItems,
+        categories: ['Todos', ...Array.from(seriesCatSet).sort((a, b) => a.localeCompare(b, 'pt-BR'))]
+      }
+    };
+  },

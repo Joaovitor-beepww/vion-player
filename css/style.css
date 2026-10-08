@@ -8025,7 +8025,7 @@ html[data-platform="tv"] *,
 
 .episode-progress-bar {
   position: absolute;
-  bottom: 28px;
+  bottom: 0;
   left: 0;
   right: 0;
   height: 4px;

@@ -1575,16 +1575,28 @@ const App = {
       await this.verifyLicenseNow(false);
     } catch(e) {}
 
+        const portalPlaylistsStr = localStorage.getItem(`vion_playlists_${mac}`);
+    let pList = portalPlaylistsStr ? JSON.parse(portalPlaylistsStr) : [];
+    
+    // Fallback pra garantir busca
     const first = await this.queryPortalPlaylists(mac);
-    if (first && first.url) {
-      if (!forceSync && this.activePlaylistUrl === first.url && this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0 && this.playlistData._schemaVersion === 25) {
+    if (!pList || pList.length === 0) {
+      const upStr = localStorage.getItem(`vion_playlists_${mac}`);
+      pList = upStr ? JSON.parse(upStr) : [];
+    }
+
+    if (pList && pList.length > 0) {
+      // Prioriza a playlist que ja estava ativa (se ainda existir na lista do portal)
+      let targetPlaylist = pList.find(p => p.url === this.activePlaylistUrl) || pList[0];
+      
+      if (!forceSync && this.activePlaylistUrl === targetPlaylist.url && this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0 && this.playlistData._schemaVersion === 25) {
         if (this.currentScreen === 'reseller-login') this.goToScreen('home');
         this.updateTrialDisplay();
-        if (notify) this.showToast('✔ Playlist e licença já estão ativas e atualizadas!');
+        if (notify) this.showToast('✔️ Playlist ativa');
         return;
       }
-      if (notify) this.showToast(`Carregando "${first.name}" do Portal...`);
-      await this.activatePlaylistByUrl(first.url, first.name, notify, false, forceSync);
+      if (notify) this.showToast(`Carregando "${targetPlaylist.name}"...`);
+      await this.activatePlaylistByUrl(targetPlaylist.url, targetPlaylist.name, notify, false, forceSync);
     } else {
       this.updateTrialDisplay();
       if (notify) this.showToast('✔ Status e playlists sincronizados com sucesso!');
@@ -1651,7 +1663,7 @@ const App = {
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
-          <button class="pill-btn focusable btn-item-reload" tabindex="0" style="padding:8px 18px;font-size:13px;background:#ffffff;color:#000;font-weight:700;">🔄 Recarregar</button>
+          <button class="pill-btn focusable btn-item-reload" tabindex="0" style="padding:8px 18px;font-size:13px;background:#ffffff;color:#000;font-weight:700;">🔄 Acessar Playlist</button>
           <button class="pill-btn focusable btn-item-disconnect" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">🚪 Desconectar</button>
         </div>
       `;
@@ -2574,10 +2586,8 @@ const App = {
     const rawKeys = Object.keys(seriesGroup.seasons || {}).map(Number).filter(n => !isNaN(n) && n > 0);
     let seasonKeys = [];
     if (rawKeys.length > 0) {
-      const maxSeason = Math.max(...rawKeys);
-      for (let s = 1; s <= maxSeason; s++) {
-        seasonKeys.push(String(s));
-      }
+      rawKeys.sort((a, b) => a - b);
+      seasonKeys = rawKeys.map(String);
     } else {
       seasonKeys = ['1'];
     }

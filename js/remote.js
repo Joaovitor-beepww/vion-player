@@ -738,29 +738,24 @@ const RemoteControl = {
       return null;
     }
 
-    // 8. BOTÕES DE AÇÃO CINEMA (PLAY, PLAY TRAILER, + FAVORITES - Imagem 4)
+    // 8. BOTOES DE ACAO CINEMA (Horizontal)
     if (currentEl.classList.contains('action-btn-cinema')) {
-      if (direction === 'DOWN') {
+      if (direction === 'RIGHT') {
         let next = currentEl.nextElementSibling;
         while (next && (!next.classList.contains('action-btn-cinema') || next.offsetParent === null)) {
           next = next.nextElementSibling;
         }
         if (next) return next;
-        return document.querySelector('.season-tab-btn.active-season') || document.querySelector('.season-tab-btn');
       }
-      if (direction === 'UP') {
+      if (direction === 'LEFT') {
         let prev = currentEl.previousElementSibling;
         while (prev && (!prev.classList.contains('action-btn-cinema') || prev.offsetParent === null)) {
           prev = prev.previousElementSibling;
         }
         if (prev) return prev;
-        return document.getElementById('btn-close-series-modal');
       }
-      if (direction === 'RIGHT') {
+      if (direction === 'DOWN') {
         return document.querySelector('.season-tab-btn.active-season') || document.querySelector('.season-tab-btn');
-      }
-      if (direction === 'LEFT') {
-        return document.getElementById('btn-close-series-modal');
       }
       return null;
     }
