@@ -663,6 +663,7 @@ function initResellerPortal() {
   initAddSubModal();
   initPartnershipsSection();
   initNotificationSettings();
+  initAdminCreditsModal();
 
   // Verifica estado inicial de autenticação
   const isAuth = localStorage.getItem('vion_reseller_auth') === 'true';
