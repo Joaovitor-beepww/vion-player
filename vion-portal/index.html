@@ -1248,5 +1248,29 @@
     </div>
   </div>
 
+  <!-- ===================================================================
+       MODAL ADMIN: GERENCIAR CRÉDITOS (Substitui o prompt nativo)
+       =================================================================== -->
+  <div id="modal-admin-credits" class="modal-overlay">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 id="admin-credits-title">Gerenciar Créditos</h3>
+        <button id="btn-close-admin-credits" class="btn-close-modal">&times;</button>
+      </div>
+      <div style="padding: 10px 0;">
+        <p id="admin-credits-desc" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;"></p>
+        <div class="form-group">
+          <label>Quantidade de Créditos</label>
+          <input type="number" id="input-admin-credits-amount" placeholder="Ex: 50 (para adicionar) ou -10 (para remover)" required autocomplete="off">
+          <small style="color: var(--text-muted); font-size: 11px; margin-top: 6px; display: block;">Use números negativos para remover créditos (ex: -5).</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-cancel-admin-credits" class="btn btn-secondary">Cancelar</button>
+        <button type="button" id="btn-confirm-admin-credits" class="btn btn-gold">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

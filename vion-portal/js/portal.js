@@ -1048,11 +1048,11 @@ function initHubDashboard() {
     const session = getResellerSession();
     if (!session) return;
     if (isCurrentUserMasterAdmin()) {
-      const amountStr = prompt(`ADICIONAR CRÉDITOS (Admin)\nSaldo atual: ${session.credits}\nDigite a quantidade a ADICIONAR (ex: 50, 100, 1000):`);
-      if (amountStr) {
-        const amount = parseInt(amountStr, 10);
-        if (!isNaN(amount)) {
-          session.credits += amount;
+// native prompt removed
+     openAdminCreditsModal('Adicionar Créditos (Admin)', 'Saldo atual: <strong>' + session.credits + '</strong><br>Digite a quantidade a ADICIONAR:', (amount) => {
+        if (amount !== 0) {
+
+
           if (!session.creditHistory) session.creditHistory = [];
           session.creditHistory.push({
             id: 'manual_' + Date.now(),
@@ -1204,11 +1204,11 @@ function refreshHubDashboard() {
       adminBtn.innerHTML = '<span>➕</span> Injetar Créditos (Admin)';
       adminBtn.addEventListener('click', () => {
         const currentSession = getResellerSession();
-        const amountStr = prompt(`ADICIONAR CRÉDITOS (Admin)\nSaldo atual: ${currentSession.credits}\nDigite a quantidade a ADICIONAR:`);
-        if (amountStr) {
-          const amount = parseInt(amountStr, 10);
-          if (!isNaN(amount)) {
-            currentSession.credits += amount;
+// native prompt removed
+       openAdminCreditsModal('Injetar Créditos (Admin)', 'Saldo atual: <strong>' + currentSession.credits + '</strong><br>Digite a quantidade a ADICIONAR ou REMOVER (use -):', (amount) => {
+         if (amount !== 0) {
+
+
             if (!currentSession.creditHistory) currentSession.creditHistory = [];
             currentSession.creditHistory.push({
               id: 'manual_' + Date.now(),
@@ -2018,13 +2018,13 @@ async function renderHubSubs() {
             const email = btn.getAttribute('data-email');
             const name = btn.getAttribute('data-name');
             const current = btn.getAttribute('data-current');
-            const amountStr = prompt(`Adicionar ou remover créditos para ${name} (${email}):\nSaldo atual: ${current} créditos.\n\nDigite a quantidade a ADICIONAR (ex: 10, 50, 100) ou a REMOVER (ex: -5):`);
-            if (!amountStr) return;
-            const amount = parseInt(amountStr, 10);
-            if (isNaN(amount) || amount === 0) {
-              alert('Quantidade inválida.');
-              return;
-            }
+// native prompt removed
+            openAdminCreditsModal('Gerenciar Créditos do Parceiro', 'Revendedor: <strong>' + name + '</strong> (' + email + ')<br>Saldo atual: <strong>' + current + '</strong>', async (amount) => {
+              if (amount === 0) return;
+
+
+
+
 
             try {
               const resp = await fetch('/api/admin/reseller/adjust-credits', {
@@ -2856,3 +2856,40 @@ function initNotificationSettings() {
 }
 
 
+
+
+let adminCreditsCallback = null;
+function openAdminCreditsModal(title, desc, callback) {
+  const modal = document.getElementById("modal-admin-credits");
+  const titleEl = document.getElementById("admin-credits-title");
+  const descEl = document.getElementById("admin-credits-desc");
+  const inputEl = document.getElementById("input-admin-credits-amount");
+  if (!modal) return;
+  if (titleEl) titleEl.textContent = title;
+  if (descEl) descEl.innerHTML = desc;
+  if (inputEl) inputEl.value = "";
+  adminCreditsCallback = callback;
+  modal.style.display = "flex";
+  if (inputEl) inputEl.focus();
+}
+function initAdminCreditsModal() {
+  const modal = document.getElementById("modal-admin-credits");
+  const btnClose = document.getElementById("btn-close-admin-credits");
+  const btnCancel = document.getElementById("btn-cancel-admin-credits");
+  const btnConfirm = document.getElementById("btn-confirm-admin-credits");
+  const inputEl = document.getElementById("input-admin-credits-amount");
+  [btnClose, btnCancel].forEach(b => b?.addEventListener("click", () => {
+    if (modal) modal.style.display = "none";
+    adminCreditsCallback = null;
+  }));
+  const confirmAction = () => {
+    const val = parseInt(inputEl?.value || "0", 10);
+    if (adminCreditsCallback) adminCreditsCallback(isNaN(val) ? 0 : val);
+    if (modal) modal.style.display = "none";
+    adminCreditsCallback = null;
+  };
+  btnConfirm?.addEventListener("click", confirmAction);
+  inputEl?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); confirmAction(); }
+  });
+}
