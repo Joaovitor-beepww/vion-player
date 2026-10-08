@@ -1065,7 +1065,7 @@ function initHubDashboard() {
           refreshHubDashboard();
           alert(`Sucesso! Foram adicionados ${amount} créditos à sua conta.`);
         }
-      }
+      });
     }
   });
 
@@ -1221,7 +1221,7 @@ function refreshHubDashboard() {
             refreshHubDashboard();
             alert(`Sucesso! Foram adicionados ${amount} créditos à sua conta.`);
           }
-        }
+        });
       });
       btnHeroBuy.parentNode.insertBefore(adminBtn, btnHeroBuy.nextSibling);
     }
@@ -2048,6 +2048,7 @@ async function renderHubSubs() {
               alert('Erro de conexão: ' + err.message);
             }
           });
+        });
         });
         return;
       }
