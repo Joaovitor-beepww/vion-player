@@ -1042,9 +1042,11 @@ function initHubDashboard() {
 
   // CHEAT CODE DO ADMIN: Clicar no valor total de créditos no card permite editar o saldo.
   const credTotalElement = document.getElementById('card-cred-total');
+  if (isCurrentUserMasterAdmin() && credTotalElement) credTotalElement.style.cursor = 'pointer';
+  
   credTotalElement?.addEventListener('click', () => {
     if (!resellerData) return;
-    if (resellerData.isMaster) {
+    if (isCurrentUserMasterAdmin()) {
       const amountStr = prompt(`ADICIONAR CRÉDITOS (Admin)\nSaldo atual: ${resellerData.credits}\nDigite a quantidade a ADICIONAR (ex: 50, 100, 1000):`);
       if (amountStr) {
         const amount = parseInt(amountStr, 10);
