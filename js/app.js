@@ -680,6 +680,7 @@ const App = {
   },
 
   isDeviceExpired() {
+    if (localStorage.getItem('vion_saved_provider_code')) return false; // Parceria provedor
     const isLicenseActive = localStorage.getItem('vion_license_active') === 'true';
     if (isLicenseActive) {
       const plan = localStorage.getItem('vion_license_plan');
@@ -743,6 +744,9 @@ const App = {
   },
 
   getTrialInfo() {
+    if (localStorage.getItem('vion_saved_provider_code')) {
+      return { expired: false, days: 999, hours: 0, minutes: 0, dateFormatted: 'Parceria', text: '⭐ Licença Parceiro' };
+    }
     const isLicenseActive = localStorage.getItem('vion_license_active') === 'true';
     if (isLicenseActive) {
       const plan = localStorage.getItem('vion_license_plan');
