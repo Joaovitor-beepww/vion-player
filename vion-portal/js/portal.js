@@ -1045,22 +1045,23 @@ function initHubDashboard() {
   if (isCurrentUserMasterAdmin() && credTotalElement) credTotalElement.style.cursor = 'pointer';
   
   credTotalElement?.addEventListener('click', () => {
-    if (!resellerData) return;
+    const session = getResellerSession();
+    if (!session) return;
     if (isCurrentUserMasterAdmin()) {
-      const amountStr = prompt(`ADICIONAR CRÉDITOS (Admin)\nSaldo atual: ${resellerData.credits}\nDigite a quantidade a ADICIONAR (ex: 50, 100, 1000):`);
+      const amountStr = prompt(`ADICIONAR CRÉDITOS (Admin)\nSaldo atual: ${session.credits}\nDigite a quantidade a ADICIONAR (ex: 50, 100, 1000):`);
       if (amountStr) {
         const amount = parseInt(amountStr, 10);
         if (!isNaN(amount)) {
-          resellerData.credits += amount;
-          if (!resellerData.creditHistory) resellerData.creditHistory = [];
-          resellerData.creditHistory.push({
+          session.credits += amount;
+          if (!session.creditHistory) session.creditHistory = [];
+          session.creditHistory.push({
             id: 'manual_' + Date.now(),
             type: 'manual',
             amount: amount,
             desc: `Adição manual (Admin)`,
             date: Date.now()
           });
-          saveResellerSession(resellerData);
+          saveResellerSession(session);
           refreshHubDashboard();
           alert(`Sucesso! Foram adicionados ${amount} créditos à sua conta.`);
         }
@@ -2077,8 +2078,9 @@ function initActivateDeviceModal() {
       const noticeAfter = document.getElementById('notice-after-credits');
       
       const updateModalCreditUI = () => {
-        if (!resellerData) return;
-        const current = resellerData.credits || 0;
+        const session = getResellerSession();
+        if (!session) return;
+        const current = session.credits || 0;
         const cost = parseInt(selectPlan?.options[selectPlan.selectedIndex]?.dataset.cost || '1', 10);
         if (noticeCurrent) noticeCurrent.textContent = current;
         if (noticeAfter) noticeAfter.textContent = current - cost;
