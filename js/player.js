@@ -1179,13 +1179,17 @@ class TVVideoPlayer {
   loadStream(url, channelName, category, channelNumber, isVod, startPositionSec = 0) {
     const cleanUrl = this.normalizeStreamUrl(url);
 
-    // .ts é SEMPRE canal ao vivo (nunca VOD)
-    if (cleanUrl.includes('.ts')) {
-      this.isVodMode = false;
-    } else if (isVod !== undefined) {
+        // Define modo VOD ou Live TV
+    if (isVod !== undefined) {
+      // Prioridade mxima: o que a interface diz que 
       this.isVodMode = isVod;
     } else {
-      this.isVodMode = cleanUrl.includes('/movie/') || cleanUrl.includes('/series/') || /\.(mp4|mkv|avi|mov)$/i.test(cleanUrl);
+      // Fallback heurstico se no foi explicitamente passado
+      if (cleanUrl.includes('.ts')) {
+        this.isVodMode = false;
+      } else {
+        this.isVodMode = cleanUrl.includes('/movie/') || cleanUrl.includes('/series/') || /\.(mp4|mkv|avi|mov)$/i.test(cleanUrl);
+      }
     }
 
     let startSec = Math.max(0, Math.floor(Number(startPositionSec) || 0));
