@@ -2,6 +2,75 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// ================= FIREBASE CLOUD SYNC =================
+const admin = require('firebase-admin');
+let db = null;
+try {
+  const serviceAccount = require('./firebase-key.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  db = admin.firestore();
+  console.log('[Firebase] Conectado ao Firestore com sucesso.');
+} catch (e) {
+  if (e.message.includes('cert')) {
+    try {
+      let sa;
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      } else {
+        sa = require('./firebase-key.json');
+      }
+      const { initializeApp, cert } = require('firebase-admin/app');
+      const { getFirestore } = require('firebase-admin/firestore');
+      initializeApp({ credential: cert(sa) });
+      db = getFirestore();
+      console.log('[Firebase] Conectado ao Firestore com sucesso (Modular API).');
+    } catch(err2) {
+      console.error('[Firebase] Falha ao iniciar Firebase Admin (Modular):', err2.message);
+    }
+  } else {
+    console.error('[Firebase] Falha ao iniciar Firebase Admin:', e.message);
+  }
+}
+
+async function downloadStateFromFirebase() {
+  if (!db) return;
+  console.log('[Firebase] Baixando estado do servidor da nuvem...');
+  const collections = [
+    { key: 'devices', path: DATA_FILE },
+    { key: 'partnerships', path: DATA_PARTNERSHIPS },
+    { key: 'resellers', path: DATA_RESELLERS },
+    { key: 'payments', path: DATA_PAYMENTS },
+    { key: 'settings', path: DATA_SETTINGS }
+  ];
+
+  for (const col of collections) {
+    try {
+      const doc = await db.collection('vion_state').doc(col.key).get();
+      if (doc.exists) {
+        const dataStr = doc.data().json;
+        if (dataStr) {
+          const fsObj = require('fs');
+          fsObj.writeFileSync(col.path, dataStr, 'utf8');
+          console.log('[Firebase] ' + col.key + ' restaurado com sucesso.');
+        }
+      }
+    } catch (e) {
+      console.error('[Firebase] Erro ao restaurar ' + col.key + ':', e.message);
+    }
+  }
+}
+
+function uploadStateToFirebase(key, dataObj) {
+  if (!db) return;
+  const jsonStr = JSON.stringify(dataObj, null, 2);
+  db.collection('vion_state').doc(key).set({ json: jsonStr })
+    .catch(e => console.error('[Firebase] Erro ao sincronizar ' + key + ':', e.message));
+}
+// ========================================================
+
+
 const PORT = process.env.PORT || 3000;
 const ROOT_PLAYER = __dirname;
 let ROOT_PORTAL = path.join(__dirname, 'vion-portal');
@@ -122,7 +191,8 @@ function loadDevices() {
       }
     }
     if (dirty) {
-      try { fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8'); } catch(e) {}
+      try { fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+    uploadStateToFirebase('devices', data); } catch(e) {}
     }
     return data;
   } catch (e) {
@@ -133,6 +203,7 @@ function loadDevices() {
 function saveDevices(data) {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+    uploadStateToFirebase('devices', data);
   } catch (e) {
     console.error('Erro ao salvar dados de dispositivos:', e);
   }
@@ -151,6 +222,7 @@ function loadPartnerships() {
 function savePartnerships(data) {
   try {
     fs.writeFileSync(DATA_PARTNERSHIPS, JSON.stringify(data, null, 2), 'utf8');
+    uploadStateToFirebase('partnerships', data);
   } catch (e) {
     console.error('Erro ao salvar códigos de parceria:', e);
   }
@@ -168,6 +240,7 @@ function loadResellers() {
 function saveResellers(data) {
   try {
     fs.writeFileSync(DATA_RESELLERS, JSON.stringify(data, null, 2), 'utf8');
+    uploadStateToFirebase('resellers', data);
   } catch (e) {
     console.error('Erro ao salvar revendedores:', e);
   }
@@ -185,6 +258,7 @@ function loadPayments() {
 function savePayments(data) {
   try {
     fs.writeFileSync(DATA_PAYMENTS, JSON.stringify(data, null, 2), 'utf8');
+    uploadStateToFirebase('payments', data);
   } catch (e) {
     console.error('Erro ao salvar pagamentos:', e);
   }
@@ -434,7 +508,11 @@ const MIME_TYPES = {
   '.ipk': 'application/vnd.webos.ipk'
 };
 
-const server = http.createServer(async (req, res) => {
+
+// Start wrapper for Firebase
+downloadStateFromFirebase().then(() => {
+  const server = http.createServer(async (req, res) => {
+
   // CORS universal
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -1766,3 +1844,5 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`[Vion Portal] Acesso ao portal em http://192.168.1.197:${PORT}/portal`);
   console.log(`[Vion Player] Acesso ao player em http://192.168.1.197:${PORT}/`);
 });
+
+}); // End of downloadStateFromFirebase wrapper

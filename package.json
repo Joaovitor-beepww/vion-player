@@ -15,6 +15,7 @@
   "author": "Vion Player Team",
   "license": "ISC",
   "dependencies": {
+    "firebase-admin": "^14.5.0",
     "xml-crypto": "^6.3.3"
   }
 }
