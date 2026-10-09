@@ -8886,3 +8886,25 @@ html[data-platform="tv"] *,
 #btn-mini-fs-back {
   display: none !important;
 }
+
+
+/* Ocultar barra de rolagem geral na TV e impedir scroll indesejado na tela de login */
+html[data-platform="tv"], html.is-tv, html[data-platform="tv"] body, html.is-tv body { overflow: hidden !important; touch-action: none !important; }
+
+
+
+/* Restricao reforcada de rolagem horizontal */
+html[data-platform="tv"], html.is-tv, html[data-platform="tv"] body, html.is-tv body { 
+  overflow: hidden !important; 
+  touch-action: none !important; 
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0; padding: 0;
+}
+.app-container {
+  overflow: hidden !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+}

@@ -443,8 +443,6 @@ const App = {
     this.initCinemaBackdropSlideshow();
     this.setupPlatformLifecycle();
     this.updateEpgCalendar();
-    this.setupPlatformLifecycle();
-    this.updateEpgCalendar();
 
     const mac = localStorage.getItem('vion_mac_address');
 
@@ -1619,6 +1617,9 @@ const App = {
   startPortalAutoPolling() {
     if (this.portalAutoPollTimer) clearInterval(this.portalAutoPollTimer);
     this.portalAutoPollTimer = setInterval(async () => {
+      const userInp = document.getElementById('input-reseller-user');
+      if (userInp && userInp.value.trim().length > 0) return; // Bloqueia auto-login se estiver digitando
+
       // SÃ³ pesquisa se ainda NÃƒO tiver playlist carregada e estiver na tela de login
       if (this.currentScreen === 'reseller-login' && !this.isSyncing && (!this.playlistData || !this.playlistData.channels || this.playlistData.channels.length === 0)) {
         const mac = localStorage.getItem('vion_mac_address');
