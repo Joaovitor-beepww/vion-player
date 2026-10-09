@@ -1,0 +1,9 @@
+#EXTM3U
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/e/e4/NASA_logo.svg" group-title="TV Ao Vivo",NASA TV Oficial
+https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg" group-title="Filmes",Big Buck Bunny (Filme Aberto)
+http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/1/18/Sintel_poster.jpg" group-title="Filmes",Sintel (Projeto Aberto)
+http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/4/41/Tears_of_Steel_poster.jpg" group-title="Filmes",Tears of Steel (Ficção Científica Livre)
+http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4
