@@ -2481,13 +2481,12 @@ function initPartnershipsSection() {
         body: JSON.stringify({ action: 'create', code: rawCode, server, name })
       });
       if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || 'Erro ao cadastrar cÃ³digo de parceria.');
-        return;
-      }
-    } catch(e) {}
+          try { const data = await res.json(); alert(data.error || 'Erro ao cadastrar codigo.'); } catch(err) { alert('Servidor reiniciando. Tente novamente em 1 minuto.'); }
+          return;
+        }
+      } catch(e) { alert('Falha na conexao. Tente novamente.'); return; }
 
-    // Fallback/sync localStorage
+      // Fallback/sync localStorage
     const local = JSON.parse(localStorage.getItem('vion_partnership_codes') || '[]');
     if (!local.find(x => x.code === rawCode)) {
       local.unshift({
