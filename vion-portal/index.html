@@ -7,6 +7,16 @@
   <title>Vion Player - Official Web Portal</title>
   <link rel="icon" type="image/png" href="/portal/img/logo.png">
   <link rel="stylesheet" href="/portal/css/style.css">
+
+  <style>html { transition: opacity 0.2s ease; }</style>
+  <script>
+    if (window.location.hash && window.location.hash.length > 2) {
+      document.documentElement.style.opacity = '0';
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() { document.documentElement.style.opacity = '1'; }, 100);
+      });
+    }
+  </script>
 </head>
 <body>
 
