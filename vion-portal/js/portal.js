@@ -1,6 +1,6 @@
-/**
- * Vion Player - Lógica do Portal com Login de Dispositivo & Gerenciamento de Playlists
- * Idêntico ao fluxo do TiviPlayer (Login com MAC + Device Key)
+﻿/**
+ * Vion Player - LÃ³gica do Portal com Login de Dispositivo & Gerenciamento de Playlists
+ * IdÃªntico ao fluxo do TiviPlayer (Login com MAC + Device Key)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,13 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initResellerPortal();
   checkExistingSession();
 
-  // Roteamento automático inicial por hash na URL
+  // Roteamento automÃ¡tico inicial por hash na URL
   const initialHash = (window.location.hash || '').replace('#', '').split('?')[0].trim();
   if (initialHash && ['home', 'login', 'manage-playlists', 'activation', 'reseller'].includes(initialHash)) {
     switchTab(initialHash);
   }
 
-  // Captura automática de MAC pela URL (ex: ?mac=00:1A:79... ou #activation?mac=...)
+  // Captura automÃ¡tica de MAC pela URL (ex: ?mac=00:1A:79... ou #activation?mac=...)
   try {
     const urlParams = new URLSearchParams(window.location.search);
     let urlMac = urlParams.get('mac');
@@ -52,7 +52,7 @@ function normalizeMac(mac) {
 }
 
 /**
- * 1. Navegação Global entre Abas
+ * 1. NavegaÃ§Ã£o Global entre Abas
  */
 function initNavigation() {
   const navLinks = document.querySelectorAll('.nav-link');
@@ -144,7 +144,7 @@ function initNavigation() {
     });
   });
 
-  // Botões na Home
+  // BotÃµes na Home
   document.getElementById('btn-hero-activate')?.addEventListener('click', (e) => {
     e.preventDefault();
     switchTab('activation');
@@ -152,7 +152,7 @@ function initNavigation() {
 
   document.getElementById('btn-hero-upload')?.addEventListener('click', (e) => {
     e.preventDefault();
-    // Se já estiver logado, vai direto para Gerenciar Playlists, senão vai para Login
+    // Se jÃ¡ estiver logado, vai direto para Gerenciar Playlists, senÃ£o vai para Login
     const currentMac = localStorage.getItem('vion_current_session');
     if (currentMac) {
       switchTab('manage-playlists');
@@ -161,13 +161,13 @@ function initNavigation() {
     }
   });
 
-  // Botão Entrar na Navbar
+  // BotÃ£o Entrar na Navbar
   document.getElementById('btn-nav-login')?.addEventListener('click', (e) => {
     e.preventDefault();
     switchTab('login');
   });
 
-  // Botão Sair na Navbar
+  // BotÃ£o Sair na Navbar
   document.getElementById('btn-nav-logout')?.addEventListener('click', (e) => {
     e.preventDefault();
     logoutDevice();
@@ -188,7 +188,7 @@ function initNavigation() {
 }
 
 /**
- * 2. Sistema de Login via MAC Address e Device Key (Idêntico à Imagem 1)
+ * 2. Sistema de Login via MAC Address e Device Key (IdÃªntico Ã  Imagem 1)
  */
 function initLoginSystem() {
   const macInput = document.getElementById('login-mac-input');
@@ -197,7 +197,7 @@ function initLoginSystem() {
   const feedback = document.getElementById('mac-validation-feedback');
   const loginAlert = document.getElementById('login-alert');
 
-  // Validação dinâmica do MAC Address enquanto digita (com máscara XX:XX:XX:XX:XX:XX)
+  // ValidaÃ§Ã£o dinÃ¢mica do MAC Address enquanto digita (com mÃ¡scara XX:XX:XX:XX:XX:XX)
   macInput?.addEventListener('input', (e) => {
     let val = e.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
     if (val.length > 12) val = val.substring(0, 12);
@@ -209,10 +209,10 @@ function initLoginSystem() {
     const formatted = parts.join(':');
     e.target.value = formatted;
 
-    // Feedback visual idêntico ao da imagem (verde quando tem 17 caracteres)
+    // Feedback visual idÃªntico ao da imagem (verde quando tem 17 caracteres)
     if (formatted.length === 17) {
       feedback.className = 'input-feedback valid';
-      feedback.innerHTML = '✔ Endereço MAC é válido';
+      feedback.innerHTML = 'âœ” EndereÃ§o MAC Ã© vÃ¡lido';
     } else if (formatted.length > 0) {
       feedback.className = 'input-feedback invalid';
       feedback.innerHTML = 'Insira o MAC completo (12 caracteres)';
@@ -222,12 +222,12 @@ function initLoginSystem() {
     }
   });
 
-  // Chave do Dispositivo (máximo 6 dígitos)
+  // Chave do Dispositivo (mÃ¡ximo 6 dÃ­gitos)
   keyInput?.addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, '').substring(0, 6);
   });
 
-  // Ação de Login Estrito (apenas MAC e Key existentes)
+  // AÃ§Ã£o de Login Estrito (apenas MAC e Key existentes)
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -235,25 +235,25 @@ function initLoginSystem() {
     const key = keyInput.value.trim();
 
     if (mac.length !== 17) {
-      showAlert(loginAlert, 'Por favor, insira um endereço MAC completo no formato XX:XX:XX:XX:XX:XX', 'error');
+      showAlert(loginAlert, 'Por favor, insira um endereÃ§o MAC completo no formato XX:XX:XX:XX:XX:XX', 'error');
       return;
     }
 
     if (key.length < 4 || key.length > 6) {
-      showAlert(loginAlert, 'A Chave do Dispositivo deve ter entre 4 e 6 números.', 'error');
+      showAlert(loginAlert, 'A Chave do Dispositivo deve ter entre 4 e 6 nÃºmeros.', 'error');
       return;
     }
 
-    showAlert(loginAlert, '🔄 Verificando credenciais do dispositivo no sistema...', 'info');
+    showAlert(loginAlert, 'ðŸ”„ Verificando credenciais do dispositivo no sistema...', 'info');
 
-    // Validação estrita: somente permite acesso se o MAC e a KEY existirem no servidor
+    // ValidaÃ§Ã£o estrita: somente permite acesso se o MAC e a KEY existirem no servidor
     const validateEndpoints = [
       '/api/device/validate',
       `${PORTAL_API}/api/device/validate`,
       'https://vion.gestorpro.app.br/api/device/validate'
     ];
 
-    let errorMsg = 'Não foi possível conectar ao servidor de validação.';
+    let errorMsg = 'NÃ£o foi possÃ­vel conectar ao servidor de validaÃ§Ã£o.';
 
     for (const endpoint of validateEndpoints) {
       try {
@@ -270,21 +270,21 @@ function initLoginSystem() {
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.success) {
           loginDevice(mac, key, data.playlists || []);
-          showAlert(loginAlert, '✔ Dispositivo autorizado com sucesso!', 'success');
+          showAlert(loginAlert, 'âœ” Dispositivo autorizado com sucesso!', 'success');
           setTimeout(() => {
             if (loginAlert) loginAlert.style.display = 'none';
           }, 1500);
           return;
         } else {
-          errorMsg = data.error || 'Dispositivo não encontrado ou Device Key incorreta.';
+          errorMsg = data.error || 'Dispositivo nÃ£o encontrado ou Device Key incorreta.';
           break;
         }
       } catch (err) {
-        // Tenta próximo endpoint
+        // Tenta prÃ³ximo endpoint
       }
     }
 
-    showAlert(loginAlert, `❌ ${errorMsg}`, 'error');
+    showAlert(loginAlert, `âŒ ${errorMsg}`, 'error');
   });
 }
 
@@ -305,7 +305,7 @@ async function syncPlaylistsFromServer(mac) {
       }
     }
   } catch (e) {
-    console.warn('Aviso: Não foi possível obter playlists do servidor:', e);
+    console.warn('Aviso: NÃ£o foi possÃ­vel obter playlists do servidor:', e);
   }
   return getDevicePlaylists(mac);
 }
@@ -320,7 +320,7 @@ function loginDevice(mac, key, initialPlaylists = []) {
   if (!playlists || playlists.length === 0) {
     playlists = getDevicePlaylists(mac);
   }
-  // Limpa quaisquer listas antigas de demonstração (NI1 / NI3)
+  // Limpa quaisquer listas antigas de demonstraÃ§Ã£o (NI1 / NI3)
   if (playlists && playlists.some(p => p.name === 'NI1' || p.name === 'NI3')) {
     playlists = playlists.filter(p => p.name !== 'NI1' && p.name !== 'NI3');
   }
@@ -359,7 +359,7 @@ function updateSessionUI(mac) {
     if (btnLogin) btnLogin.style.display = 'none';
     if (btnLogout) {
       btnLogout.style.display = 'flex';
-      btnLogout.innerHTML = `<span>${mac}</span> <span>[→ Sair</span>`;
+      btnLogout.innerHTML = `<span>${mac}</span> <span>[â†’ Sair</span>`;
     }
     if (connectedMacEl) connectedMacEl.textContent = mac;
   } else {
@@ -369,7 +369,7 @@ function updateSessionUI(mac) {
 }
 
 /**
- * 3. Gerenciamento Completo de Playlists (Idêntico à Imagem 2)
+ * 3. Gerenciamento Completo de Playlists (IdÃªntico Ã  Imagem 2)
  */
 function initPlaylistManager() {
   const modal = document.getElementById('modal-playlist');
@@ -402,7 +402,7 @@ function initPlaylistManager() {
     fieldXtream.style.display = 'block';
   });
 
-  // Abrir Modal de Adição
+  // Abrir Modal de AdiÃ§Ã£o
   btnAdd?.addEventListener('click', () => {
     document.getElementById('modal-title').textContent = 'Adicionar Playlist';
     document.getElementById('playlist-edit-id').value = '';
@@ -432,7 +432,7 @@ function initPlaylistManager() {
     if (currentType === 'm3u') {
       url = document.getElementById('input-playlist-url').value.trim();
       if (!url.startsWith('http')) {
-        alert('Insira uma URL M3U válida começando com http:// ou https://');
+        alert('Insira uma URL M3U vÃ¡lida comeÃ§ando com http:// ou https://');
         return;
       }
     } else {
@@ -479,12 +479,12 @@ function initPlaylistManager() {
         renderPlaylists(currentMac);
       }
     }).catch(err => {
-      console.warn('Aviso: Servidor da TV não respondeu diretamente (usando cache local):', err);
+      console.warn('Aviso: Servidor da TV nÃ£o respondeu diretamente (usando cache local):', err);
     });
 
     renderPlaylists(currentMac);
     closeModal();
-    alert('Playlist salva com sucesso! Os canais já estão sincronizados no Vion Player.');
+    alert('Playlist salva com sucesso! Os canais jÃ¡ estÃ£o sincronizados no Vion Player.');
   });
 }
 
@@ -538,12 +538,12 @@ function renderPlaylists(mac) {
       </div>
     `;
 
-    // Botão Editar
+    // BotÃ£o Editar
     row.querySelector('.edit').addEventListener('click', () => {
       openEditModal(p);
     });
 
-    // Botão Excluir
+    // BotÃ£o Excluir
     row.querySelector('.delete').addEventListener('click', () => {
       if (confirm(`Deseja realmente remover a playlist "${p.name}"?`)) {
         deletePlaylist(mac, p.id);
@@ -595,13 +595,13 @@ function escapeHtml(str) {
 
 
 // ===================================================================
-// 4. PAINEL DO REVENDEDOR (RESELLER HUB) - GESTÃO COMPLETA
+// 4. PAINEL DO REVENDEDOR (RESELLER HUB) - GESTÃƒO COMPLETA
 // ===================================================================
 
 // ===================================================================
-// 4. MÓDULO OFICIAL DE REVENDEDORES & PARCEIROS
+// 4. MÃ“DULO OFICIAL DE REVENDEDORES & PARCEIROS
 // Inspirado nas 5 telas oficiais (Cadastro 2 etapas, Cinema Login,
-// Dashboard com 5 cards pretos, Topbar com Dropdown e Compra de Créditos Direta)
+// Dashboard com 5 cards pretos, Topbar com Dropdown e Compra de CrÃ©ditos Direta)
 // ===================================================================
 
 const MASTER_ADMIN_EMAIL = 'joaovitordc1010@gmail.com';
@@ -623,18 +623,18 @@ function getResellerSession() {
     data = {
       email: email || 'revendedor@exemplo.com',
       company: isMaster ? 'Vion Player Master' : 'Minha Revenda',
-      firstName: isMaster ? 'João' : 'Revendedor',
+      firstName: isMaster ? 'JoÃ£o' : 'Revendedor',
       lastName: isMaster ? 'Vitor' : 'Oficial',
       country: 'Brasil',
-      address: 'São Paulo, Brasil',
+      address: 'SÃ£o Paulo, Brasil',
       phone: '+55 11 99999-9999',
       credits: isMaster ? 9999 : parseInt(localStorage.getItem('vion_reseller_credits') || '0', 10),
       activations: JSON.parse(localStorage.getItem('vion_reseller_devices') || '[]'),
       creditHistory: isMaster ? [
-        { id: 'h1', type: 'initial', amount: 9999, desc: 'Créditos Iniciais de Administrador', date: Date.now() }
+        { id: 'h1', type: 'initial', amount: 9999, desc: 'CrÃ©ditos Iniciais de Administrador', date: Date.now() }
       ] : [],
       links: [
-        { id: 'l1', name: 'Link Oficial de Divulgação', code: 'VION-' + (isMaster ? 'JV' : 'PRO'), clicks: 0, activations: 0, url: `${window.location.origin}/portal#reseller?ref=VION-PRO` }
+        { id: 'l1', name: 'Link Oficial de DivulgaÃ§Ã£o', code: 'VION-' + (isMaster ? 'JV' : 'PRO'), clicks: 0, activations: 0, url: `${window.location.origin}/portal#reseller?ref=VION-PRO` }
       ],
       subs: JSON.parse(localStorage.getItem('vion_reseller_subs') || '[]'),
       withdrawals: [],
@@ -665,7 +665,7 @@ function initResellerPortal() {
   initNotificationSettings();
   initAdminCreditsModal();
 
-  // Verifica estado inicial de autenticação
+  // Verifica estado inicial de autenticaÃ§Ã£o
   const isAuth = localStorage.getItem('vion_reseller_auth') === 'true';
   if (isAuth) {
     showResellerView('dashboard');
@@ -719,7 +719,7 @@ function initPartnerRegistration() {
     });
   });
 
-  // Botão de alternar visibilidade de senhas
+  // BotÃ£o de alternar visibilidade de senhas
   document.querySelectorAll('.btn-toggle-password').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -737,7 +737,7 @@ function initPartnerRegistration() {
     });
   });
 
-  // Alteração de bandeira do DDI e máscara do Telefone
+  // AlteraÃ§Ã£o de bandeira do DDI e mÃ¡scara do Telefone
   const phoneCodeSelect = document.getElementById('reg-phone-code');
   const phoneFlagIcon = document.getElementById('phone-flag-icon');
   const phoneInput = document.getElementById('reg-phone-number');
@@ -750,21 +750,21 @@ function initPartnerRegistration() {
       else if (val === '+351') phoneInput.placeholder = '912 345 678';
       else if (val === '+34') phoneInput.placeholder = '612 345 678';
       else if (val === '+54') phoneInput.placeholder = '11 1234-5678';
-      else phoneInput.placeholder = 'Número de telefone';
+      else phoneInput.placeholder = 'NÃºmero de telefone';
     }
   }
 
   phoneCodeSelect?.addEventListener('change', () => {
     const val = phoneCodeSelect.value;
-    if (val === '+55') phoneFlagIcon.textContent = '🇧🇷';
-    else if (val === '+1') phoneFlagIcon.textContent = '🇺🇸';
-    else if (val === '+351') phoneFlagIcon.textContent = '🇵🇹';
-    else if (val === '+34') phoneFlagIcon.textContent = '🇪🇸';
-    else if (val === '+54') phoneFlagIcon.textContent = '🇦🇷';
+    if (val === '+55') phoneFlagIcon.textContent = 'ðŸ‡§ðŸ‡·';
+    else if (val === '+1') phoneFlagIcon.textContent = 'ðŸ‡ºðŸ‡¸';
+    else if (val === '+351') phoneFlagIcon.textContent = 'ðŸ‡µðŸ‡¹';
+    else if (val === '+34') phoneFlagIcon.textContent = 'ðŸ‡ªðŸ‡¸';
+    else if (val === '+54') phoneFlagIcon.textContent = 'ðŸ‡¦ðŸ‡·';
     updatePhonePlaceholder();
   });
 
-  // Máscara automática de telefone para o Brasil
+  // MÃ¡scara automÃ¡tica de telefone para o Brasil
   phoneInput?.addEventListener('input', (e) => {
     const val = phoneCodeSelect?.value || '+55';
     if (val === '+55') {
@@ -783,7 +783,7 @@ function initPartnerRegistration() {
 
   updatePhonePlaceholder();
 
-  // AVANÇAR: ETAPA 1 -> ETAPA 2 (Imagem 1 -> Imagem 2)
+  // AVANÃ‡AR: ETAPA 1 -> ETAPA 2 (Imagem 1 -> Imagem 2)
   step1Form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const company = document.getElementById('reg-company')?.value.trim();
@@ -802,19 +802,19 @@ function initPartnerRegistration() {
       return;
     }
 
-    // Validação imediata: se o e-mail já existe, bloqueia logo na etapa 1!
+    // ValidaÃ§Ã£o imediata: se o e-mail jÃ¡ existe, bloqueia logo na etapa 1!
     try {
       const chkRes = await fetch(`/api/reseller/check-email?email=${encodeURIComponent(email)}`);
       const chkData = await chkRes.json();
       if (chkData.exists) {
-        showAlert(alertStep1, '⚠️ Este e-mail já está cadastrado no sistema! Por favor, faça login com sua conta.', 'error');
+        showAlert(alertStep1, 'âš ï¸ Este e-mail jÃ¡ estÃ¡ cadastrado no sistema! Por favor, faÃ§a login com sua conta.', 'error');
         return;
       }
     } catch(err) {}
 
     if (alertStep1) alertStep1.style.display = 'none';
 
-    // Transição visual: Círculo 1 marcado, Círculo 2 ativo (Estilo Imagem 2)
+    // TransiÃ§Ã£o visual: CÃ­rculo 1 marcado, CÃ­rculo 2 ativo (Estilo Imagem 2)
     circle1?.classList.remove('active');
     circle1?.classList.add('completed');
     circle2?.classList.add('active');
@@ -854,24 +854,24 @@ function initPartnerRegistration() {
     const cleanDigits = phoneNumber.replace(/\D/g, '');
 
     if (!address || !phoneNumber) {
-      showAlert(alertStep2, 'Por favor, informe seu endereço e telefone.', 'error');
+      showAlert(alertStep2, 'Por favor, informe seu endereÃ§o e telefone.', 'error');
       return;
     }
 
-    // Validação estrita de número de telefone/WhatsApp
+    // ValidaÃ§Ã£o estrita de nÃºmero de telefone/WhatsApp
     if (phoneCode === '+55') {
       if (cleanDigits.length < 10 || cleanDigits.length > 11) {
-        showAlert(alertStep2, '⚠️ Por favor, informe um número de celular/WhatsApp válido com DDD (Ex: (11) 99999-9999).', 'error');
+        showAlert(alertStep2, 'âš ï¸ Por favor, informe um nÃºmero de celular/WhatsApp vÃ¡lido com DDD (Ex: (11) 99999-9999).', 'error');
         return;
       }
       const ddd = parseInt(cleanDigits.slice(0, 2), 10);
       if (ddd < 11 || ddd > 99) {
-        showAlert(alertStep2, '⚠️ DDD inválido. Informe um código de área brasileiro válido (Ex: 11, 21, 31, etc.).', 'error');
+        showAlert(alertStep2, 'âš ï¸ DDD invÃ¡lido. Informe um cÃ³digo de Ã¡rea brasileiro vÃ¡lido (Ex: 11, 21, 31, etc.).', 'error');
         return;
       }
     } else {
       if (cleanDigits.length < 7 || cleanDigits.length > 15) {
-        showAlert(alertStep2, '⚠️ Por favor, informe um número de telefone internacional válido.', 'error');
+        showAlert(alertStep2, 'âš ï¸ Por favor, informe um nÃºmero de telefone internacional vÃ¡lido.', 'error');
         return;
       }
     }
@@ -879,11 +879,11 @@ function initPartnerRegistration() {
     const fullPhone = `${phoneCode} ${phoneNumber}`;
 
     if (!terms) {
-      showAlert(alertStep2, 'Você deve concordar com os termos de privacidade e uso.', 'error');
+      showAlert(alertStep2, 'VocÃª deve concordar com os termos de privacidade e uso.', 'error');
       return;
     }
 
-    showAlert(alertStep2, '🔄 Criando sua conta de parceiro...', 'info');
+    showAlert(alertStep2, 'ðŸ”„ Criando sua conta de parceiro...', 'info');
 
     const partnerTypes = ['reseller'];
 
@@ -900,7 +900,7 @@ function initPartnerRegistration() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        showAlert(alertStep2, data?.error || 'Este e-mail já está cadastrado no sistema. Por favor, faça login.', 'error');
+        showAlert(alertStep2, data?.error || 'Este e-mail jÃ¡ estÃ¡ cadastrado no sistema. Por favor, faÃ§a login.', 'error');
         return;
       }
 
@@ -908,13 +908,13 @@ function initPartnerRegistration() {
         saveResellerSession(data.reseller);
       }
 
-      // Grava autenticação local APENAS se o cadastro foi aceito pelo servidor
+      // Grava autenticaÃ§Ã£o local APENAS se o cadastro foi aceito pelo servidor
       const isMaster = (email === MASTER_ADMIN_EMAIL.toLowerCase());
       localStorage.setItem('vion_reseller_auth', 'true');
       localStorage.setItem('vion_reseller_user', email);
       localStorage.setItem('vion_is_master_admin', isMaster ? 'true' : 'false');
 
-      showAlert(alertStep2, '✔ Cadastro realizado com sucesso! Entrando no seu painel...', 'success');
+      showAlert(alertStep2, 'âœ” Cadastro realizado com sucesso! Entrando no seu painel...', 'success');
 
       setTimeout(() => {
         showResellerView('dashboard');
@@ -961,14 +961,14 @@ function initCinemaLogin() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('✅ ' + data.message);
+        alert('âœ… ' + data.message);
         if (userInput) userInput.value = emailPrompt.trim();
         if (passInput) passInput.value = newPassPrompt.trim();
       } else {
-        alert('❌ ' + (data.error || 'Falha ao redefinir senha.'));
+        alert('âŒ ' + (data.error || 'Falha ao redefinir senha.'));
       }
     } catch(err) {
-      alert('Erro de conexão ao redefinir senha.');
+      alert('Erro de conexÃ£o ao redefinir senha.');
     }
   });
 
@@ -982,7 +982,7 @@ function initCinemaLogin() {
       return;
     }
 
-    showAlert(alertBox, '🔄 Autenticando revendedor...', 'info');
+    showAlert(alertBox, 'ðŸ”„ Autenticando revendedor...', 'info');
 
     try {
       const res = await fetch('/api/reseller/login', {
@@ -1007,7 +1007,7 @@ function initCinemaLogin() {
       localStorage.setItem('vion_reseller_user', user);
       localStorage.setItem('vion_is_master_admin', isMaster ? 'true' : 'false');
 
-      showAlert(alertBox, isMaster ? '✔ Bem-vindo, Administrador Geral!' : '✔ Login autorizado!', 'success');
+      showAlert(alertBox, isMaster ? 'âœ” Bem-vindo, Administrador Geral!' : 'âœ” Login autorizado!', 'success');
 
       setTimeout(() => {
         if (alertBox) alertBox.style.display = 'none';
@@ -1015,7 +1015,7 @@ function initCinemaLogin() {
       }, 500);
 
     } catch(err) {
-      showAlert(alertBox, 'Erro ao conectar ao servidor de login. Verifique sua conexão.', 'error');
+      showAlert(alertBox, 'Erro ao conectar ao servidor de login. Verifique sua conexÃ£o.', 'error');
     }
   });
 }
@@ -1041,7 +1041,7 @@ function initHubDashboard() {
     }
   });
 
-  // CHEAT CODE DO ADMIN: Clicar no valor total de créditos no card permite editar o saldo.
+  // CHEAT CODE DO ADMIN: Clicar no valor total de crÃ©ditos no card permite editar o saldo.
   const credTotalElement = document.getElementById('card-cred-total');
   if (isCurrentUserMasterAdmin() && credTotalElement) credTotalElement.style.cursor = 'pointer';
   
@@ -1050,7 +1050,7 @@ function initHubDashboard() {
     if (!session) return;
     if (isCurrentUserMasterAdmin()) {
 // native prompt removed
-     openAdminCreditsModal('Adicionar Créditos (Admin)', 'Saldo atual: <strong>' + session.credits + '</strong><br>Digite a quantidade a ADICIONAR:', (amount) => {
+     openAdminCreditsModal('Adicionar CrÃ©ditos (Admin)', 'Saldo atual: <strong>' + session.credits + '</strong><br>Digite a quantidade a ADICIONAR:', (amount) => {
         if (amount !== 0) {
 
 
@@ -1059,18 +1059,18 @@ function initHubDashboard() {
             id: 'manual_' + Date.now(),
             type: 'manual',
             amount: amount,
-            desc: `Adição manual (Admin)`,
+            desc: `AdiÃ§Ã£o manual (Admin)`,
             date: Date.now()
           });
           saveResellerSession(session);
           refreshHubDashboard();
-          alert(`Sucesso! Foram adicionados ${amount} créditos à sua conta.`);
+          alert(`Sucesso! Foram adicionados ${amount} crÃ©ditos Ã  sua conta.`);
         }
       });
     }
   });
 
-  // Ações do Dropdown Menu (Imagem 5)
+  // AÃ§Ãµes do Dropdown Menu (Imagem 5)
   document.getElementById('menu-buy-credits')?.addEventListener('click', () => {
     dropdownMenu?.classList.remove('active');
     openDirectBuyModal();
@@ -1099,7 +1099,7 @@ function initHubDashboard() {
     refreshHubDashboard();
   });
 
-  // Toggle do Menu Lateral (Hambúrguer ☰) sem quebrar o layout
+  // Toggle do Menu Lateral (HambÃºrguer â˜°) sem quebrar o layout
   function openMobileSidebar() {
     sidebar?.classList.add('mobile-open');
     const backdrop = document.getElementById('hub-sidebar-backdrop');
@@ -1137,7 +1137,7 @@ function initHubDashboard() {
   document.getElementById('hub-sidebar-backdrop')?.addEventListener('click', closeMobileSidebar);
   document.getElementById('btn-close-mobile-drawer')?.addEventListener('click', closeMobileSidebar);
 
-  // Navegação entre sub-abas da Sidebar
+  // NavegaÃ§Ã£o entre sub-abas da Sidebar
   const navBtns = document.querySelectorAll('.hub-nav-btn');
   navBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1148,10 +1148,12 @@ function initHubDashboard() {
   });
 
   // Sub-aba inicial: Painel
-  switchHubSubView('dashboard');
+  const lastTab = sessionStorage.getItem('vion_reseller_active_tab') || 'dashboard';
+  switchHubSubView(lastTab);
 }
 
 function switchHubSubView(targetSub) {
+  sessionStorage.setItem('vion_reseller_active_tab', targetSub);
   const navBtns = document.querySelectorAll('.hub-nav-btn');
   const subContents = document.querySelectorAll('.hub-sub-content');
 
@@ -1166,13 +1168,13 @@ function switchHubSubView(targetSub) {
   const activeContent = document.getElementById(`hub-sub-${targetSub}`);
   if (activeContent) activeContent.classList.add('active');
 
-  // Renders específicos
+  // Renders especÃ­ficos
   if (targetSub === 'devices') renderHubDevices();
   if (targetSub === 'credits-history') renderHubCreditHistory();
   if (targetSub === 'subs') renderHubSubs();
   if (targetSub === 'partnerships') {
     if (!isCurrentUserMasterAdmin()) {
-      alert('Acesso restrito: Apenas o Administrador Geral pode acessar Códigos de Parceria.');
+      alert('Acesso restrito: Apenas o Administrador Geral pode acessar CÃ³digos de Parceria.');
       switchHubSubView('dashboard');
       return;
     }
@@ -1192,7 +1194,7 @@ function refreshHubDashboard() {
   const flagEl = document.getElementById('hub-flag-badge');
   const masterBtn = document.getElementById('hub-nav-partners');
 
-  // Adiciona botão explícito de injetar créditos se for Master
+  // Adiciona botÃ£o explÃ­cito de injetar crÃ©ditos se for Master
   if (isMaster) {
     const btnHeroBuy = document.getElementById('btn-hero-buy-credits');
     if (btnHeroBuy && !document.getElementById('btn-admin-cheat')) {
@@ -1202,11 +1204,11 @@ function refreshHubDashboard() {
       adminBtn.style.background = '#22c55e';
       adminBtn.style.borderColor = '#22c55e';
       adminBtn.style.marginLeft = '10px';
-      adminBtn.innerHTML = '<span>➕</span> Injetar Créditos (Admin)';
+      adminBtn.innerHTML = '<span>âž•</span> Injetar CrÃ©ditos (Admin)';
       adminBtn.addEventListener('click', () => {
         const currentSession = getResellerSession();
 // native prompt removed
-       openAdminCreditsModal('Injetar Créditos (Admin)', 'Saldo atual: <strong>' + currentSession.credits + '</strong><br>Digite a quantidade a ADICIONAR ou REMOVER (use -):', (amount) => {
+       openAdminCreditsModal('Injetar CrÃ©ditos (Admin)', 'Saldo atual: <strong>' + currentSession.credits + '</strong><br>Digite a quantidade a ADICIONAR ou REMOVER (use -):', (amount) => {
          if (amount !== 0) {
 
 
@@ -1215,12 +1217,12 @@ function refreshHubDashboard() {
               id: 'manual_' + Date.now(),
               type: 'manual',
               amount: amount,
-              desc: `Adição manual (Admin)`,
+              desc: `AdiÃ§Ã£o manual (Admin)`,
               date: Date.now()
             });
             saveResellerSession(currentSession);
             refreshHubDashboard();
-            alert(`Sucesso! Foram adicionados ${amount} créditos à sua conta.`);
+            alert(`Sucesso! Foram adicionados ${amount} crÃ©ditos Ã  sua conta.`);
           }
         });
       });
@@ -1228,19 +1230,19 @@ function refreshHubDashboard() {
     }
   }
 
-  if (nameEl) nameEl.textContent = session.firstName ? `${session.firstName} ${session.lastName || ''}`.trim() : (isMaster ? 'João Vitor' : 'Revendedor');
+  if (nameEl) nameEl.textContent = session.firstName ? `${session.firstName} ${session.lastName || ''}`.trim() : (isMaster ? 'JoÃ£o Vitor' : 'Revendedor');
   if (creditsEl) creditsEl.textContent = session.credits || 0;
-  if (flagEl) flagEl.textContent = session.country === 'Estados Unidos' ? '🇺🇸' : (session.country === 'Portugal' ? '🇵🇹' : '🇧🇷');
+  if (flagEl) flagEl.textContent = session.country === 'Estados Unidos' ? 'ðŸ‡ºðŸ‡¸' : (session.country === 'Portugal' ? 'ðŸ‡µðŸ‡¹' : 'ðŸ‡§ðŸ‡·');
   if (masterBtn) masterBtn.style.display = isMaster ? 'flex' : 'none';
 
   // ATUALIZA OS CARDS PRETOS DO REVENDEDOR
   const devices = session.activations || [];
   const todayStr = new Date().toISOString().slice(0, 10);
   const now = new Date();
-  const monthsPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const monthsPt = ['Janeiro', 'Fevereiro', 'MarÃ§o', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
   const curMonthName = monthsPt[now.getMonth()];
 
-  // Card 1: Ativações
+  // Card 1: AtivaÃ§Ãµes
   const actTotal = devices.length;
   const actMonth = devices.filter(d => (d.createdAt || d.date ? new Date(d.createdAt || d.date).getMonth() === now.getMonth() : false)).length;
   const actToday = devices.filter(d => (d.createdAt || d.date ? new Date(d.createdAt || d.date).toISOString().startsWith(todayStr) : false)).length;
@@ -1250,7 +1252,7 @@ function refreshHubDashboard() {
   setText('card-act-month', actMonth);
   setText('card-act-today', actToday);
 
-  // Card 2: Crédito
+  // Card 2: CrÃ©dito
   setText('card-cred-total', session.credits || 0);
   setText('card-cred-month-name', `${curMonthName} :`);
   setText('card-cred-month', session.creditHistory ? session.creditHistory.filter(h => h.amount > 0).reduce((acc, x) => acc + x.amount, 0) : 0);
@@ -1275,7 +1277,7 @@ function handleResellerLogout() {
 }
 
 // ===================================================================
-// 4.4 COMPRA DIRETA DE CRÉDITOS ("COMPRAR CRÉDITOS DIRETAMENTE LÁ")
+// 4.4 COMPRA DIRETA DE CRÃ‰DITOS ("COMPRAR CRÃ‰DITOS DIRETAMENTE LÃ")
 // ===================================================================
 let selectedCreditsPack = { amount: 25, price: 300 };
 
@@ -1287,7 +1289,7 @@ function initDirectBuyCredits() {
     if (modal) modal.style.display = 'none';
   });
 
-  // Função global chamada nos cards de pacotes
+  // FunÃ§Ã£o global chamada nos cards de pacotes
   window.selectCreditPack = function(amount, price) {
     selectedCreditsPack = { amount, price };
     openCheckoutView(amount, price);
@@ -1323,7 +1325,7 @@ async function openCheckoutView(amount, price) {
   const modalBox = modal.querySelector('.modal-box');
   modalBox.innerHTML = `
     <div class="modal-header">
-      <h3>Pagamento Instantâneo via PIX</h3>
+      <h3>Pagamento InstantÃ¢neo via PIX</h3>
       <button type="button" class="btn-close-modal" onclick="closePixBuyModal()">&times;</button>
     </div>
     <div style="padding: 40px 20px; text-align: center;">
@@ -1347,27 +1349,27 @@ async function openCheckoutView(amount, price) {
         email: session?.email || 'contato@vionplayer.app',
         amount: price,
         credits: amount,
-        description: `Recarga de ${amount} Créditos - Vion Player`
+        description: `Recarga de ${amount} CrÃ©ditos - Vion Player`
       })
     });
     paymentData = await res.json();
   } catch(e) {
-    paymentData = { success: false, error: 'Falha de comunicação com o servidor de pagamentos.' };
+    paymentData = { success: false, error: 'Falha de comunicaÃ§Ã£o com o servidor de pagamentos.' };
   }
 
   if (!paymentData || !paymentData.success) {
     modalBox.innerHTML = `
       <div class="modal-header">
-        <h3>Erro ao Gerar Cobrança</h3>
+        <h3>Erro ao Gerar CobranÃ§a</h3>
         <button type="button" class="btn-close-modal" onclick="closePixBuyModal()">&times;</button>
       </div>
       <div style="padding: 30px 20px; text-align: center;">
-        <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+        <div style="font-size: 48px; margin-bottom: 12px;">âš ï¸</div>
         <p style="color: #ef4444; font-weight: 600; font-size: 15px; margin-bottom: 16px;">
-          ${paymentData?.error || 'Não foi possível gerar a chave PIX no momento.'}
+          ${paymentData?.error || 'NÃ£o foi possÃ­vel gerar a chave PIX no momento.'}
         </p>
         <button type="button" class="btn btn-secondary" onclick="initDirectBuyCreditsModalRestore()">
-          ← Voltar para Escolha de Pacotes
+          â† Voltar para Escolha de Pacotes
         </button>
       </div>
     `;
@@ -1381,21 +1383,21 @@ async function openCheckoutView(amount, price) {
 
   modalBox.innerHTML = `
     <div class="modal-header">
-      <h3>Pagamento Instantâneo via PIX</h3>
+      <h3>Pagamento InstantÃ¢neo via PIX</h3>
       <button type="button" class="btn-close-modal" onclick="closePixBuyModal()">&times;</button>
     </div>
 
     <div style="padding: 10px 0; text-align: center;">
       ${paymentData.notConfigured ? `
         <div style="background: rgba(245, 158, 11, 0.12); border: 1px dashed rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 12px; margin-bottom: 16px; font-size: 12.5px; color: #fbbf24; text-align: left;">
-          ⚡ <strong>Modo Demonstração / Teste:</strong> Configure seu Access Token do Mercado Pago na aba Códigos de Parceria para receber pagamentos reais no seu banco.
+          âš¡ <strong>Modo DemonstraÃ§Ã£o / Teste:</strong> Configure seu Access Token do Mercado Pago na aba CÃ³digos de Parceria para receber pagamentos reais no seu banco.
         </div>
       ` : ''}
 
       <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
         <span style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Pacote Selecionado:</span>
         <div style="font-size: 20px; font-weight: 800; color: #f59e0b; margin: 2px 0;">
-          ${amount} Créditos de Revenda
+          ${amount} CrÃ©ditos de Revenda
         </div>
         <div style="font-size: 18px; font-weight: 900; color: #ffffff;">
           Total: R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -1407,7 +1409,7 @@ async function openCheckoutView(amount, price) {
           <img src="data:image/png;base64,${qrCodeBase64}" alt="QR Code PIX Mercado Pago" class="pix-qr-image">
         </div>
         <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
-          Abra o app do seu banco e aponte a câmera para o QR Code acima.
+          Abra o app do seu banco e aponte a cÃ¢mera para o QR Code acima.
         </p>
       ` : `
         <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
@@ -1418,52 +1420,52 @@ async function openCheckoutView(amount, price) {
       <div class="pix-key-display" id="pix-copy-text" style="font-size: 11px; max-height: 60px; overflow-y: auto; user-select: all;">${qrCode}</div>
 
       <button type="button" class="btn btn-outline" id="btn-copy-pix-code" style="margin-top: 10px; margin-bottom: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <span>📋</span> Copiar Código PIX Copia e Cola
+        <span>ðŸ“‹</span> Copiar CÃ³digo PIX Copia e Cola
       </button>
 
-      <!-- Status em Tempo Real (Verificação Automática) -->
+      <!-- Status em Tempo Real (VerificaÃ§Ã£o AutomÃ¡tica) -->
       <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;">
         <span class="pulse-indicator"></span>
         <span style="font-size: 13px; color: #86efac; font-weight: 600;" id="pix-live-status-text">
-          Aguardando pagamento no banco... Liberação automática
+          Aguardando pagamento no banco... LiberaÃ§Ã£o automÃ¡tica
         </span>
       </div>
 
       ${(isDemo || paymentData.notConfigured) ? `
         <button type="button" class="btn btn-gold" id="btn-simulate-pix-success" style="width: 100%; margin-top: 14px; font-size: 14px; padding: 12px;">
-          ⚡ Simular Pagamento Aprovado Imediato (Teste)
+          âš¡ Simular Pagamento Aprovado Imediato (Teste)
         </button>
       ` : ''}
 
       <div style="border-top: 1px solid #334155; padding-top: 14px; margin-top: 16px;">
         <button type="button" class="btn btn-secondary" onclick="initDirectBuyCreditsModalRestore()" style="width: 100%;">
-          ← Escolher Outro Pacote
+          â† Escolher Outro Pacote
         </button>
       </div>
     </div>
   `;
 
-  // Botão Copiar
+  // BotÃ£o Copiar
   document.getElementById('btn-copy-pix-code')?.addEventListener('click', () => {
     navigator.clipboard.writeText(qrCode);
     const btn = document.getElementById('btn-copy-pix-code');
-    if (btn) btn.innerHTML = '<span>✅</span> Código PIX Copiado com Sucesso!';
+    if (btn) btn.innerHTML = '<span>âœ…</span> CÃ³digo PIX Copiado com Sucesso!';
     setTimeout(() => {
-      if (btn) btn.innerHTML = '<span>📋</span> Copiar Código PIX Copia e Cola';
+      if (btn) btn.innerHTML = '<span>ðŸ“‹</span> Copiar CÃ³digo PIX Copia e Cola';
     }, 3000);
   });
 
-  // Função disparada quando aprovado
+  // FunÃ§Ã£o disparada quando aprovado
   const handlePaymentApproved = () => {
     clearPixPolling();
     modalBox.innerHTML = `
       <div style="padding: 36px 20px; text-align: center;">
-        <div style="font-size: 64px; margin-bottom: 12px;">🎉</div>
+        <div style="font-size: 64px; margin-bottom: 12px;">ðŸŽ‰</div>
         <h3 style="color: #22c55e; font-size: 24px; font-weight: 800; margin-bottom: 8px;">
           Pagamento Aprovado com Sucesso!
         </h3>
         <p style="color: #cbd5e1; font-size: 15px; margin-bottom: 22px;">
-          <strong style="color: #f59e0b;">+${amount} créditos</strong> foram adicionados ao seu saldo de revenda.
+          <strong style="color: #f59e0b;">+${amount} crÃ©ditos</strong> foram adicionados ao seu saldo de revenda.
         </p>
         <button type="button" class="btn btn-gold" onclick="closePixBuyModal()" style="padding: 12px 32px; font-size: 15px;">
           Continuar no Painel
@@ -1471,7 +1473,7 @@ async function openCheckoutView(amount, price) {
       </div>
     `;
 
-    // Atualiza a sessão e recarrega os dados do dashboard
+    // Atualiza a sessÃ£o e recarrega os dados do dashboard
     if (session) {
       session.credits = (session.credits || 0) + amount;
       if (!Array.isArray(session.creditHistory)) session.creditHistory = [];
@@ -1479,7 +1481,7 @@ async function openCheckoutView(amount, price) {
         id: 'mp_' + Date.now(),
         type: 'purchase',
         amount: amount,
-        desc: `Recarga de ${amount} créditos via PIX Mercado Pago`,
+        desc: `Recarga de ${amount} crÃ©ditos via PIX Mercado Pago`,
         date: Date.now()
       });
       saveResellerSession(session);
@@ -1487,10 +1489,10 @@ async function openCheckoutView(amount, price) {
     }
   };
 
-  // Botão de Simulação (se disponível)
+  // BotÃ£o de SimulaÃ§Ã£o (se disponÃ­vel)
   document.getElementById('btn-simulate-pix-success')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-simulate-pix-success');
-    if (btn) btn.innerHTML = '⏳ Confirmando liberação...';
+    if (btn) btn.innerHTML = 'â³ Confirmando liberaÃ§Ã£o...';
     try {
       await fetch('/api/payment/simulate-approval', {
         method: 'POST',
@@ -1501,7 +1503,7 @@ async function openCheckoutView(amount, price) {
     handlePaymentApproved();
   });
 
-  // Polling automático no Mercado Pago a cada 2.5 segundos
+  // Polling automÃ¡tico no Mercado Pago a cada 2.5 segundos
   pixPollingTimer = setInterval(async () => {
     try {
       const checkRes = await fetch(`/api/payment/status?id=${encodeURIComponent(paymentId)}`);
@@ -1518,45 +1520,45 @@ function initDirectBuyCreditsModalRestore() {
   if (!modal) return;
   modal.querySelector('.modal-box').innerHTML = `
     <div class="modal-header">
-      <h3>Comprar Créditos para Revenda</h3>
+      <h3>Comprar CrÃ©ditos para Revenda</h3>
       <button type="button" class="btn-close-modal" onclick="document.getElementById('modal-buy-credits').style.display='none'">&times;</button>
     </div>
 
     <div style="padding: 10px 0;">
       <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">
-        Adquira pacotes de créditos com preço de atacado e libere licenças na hora:
+        Adquira pacotes de crÃ©ditos com preÃ§o de atacado e libere licenÃ§as na hora:
       </p>
 
       <div class="buy-credits-grid">
         <div class="credit-pack-card" onclick="selectCreditPack(10, 150)">
           <div class="pack-badge">Iniciante</div>
-          <h4>10 Créditos</h4>
+          <h4>10 CrÃ©ditos</h4>
           <div class="pack-price">R$ 150,00</div>
-          <div class="pack-unit">R$ 15,00 / crédito</div>
+          <div class="pack-unit">R$ 15,00 / crÃ©dito</div>
           <button type="button" class="btn btn-outline pack-btn">Comprar</button>
         </div>
 
         <div class="credit-pack-card featured" onclick="selectCreditPack(25, 300)">
           <div class="pack-badge pack-badge-gold">Mais Vendido</div>
-          <h4>25 Créditos</h4>
+          <h4>25 CrÃ©ditos</h4>
           <div class="pack-price">R$ 300,00</div>
-          <div class="pack-unit">R$ 12,00 / crédito</div>
+          <div class="pack-unit">R$ 12,00 / crÃ©dito</div>
           <button type="button" class="btn btn-gold pack-btn">Comprar</button>
         </div>
 
         <div class="credit-pack-card" onclick="selectCreditPack(50, 500)">
           <div class="pack-badge">Atacado</div>
-          <h4>50 Créditos</h4>
+          <h4>50 CrÃ©ditos</h4>
           <div class="pack-price">R$ 500,00</div>
-          <div class="pack-unit">R$ 10,00 / crédito</div>
+          <div class="pack-unit">R$ 10,00 / crÃ©dito</div>
           <button type="button" class="btn btn-outline pack-btn">Comprar</button>
         </div>
 
         <div class="credit-pack-card" onclick="selectCreditPack(100, 800)">
           <div class="pack-badge">Master</div>
-          <h4>100 Créditos</h4>
+          <h4>100 CrÃ©ditos</h4>
           <div class="pack-price">R$ 800,00</div>
-          <div class="pack-unit">R$ 8,00 / crédito</div>
+          <div class="pack-unit">R$ 8,00 / crÃ©dito</div>
           <button type="button" class="btn btn-outline pack-btn">Comprar</button>
         </div>
       </div>
@@ -1565,7 +1567,7 @@ function initDirectBuyCreditsModalRestore() {
 }
 
 // ===================================================================
-// ATIVAÇÃO DIRETA DE DISPOSITIVO VIA PIX MERCADO PAGO (CLIENTE FINAL)
+// ATIVAÃ‡ÃƒO DIRETA DE DISPOSITIVO VIA PIX MERCADO PAGO (CLIENTE FINAL)
 // ===================================================================
 let devicePixPollingTimer = null;
 
@@ -1591,10 +1593,10 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
   const modalBox = modal.querySelector('.modal-box');
   const isLifetime = planType === 'vitalicio';
 
-  // ETAPA 1: DIGITAÇÃO DO ENDEREÇO MAC
+  // ETAPA 1: DIGITAÃ‡ÃƒO DO ENDEREÃ‡O MAC
   modalBox.innerHTML = `
     <div class="modal-header">
-      <h3>Ativação do Vion Player na TV</h3>
+      <h3>AtivaÃ§Ã£o do Vion Player na TV</h3>
       <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
     </div>
 
@@ -1605,24 +1607,24 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
           ${planTitle}
         </div>
         <div style="font-size: 18px; font-weight: 900; color: #ffffff;">
-          R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ${isLifetime ? '(Pagamento Único)' : '(12 Meses)'}
+          R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ${isLifetime ? '(Pagamento Ãšnico)' : '(12 Meses)'}
         </div>
       </div>
 
       <div style="text-align: left;">
         <label style="font-size: 13px; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">
-          Endereço MAC da TV ou Aparelho:
+          EndereÃ§o MAC da TV ou Aparelho:
         </label>
         <input type="text" id="input-device-pay-mac" placeholder="Ex: 00:1A:79:B4:C2:5D" maxlength="17"
                style="width: 100%; font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box;">
         
         <div id="device-mac-status-hint" style="margin-top: 8px; font-size: 12.5px; min-height: 20px;">
-          <span style="color: #94a3b8;">💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.</span>
+          <span style="color: #94a3b8;">ðŸ’¡ <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereÃ§o MAC aparece na tela inicial.</span>
         </div>
 
         <div style="border-top: 1px solid #334155; padding-top: 18px; margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
           <button type="button" class="btn btn-gold" id="btn-device-pay-proceed" style="width: 100%; font-size: 15px; padding: 14px;">
-            ⚡ Gerar PIX para Ativação Instantânea (R$ ${price},00)
+            âš¡ Gerar PIX para AtivaÃ§Ã£o InstantÃ¢nea (R$ ${price},00)
           </button>
           <button type="button" class="btn btn-secondary" onclick="closeDevicePayModal()" style="width: 100%;">
             Cancelar
@@ -1632,7 +1634,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
     </div>
   `;
 
-  // Auto-formatação de MAC Address (ex: 00:1A:79...) + Verificação em tempo real
+  // Auto-formataÃ§Ã£o de MAC Address (ex: 00:1A:79...) + VerificaÃ§Ã£o em tempo real
   const macInput = document.getElementById('input-device-pay-mac');
   const statusHint = document.getElementById('device-mac-status-hint');
   macInput?.focus();
@@ -1643,20 +1645,20 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
     e.target.value = parts.join(':');
 
     if (e.target.value.length === 17) {
-      if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">🔄 Verificando se o aparelho está cadastrado...</span>';
+      if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">ðŸ”„ Verificando se o aparelho estÃ¡ cadastrado...</span>';
       try {
         const checkRes = await fetch(`/api/device?mac=${encodeURIComponent(e.target.value)}`);
         const checkData = await checkRes.json();
         if (checkRes.ok && checkData.success) {
-          if (statusHint) statusHint.innerHTML = '<span style="color: #22c55e; font-weight: 700;">✔ Aparelho identificado no sistema! TV pronta para ativação.</span>';
+          if (statusHint) statusHint.innerHTML = '<span style="color: #22c55e; font-weight: 700;">âœ” Aparelho identificado no sistema! TV pronta para ativaÃ§Ã£o.</span>';
         } else {
-          if (statusHint) statusHint.innerHTML = '<span style="color: #f59e0b; font-weight: 600;">⚠️ Dispositivo não encontrado. Certifique-se de já ter aberto o Vion Player na TV.</span>';
+          if (statusHint) statusHint.innerHTML = '<span style="color: #f59e0b; font-weight: 600;">âš ï¸ Dispositivo nÃ£o encontrado. Certifique-se de jÃ¡ ter aberto o Vion Player na TV.</span>';
         }
       } catch(err) {
-        if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.</span>';
+        if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">ðŸ’¡ <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereÃ§o MAC aparece na tela inicial.</span>';
       }
     } else {
-      if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">💡 <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereço MAC aparece na tela inicial.</span>';
+      if (statusHint) statusHint.innerHTML = '<span style="color: #94a3b8;">ðŸ’¡ <strong>Onde encontrar?</strong> Abra o Vion Player na sua TV. O endereÃ§o MAC aparece na tela inicial.</span>';
     }
   });
 
@@ -1670,31 +1672,31 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
   document.getElementById('btn-device-pay-proceed')?.addEventListener('click', async () => {
     let mac = (macInput?.value || '').trim().toUpperCase();
 
-    // Validação básica do MAC
+    // ValidaÃ§Ã£o bÃ¡sica do MAC
     const cleanMac = mac.replace(/[^0-9A-F]/g, '');
     if (cleanMac.length !== 12) {
-      alert('Por favor, informe um endereço MAC válido contendo 12 dígitos (ex: 00:1A:79:B4:C2:5D).');
+      alert('Por favor, informe um endereÃ§o MAC vÃ¡lido contendo 12 dÃ­gitos (ex: 00:1A:79:B4:C2:5D).');
       macInput?.focus();
       return;
     }
 
-    // Validação estrita: somente permite avançar se o MAC já existir no sistema (abriu o app na TV)
+    // ValidaÃ§Ã£o estrita: somente permite avanÃ§ar se o MAC jÃ¡ existir no sistema (abriu o app na TV)
     try {
       const checkRes = await fetch(`/api/device?mac=${encodeURIComponent(mac)}`);
       const checkData = await checkRes.json();
       if (!checkRes.ok || !checkData.success) {
-        alert(`❌ Dispositivo não encontrado!\n\nO endereço MAC "${mac}" ainda não foi registrado no sistema.\n\nPor favor, abra o aplicativo Vion Player na sua TV pelo menos uma vez para que o seu aparelho seja reconhecido antes de realizar a ativação, ou verifique se digitou o MAC corretamente.`);
+        alert(`âŒ Dispositivo nÃ£o encontrado!\n\nO endereÃ§o MAC "${mac}" ainda nÃ£o foi registrado no sistema.\n\nPor favor, abra o aplicativo Vion Player na sua TV pelo menos uma vez para que o seu aparelho seja reconhecido antes de realizar a ativaÃ§Ã£o, ou verifique se digitou o MAC corretamente.`);
         macInput?.focus();
         return;
       }
     } catch(err) {
-      // Se houver falha de rede na checagem prévia, prossegue com cautela
+      // Se houver falha de rede na checagem prÃ©via, prossegue com cautela
     }
 
-    // ETAPA 2: GERANDO COBRANÇA
+    // ETAPA 2: GERANDO COBRANÃ‡A
     modalBox.innerHTML = `
       <div class="modal-header">
-        <h3>Ativação do Vion Player</h3>
+        <h3>AtivaÃ§Ã£o do Vion Player</h3>
         <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
       </div>
       <div style="padding: 40px 20px; text-align: center;">
@@ -1717,27 +1719,27 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
           mac: mac,
           amount: price,
           email: 'cliente@vionplayer.app',
-          description: `Ativação ${planTitle} - MAC ${mac}`
+          description: `AtivaÃ§Ã£o ${planTitle} - MAC ${mac}`
         })
       });
       payData = await res.json();
     } catch(err) {
-      payData = { success: false, error: 'Falha de comunicação com o servidor de pagamentos.' };
+      payData = { success: false, error: 'Falha de comunicaÃ§Ã£o com o servidor de pagamentos.' };
     }
 
     if (!payData || !payData.success) {
       modalBox.innerHTML = `
         <div class="modal-header">
-          <h3>Erro ao Gerar Cobrança</h3>
+          <h3>Erro ao Gerar CobranÃ§a</h3>
           <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
         </div>
         <div style="padding: 30px 20px; text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+          <div style="font-size: 48px; margin-bottom: 12px;">âš ï¸</div>
           <p style="color: #ef4444; font-weight: 600; font-size: 15px; margin-bottom: 16px;">
-            ${payData?.error || 'Não foi possível gerar a chave PIX no momento.'}
+            ${payData?.error || 'NÃ£o foi possÃ­vel gerar a chave PIX no momento.'}
           </p>
           <button type="button" class="btn btn-secondary" onclick="openDevicePaymentModal('${planType}', ${price}, '${planTitle}')">
-            ← Tentar Novamente
+            â† Tentar Novamente
           </button>
         </div>
       `;
@@ -1752,7 +1754,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
 
     modalBox.innerHTML = `
       <div class="modal-header">
-        <h3>Pagamento PIX - Ativação de TV</h3>
+        <h3>Pagamento PIX - AtivaÃ§Ã£o de TV</h3>
         <button type="button" class="btn-close-modal" onclick="closeDevicePayModal()">&times;</button>
       </div>
 
@@ -1763,7 +1765,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
             ${mac}
           </div>
           <div style="font-size: 14px; font-weight: 700; color: #ffffff;">
-            ${planTitle} • R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            ${planTitle} â€¢ R$ ${Number(price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </div>
         </div>
 
@@ -1772,7 +1774,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
             <img src="data:image/png;base64,${qrCodeBase64}" alt="QR Code PIX Mercado Pago" class="pix-qr-image">
           </div>
           <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
-            Abra o app do seu banco e aponte a câmera para o QR Code acima.
+            Abra o app do seu banco e aponte a cÃ¢mera para o QR Code acima.
           </p>
         ` : `
           <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 10px;">
@@ -1783,19 +1785,19 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
         <div class="pix-key-display" id="device-pix-copy-text" style="font-size: 11px; max-height: 60px; overflow-y: auto; user-select: all;">${qrCode}</div>
 
         <button type="button" class="btn btn-outline" id="btn-copy-device-pix-code" style="margin-top: 10px; margin-bottom: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <span>📋</span> Copiar Código PIX Copia e Cola
+          <span>ðŸ“‹</span> Copiar CÃ³digo PIX Copia e Cola
         </button>
 
         <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;">
           <span class="pulse-indicator"></span>
           <span style="font-size: 13px; color: #86efac; font-weight: 600;">
-            Aguardando pagamento no banco... Liberação automática do MAC
+            Aguardando pagamento no banco... LiberaÃ§Ã£o automÃ¡tica do MAC
           </span>
         </div>
 
         ${(isDemo || payData.notConfigured) ? `
           <button type="button" class="btn btn-gold" id="btn-simulate-device-pix-success" style="width: 100%; margin-top: 14px; font-size: 14px; padding: 12px;">
-            ⚡ Simular Pagamento Aprovado Imediato (Teste)
+            âš¡ Simular Pagamento Aprovado Imediato (Teste)
           </button>
         ` : ''}
 
@@ -1807,22 +1809,22 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
       </div>
     `;
 
-    // Botão Copiar
+    // BotÃ£o Copiar
     document.getElementById('btn-copy-device-pix-code')?.addEventListener('click', () => {
       navigator.clipboard.writeText(qrCode);
       const btn = document.getElementById('btn-copy-device-pix-code');
-      if (btn) btn.innerHTML = '<span>✅</span> Código PIX Copiado com Sucesso!';
+      if (btn) btn.innerHTML = '<span>âœ…</span> CÃ³digo PIX Copiado com Sucesso!';
       setTimeout(() => {
-        if (btn) btn.innerHTML = '<span>📋</span> Copiar Código PIX Copia e Cola';
+        if (btn) btn.innerHTML = '<span>ðŸ“‹</span> Copiar CÃ³digo PIX Copia e Cola';
       }, 3000);
     });
 
-    // Função de Ativação Concluída
+    // FunÃ§Ã£o de AtivaÃ§Ã£o ConcluÃ­da
     const handleDevicePaymentApproved = () => {
       clearDevicePixPolling();
       modalBox.innerHTML = `
         <div style="padding: 36px 20px; text-align: center;">
-          <div style="font-size: 64px; margin-bottom: 12px;">🎉</div>
+          <div style="font-size: 64px; margin-bottom: 12px;">ðŸŽ‰</div>
           <h3 style="color: #22c55e; font-size: 24px; font-weight: 800; margin-bottom: 8px;">
             Aparelho Ativado com Sucesso!
           </h3>
@@ -1830,7 +1832,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
             O dispositivo com MAC <strong style="color: #f59e0b; font-family: monospace;">${mac}</strong> foi ativado com a <strong>${planTitle}</strong>!
           </p>
           <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 24px;">
-            Basta abrir ou reiniciar o Vion Player na sua TV para começar a assistir.
+            Basta abrir ou reiniciar o Vion Player na sua TV para comeÃ§ar a assistir.
           </p>
           <button type="button" class="btn btn-gold" onclick="closeDevicePayModal()" style="padding: 12px 36px; font-size: 15px;">
             Concluir
@@ -1839,10 +1841,10 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
       `;
     };
 
-    // Botão Simular (se disponível)
+    // BotÃ£o Simular (se disponÃ­vel)
     document.getElementById('btn-simulate-device-pix-success')?.addEventListener('click', async () => {
       const btn = document.getElementById('btn-simulate-device-pix-success');
-      if (btn) btn.innerHTML = '⏳ Confirmando liberação...';
+      if (btn) btn.innerHTML = 'â³ Confirmando liberaÃ§Ã£o...';
       try {
         await fetch('/api/payment/simulate-approval', {
           method: 'POST',
@@ -1853,7 +1855,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
       handleDevicePaymentApproved();
     });
 
-    // Polling de verificação ao vivo no Mercado Pago
+    // Polling de verificaÃ§Ã£o ao vivo no Mercado Pago
     devicePixPollingTimer = setInterval(async () => {
       try {
         const checkRes = await fetch(`/api/payment/status?id=${encodeURIComponent(paymentId)}`);
@@ -1867,7 +1869,7 @@ window.openDevicePaymentModal = function(planType, price, planTitle) {
 };
 
 // ===================================================================
-// 4.5 SUB-ABAS DO PAINEL (DISPOSITIVOS, CRÉDITOS, LINKS, RETIRADAS, SUBS)
+// 4.5 SUB-ABAS DO PAINEL (DISPOSITIVOS, CRÃ‰DITOS, LINKS, RETIRADAS, SUBS)
 // ===================================================================
 
 function renderHubDevices(query = '') {
@@ -1882,7 +1884,7 @@ function renderHubDevices(query = '') {
   const filtered = devices.filter(d => !q || (d.mac || '').toUpperCase().includes(q) || (d.comment || '').toUpperCase().includes(q));
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Nenhum dispositivo cadastrado. Clique em "+ Ativar Dispositivo" para começar.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Nenhum dispositivo cadastrado. Clique em "+ Ativar Dispositivo" para comeÃ§ar.</td></tr>`;
     return;
   }
 
@@ -1892,13 +1894,13 @@ function renderHubDevices(query = '') {
       <td style="font-weight: 700; color: #64748b;">#${idx + 1}</td>
       <td style="font-family: monospace; font-weight: 700; color: #0284c7;">${escapeHtml(d.mac)}</td>
       <td>${escapeHtml(d.comment || 'Cliente')}</td>
-      <td><span style="font-size: 12px; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-weight: 700;">${d.plan === 'lifetime' ? '⭐ Vitalício' : '📅 1 Ano'}</span></td>
-      <td><span style="font-size: 12px; background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-weight: 700;">● Ativo</span></td>
+      <td><span style="font-size: 12px; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-weight: 700;">${d.plan === 'lifetime' ? 'â­ VitalÃ­cio' : 'ðŸ“… 1 Ano'}</span></td>
+      <td><span style="font-size: 12px; background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-weight: 700;">â— Ativo</span></td>
       <td style="text-align: right; white-space: nowrap;">
-        <button type="button" class="btn-receipt-row" data-mac="${escapeHtml(d.mac)}" data-comment="${escapeHtml(d.comment || 'Cliente')}" data-plan="${escapeHtml(d.plan || '1year')}" data-date="${d.date || Date.now()}" title="Ver Comprovante de Ativação" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #b45309; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; margin-right: 8px; cursor: pointer;">
-          📄 Recibo
+        <button type="button" class="btn-receipt-row" data-mac="${escapeHtml(d.mac)}" data-comment="${escapeHtml(d.comment || 'Cliente')}" data-plan="${escapeHtml(d.plan || '1year')}" data-date="${d.date || Date.now()}" title="Ver Comprovante de AtivaÃ§Ã£o" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #b45309; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; margin-right: 8px; cursor: pointer;">
+          ðŸ“„ Recibo
         </button>
-        <button type="button" class="btn-del-device" style="background: transparent; border: none; color: #ef4444; font-size: 16px; cursor: pointer;" title="Excluir">✕</button>
+        <button type="button" class="btn-del-device" style="background: transparent; border: none; color: #ef4444; font-size: 16px; cursor: pointer;" title="Excluir">âœ•</button>
       </td>
     `;
     tr.querySelector('.btn-receipt-row')?.addEventListener('click', () => {
@@ -1925,7 +1927,7 @@ function renderHubCreditHistory() {
   const history = session.creditHistory || [];
 
   if (history.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">Nenhum histórico registrado.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">Nenhum histÃ³rico registrado.</td></tr>`;
     return;
   }
 
@@ -1935,10 +1937,10 @@ function renderHubCreditHistory() {
     const dateFormatted = new Date(h.date || Date.now()).toLocaleString('pt-BR');
     tr.innerHTML = `
       <td style="color: #64748b; font-size: 13px;">${dateFormatted}</td>
-      <td><strong>${h.type === 'purchase' ? '🛒 Compra' : (h.type === 'bonus' ? '🎁 Bônus' : '⚡ Ativação')}</strong></td>
+      <td><strong>${h.type === 'purchase' ? 'ðŸ›’ Compra' : (h.type === 'bonus' ? 'ðŸŽ BÃ´nus' : 'âš¡ AtivaÃ§Ã£o')}</strong></td>
       <td>${escapeHtml(h.desc || '-')}</td>
       <td style="font-weight: 800; color: ${isAdd ? '#16a34a' : '#dc2626'};">${isAdd ? '+' : ''}${h.amount}</td>
-      <td><span style="font-size: 12px; background: #f0fdf4; color: #166534; padding: 3px 8px; border-radius: 4px; font-weight: 700;">Concluído</span></td>
+      <td><span style="font-size: 12px; background: #f0fdf4; color: #166534; padding: 3px 8px; border-radius: 4px; font-weight: 700;">ConcluÃ­do</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -1976,7 +1978,7 @@ async function renderHubSubs() {
           const tr = document.createElement('tr');
           const dateFormatted = p.createdAt ? new Date(p.createdAt).toLocaleDateString('pt-BR') : '-';
           const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
-          const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Olá ${(p.firstName || '').trim()}, tudo bem? Sou o administrador do Vion Player.`)}` : null;
+          const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`OlÃ¡ ${(p.firstName || '').trim()}, tudo bem? Sou o administrador do Vion Player.`)}` : null;
 
           tr.innerHTML = `
             <td>
@@ -1992,7 +1994,7 @@ async function renderHubSubs() {
                   <span style="font-size: 13px; font-weight: 600; color: #334155;">${escapeHtml(p.phone)}</span>
                   ${waUrl ? `
                     <a href="${waUrl}" target="_blank" rel="noopener noreferrer" title="Conversar no WhatsApp" style="display: inline-flex; align-items: center; justify-content: center; background: #22c55e; color: #fff; width: 26px; height: 26px; border-radius: 50%; text-decoration: none; font-size: 13px; box-shadow: 0 2px 4px rgba(34,197,94,0.3);">
-                      💬
+                      ðŸ’¬
                     </a>
                   ` : ''}
                 </div>
@@ -2000,27 +2002,27 @@ async function renderHubSubs() {
             </td>
             <td>
               <span style="background: ${p.credits > 0 ? '#dcfce7' : '#f1f5f9'}; color: ${p.credits > 0 ? '#15803d' : '#475569'}; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 13px; display: inline-block;">
-                ${p.credits || 0} créditos
+                ${p.credits || 0} crÃ©ditos
               </span>
             </td>
             <td style="color: #64748b; font-size: 13px;">${dateFormatted}</td>
             <td style="text-align: right; white-space: nowrap;">
               <button type="button" class="btn btn-gold btn-adjust-credits" data-email="${escapeHtml(p.email)}" data-name="${escapeHtml(p.firstName || p.company)}" data-current="${p.credits || 0}" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 6px;">
-                + Créditos
+                + CrÃ©ditos
               </button>
             </td>
           `;
           tbody.appendChild(tr);
         });
 
-        // Event listener para adicionar créditos
+        // Event listener para adicionar crÃ©ditos
         tbody.querySelectorAll('.btn-adjust-credits').forEach(btn => {
           btn.addEventListener('click', async () => {
             const email = btn.getAttribute('data-email');
             const name = btn.getAttribute('data-name');
             const current = btn.getAttribute('data-current');
 // native prompt removed
-            openAdminCreditsModal('Gerenciar Créditos do Parceiro', 'Revendedor: <strong>' + name + '</strong> (' + email + ')<br>Saldo atual: <strong>' + current + '</strong>', async (amount) => {
+            openAdminCreditsModal('Gerenciar CrÃ©ditos do Parceiro', 'Revendedor: <strong>' + name + '</strong> (' + email + ')<br>Saldo atual: <strong>' + current + '</strong>', async (amount) => {
               if (amount === 0) return;
 
 
@@ -2035,18 +2037,18 @@ async function renderHubSubs() {
                   adminEmail: MASTER_ADMIN_EMAIL,
                   targetEmail: email,
                   amount: amount,
-                  reason: `Ajuste manual de ${amount} créditos pelo Administrador`
+                  reason: `Ajuste manual de ${amount} crÃ©ditos pelo Administrador`
                 })
               });
               const result = await resp.json();
               if (result.success) {
-                alert(`✅ Sucesso! ${amount > 0 ? '+' : ''}${amount} créditos ajustados para ${name}.\nNovo saldo: ${result.reseller.credits} créditos.`);
+                alert(`âœ… Sucesso! ${amount > 0 ? '+' : ''}${amount} crÃ©ditos ajustados para ${name}.\nNovo saldo: ${result.reseller.credits} crÃ©ditos.`);
                 renderHubSubs();
               } else {
-                alert('Erro: ' + (result.error || 'Falha ao ajustar créditos.'));
+                alert('Erro: ' + (result.error || 'Falha ao ajustar crÃ©ditos.'));
               }
             } catch (err) {
-              alert('Erro de conexão: ' + err.message);
+              alert('Erro de conexÃ£o: ' + err.message);
             }
           });
         });
@@ -2058,7 +2060,7 @@ async function renderHubSubs() {
     }
   }
 
-  // Visualização para Revendedores Comuns
+  // VisualizaÃ§Ã£o para Revendedores Comuns
   if (titleEl) titleEl.textContent = 'Meus Sub-revendedores';
   if (addBtn) addBtn.style.display = 'inline-flex';
 
@@ -2089,7 +2091,7 @@ async function renderHubSubs() {
 }
 
 // ===================================================================
-// 4.6 MODAIS DE ATIVAÇÃO, SAQUE, PERFIL E SUB-REVENDA
+// 4.6 MODAIS DE ATIVAÃ‡ÃƒO, SAQUE, PERFIL E SUB-REVENDA
 // ===================================================================
 
 function initActivateDeviceModal() {
@@ -2101,7 +2103,7 @@ function initActivateDeviceModal() {
   const alertBox = document.getElementById('activate-alert-box');
   const macInput = document.getElementById('input-activate-mac');
 
-  // Máscara e auto-formatação dinâmica para MAC no painel de revenda (XX:XX:XX:XX:XX:XX)
+  // MÃ¡scara e auto-formataÃ§Ã£o dinÃ¢mica para MAC no painel de revenda (XX:XX:XX:XX:XX:XX)
   macInput?.addEventListener('input', (e) => {
     let val = e.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
     if (val.length > 12) val = val.substring(0, 12);
@@ -2148,7 +2150,7 @@ function initActivateDeviceModal() {
     const plan = document.getElementById('select-activate-plan')?.value || '1year';
 
     if (cleanMac.length !== 12 || !normMac) {
-      showAlert(alertBox, 'Por favor, informe um endereço MAC válido contendo 12 dígitos (ex: 00:1A:79:B4:C2:5D).', 'error');
+      showAlert(alertBox, 'Por favor, informe um endereÃ§o MAC vÃ¡lido contendo 12 dÃ­gitos (ex: 00:1A:79:B4:C2:5D).', 'error');
       macInput?.focus();
       return;
     }
@@ -2157,11 +2159,11 @@ function initActivateDeviceModal() {
     const cost = (plan === 'lifetime' || plan === 'vitalicio') ? 2 : 1;
 
     if ((session.credits || 0) < cost) {
-      showAlert(alertBox, `Saldo insuficiente! Você precisa de ${cost} crédito(s).`, 'error');
+      showAlert(alertBox, `Saldo insuficiente! VocÃª precisa de ${cost} crÃ©dito(s).`, 'error');
       return;
     }
 
-    showAlert(alertBox, '🔄 Ativando dispositivo no servidor...', 'info');
+    showAlert(alertBox, 'ðŸ”„ Ativando dispositivo no servidor...', 'info');
 
     let serverSuccess = false;
     try {
@@ -2172,7 +2174,7 @@ function initActivateDeviceModal() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        showAlert(alertBox, data?.error || 'Erro ao processar ativação no servidor.', 'error');
+        showAlert(alertBox, data?.error || 'Erro ao processar ativaÃ§Ã£o no servidor.', 'error');
         return;
       }
       if (data.reseller) {
@@ -2202,7 +2204,7 @@ function initActivateDeviceModal() {
         id: 'use_' + Date.now(),
         type: 'activation',
         amount: -cost,
-        desc: `Ativação do dispositivo MAC ${normMac}`,
+        desc: `AtivaÃ§Ã£o do dispositivo MAC ${normMac}`,
         date: Date.now()
       });
 
@@ -2212,7 +2214,7 @@ function initActivateDeviceModal() {
     refreshHubDashboard();
     renderHubDevices();
 
-    showAlert(alertBox, `✔ Dispositivo MAC ${normMac} ativado com sucesso!`, 'success');
+    showAlert(alertBox, `âœ” Dispositivo MAC ${normMac} ativado com sucesso!`, 'success');
     const actItem = (session.activations && session.activations[0]) || {};
     setTimeout(() => {
       if (modal) modal.style.display = 'none';
@@ -2266,7 +2268,7 @@ function initProfileModal() {
     saveResellerSession(session);
     refreshHubDashboard();
 
-    showAlert(alertBox, '✔ Perfil atualizado com sucesso!', 'success');
+    showAlert(alertBox, 'âœ” Perfil atualizado com sucesso!', 'success');
     setTimeout(() => {
       if (modal) modal.style.display = 'none';
       if (alertBox) alertBox.style.display = 'none';
@@ -2299,7 +2301,7 @@ function initAddSubModal() {
 
     const session = getResellerSession();
     if ((session.credits || 0) < credits) {
-      showAlert(alertBox, 'Você não possui créditos suficientes para transferir.', 'error');
+      showAlert(alertBox, 'VocÃª nÃ£o possui crÃ©ditos suficientes para transferir.', 'error');
       return;
     }
 
@@ -2315,7 +2317,7 @@ function initAddSubModal() {
     refreshHubDashboard();
     renderHubSubs();
 
-    showAlert(alertBox, `✔ Sub-revenda criada e ${credits} crédito(s) transferidos!`, 'success');
+    showAlert(alertBox, `âœ” Sub-revenda criada e ${credits} crÃ©dito(s) transferidos!`, 'success');
     setTimeout(() => {
       if (modal) modal.style.display = 'none';
       if (alertBox) alertBox.style.display = 'none';
@@ -2351,7 +2353,7 @@ async function renderPortalPartnerships(filterText = '') {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="reseller-empty-cell" style="text-align: center; padding: 36px; color: var(--text-muted);">
-          Nenhum código de parceria encontrado. Cadastre um novo código acima.
+          Nenhum cÃ³digo de parceria encontrado. Cadastre um novo cÃ³digo acima.
         </td>
       </tr>
     `;
@@ -2381,7 +2383,7 @@ async function renderPortalPartnerships(filterText = '') {
       </td>
       <td>
         <span style="font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 800; display: inline-block; ${p.active ? 'background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3);' : 'background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3);'}">
-          ${p.active ? '● ATIVO' : '○ DESATIVADO'}
+          ${p.active ? 'â— ATIVO' : 'â—‹ DESATIVADO'}
         </span>
       </td>
       <td style="text-align: right;">
@@ -2419,10 +2421,10 @@ async function renderPortalPartnerships(filterText = '') {
       renderPortalPartnerships(filterText);
     });
 
-    // Evento de Exclusão
+    // Evento de ExclusÃ£o
     const btnDelete = tr.querySelector('.btn-partner-delete-state');
     btnDelete?.addEventListener('click', async () => {
-      if (!confirm(`Tem certeza que deseja excluir o código de parceria "${p.code}"? Clientes não conseguirão mais usá-lo na TV.`)) {
+      if (!confirm(`Tem certeza que deseja excluir o cÃ³digo de parceria "${p.code}"? Clientes nÃ£o conseguirÃ£o mais usÃ¡-lo na TV.`)) {
         return;
       }
 
@@ -2449,7 +2451,7 @@ async function renderPortalPartnerships(filterText = '') {
 }
 
 function initPartnershipsSection() {
-  // Formulário de Cadastro de Código
+  // FormulÃ¡rio de Cadastro de CÃ³digo
   document.getElementById('portal-form-create-partner')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const codeInput = document.getElementById('portal-partner-code');
@@ -2461,7 +2463,7 @@ function initPartnershipsSection() {
     const name = (nameInput?.value || '').trim() || rawCode;
 
     if (!rawCode || !server) {
-      alert('Informe o código e o servidor / DNS.');
+      alert('Informe o cÃ³digo e o servidor / DNS.');
       return;
     }
 
@@ -2480,7 +2482,7 @@ function initPartnershipsSection() {
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || 'Erro ao cadastrar código de parceria.');
+        alert(data.error || 'Erro ao cadastrar cÃ³digo de parceria.');
         return;
       }
     } catch(e) {}
@@ -2504,7 +2506,7 @@ function initPartnershipsSection() {
     if (nameInput) nameInput.value = '';
 
     renderPortalPartnerships();
-    alert(`✔ Código de parceria "${rawCode}" cadastrado com sucesso!`);
+    alert(`âœ” CÃ³digo de parceria "${rawCode}" cadastrado com sucesso!`);
   });
 
   // Busca de Parcerias
@@ -2522,7 +2524,7 @@ function initPartnershipsSection() {
     renderPortalPartnerships();
   });
 
-  // Inicializa card de configurações do Mercado Pago
+  // Inicializa card de configuraÃ§Ãµes do Mercado Pago
   initMpAdminSettings();
 }
 
@@ -2539,7 +2541,7 @@ function initMpAdminSettings() {
         if (badge) {
           badge.style.background = '#dcfce7';
           badge.style.color = '#15803d';
-          badge.innerHTML = `🟢 Conectado (${data.maskedToken})`;
+          badge.innerHTML = `ðŸŸ¢ Conectado (${data.maskedToken})`;
         }
         if (input && !input.value) {
           input.placeholder = `Ativo: ${data.maskedToken}`;
@@ -2548,7 +2550,7 @@ function initMpAdminSettings() {
         if (badge) {
           badge.style.background = '#fee2e2';
           badge.style.color = '#dc2626';
-          badge.innerHTML = '🔴 Não Configurado';
+          badge.innerHTML = 'ðŸ”´ NÃ£o Configurado';
         }
       }
     } catch(e) {}
@@ -2563,7 +2565,7 @@ function initMpAdminSettings() {
     if (!token) return alert('Por favor, digite o Access Token do Mercado Pago.');
 
     const btn = document.getElementById('btn-save-mp-settings');
-    if (btn) btn.innerHTML = '⏳ Salvando...';
+    if (btn) btn.innerHTML = 'â³ Salvando...';
 
     try {
       const res = await fetch('/api/admin/settings', {
@@ -2579,22 +2581,22 @@ function initMpAdminSettings() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('🎉 Credencial do Mercado Pago salva com sucesso! O PIX automático agora está ativo em produção.');
+        alert('ðŸŽ‰ Credencial do Mercado Pago salva com sucesso! O PIX automÃ¡tico agora estÃ¡ ativo em produÃ§Ã£o.');
         input.value = '';
         loadMpStatus();
       } else {
         alert('Erro ao salvar: ' + (data.error || 'Tente novamente.'));
       }
     } catch(err) {
-      alert('Erro de conexão ao salvar.');
+      alert('Erro de conexÃ£o ao salvar.');
     } finally {
-      if (btn) btn.innerHTML = '<span>💾</span> Salvar Credencial';
+      if (btn) btn.innerHTML = '<span>ðŸ’¾</span> Salvar Credencial';
     }
   });
 }
 
 // ===================================================================
-// 4.9 COMPROVANTE DE ATIVAÇÃO PROFISSIONAL (WHATSAPP & RECIBO)
+// 4.9 COMPROVANTE DE ATIVAÃ‡ÃƒO PROFISSIONAL (WHATSAPP & RECIBO)
 // ===================================================================
 
 function openActivationReceiptModal(mac, client, plan, expiresAt, date) {
@@ -2610,9 +2612,9 @@ function openActivationReceiptModal(mac, client, plan, expiresAt, date) {
   const btnCopy = document.getElementById('btn-receipt-copy');
 
   const isLifetime = (plan === 'lifetime');
-  const planText = isLifetime ? 'Licença Vitalícia ⭐' : 'Licença 1 Ano 📅';
+  const planText = isLifetime ? 'LicenÃ§a VitalÃ­cia â­' : 'LicenÃ§a 1 Ano ðŸ“…';
   
-  let expiryText = 'Vitalícia (Sem expiração)';
+  let expiryText = 'VitalÃ­cia (Sem expiraÃ§Ã£o)';
   if (!isLifetime) {
     const expMs = expiresAt || (Date.now() + 365 * 24 * 60 * 60 * 1000);
     expiryText = new Date(expMs).toLocaleDateString('pt-BR');
@@ -2628,15 +2630,15 @@ function openActivationReceiptModal(mac, client, plan, expiresAt, date) {
 
   // Mensagem profissional formatada para o WhatsApp
   const waMessage = 
-`🌟 *COMPROVANTE DE ATIVAÇÃO - VION PLAYER* 🌟\n\n` +
-`Olá! Sua licença do aplicativo *Vion Player* foi ativada com sucesso! 🚀\n\n` +
-`📱 *Dispositivo (MAC):* ${mac}\n` +
-`👤 *Cliente:* ${client || 'Cliente'}\n` +
-`💎 *Plano:* ${planText}\n` +
-`📅 *Validade:* ${expiryText}\n` +
-`✅ *Status:* ATIVO E LIBERADO\n\n` +
-`Aproveite a melhor experiência em filmes, séries e canais na sua Smart TV! 🍿✨\n` +
-`Dúvidas ou suporte? Estamos à disposição!`;
+`ðŸŒŸ *COMPROVANTE DE ATIVAÃ‡ÃƒO - VION PLAYER* ðŸŒŸ\n\n` +
+`OlÃ¡! Sua licenÃ§a do aplicativo *Vion Player* foi ativada com sucesso! ðŸš€\n\n` +
+`ðŸ“± *Dispositivo (MAC):* ${mac}\n` +
+`ðŸ‘¤ *Cliente:* ${client || 'Cliente'}\n` +
+`ðŸ’Ž *Plano:* ${planText}\n` +
+`ðŸ“… *Validade:* ${expiryText}\n` +
+`âœ… *Status:* ATIVO E LIBERADO\n\n` +
+`Aproveite a melhor experiÃªncia em filmes, sÃ©ries e canais na sua Smart TV! ðŸ¿âœ¨\n` +
+`DÃºvidas ou suporte? Estamos Ã  disposiÃ§Ã£o!`;
 
   const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waMessage)}`;
   if (btnWa) btnWa.setAttribute('href', waUrl);
@@ -2644,12 +2646,12 @@ function openActivationReceiptModal(mac, client, plan, expiresAt, date) {
   if (btnCopy) {
     btnCopy.onclick = () => {
       navigator.clipboard.writeText(waMessage).then(() => {
-        btnCopy.innerHTML = '<span>✅</span> Mensagem Copiada!';
+        btnCopy.innerHTML = '<span>âœ…</span> Mensagem Copiada!';
         setTimeout(() => {
-          btnCopy.innerHTML = '<span>📋</span> Copiar Texto do Comprovante';
+          btnCopy.innerHTML = '<span>ðŸ“‹</span> Copiar Texto do Comprovante';
         }, 2000);
       }).catch(() => {
-        alert('Não foi possível copiar automaticamente.');
+        alert('NÃ£o foi possÃ­vel copiar automaticamente.');
       });
     };
   }
@@ -2671,7 +2673,7 @@ function initActivationReceiptModal() {
 }
 
 // ===================================================================
-// 4.10 CONFIGURAÇÃO DE ALERTAS NO CELULAR (TELEGRAM & WHATSAPP)
+// 4.10 CONFIGURAÃ‡ÃƒO DE ALERTAS NO CELULAR (TELEGRAM & WHATSAPP)
 // ===================================================================
 
 function initNotificationSettings() {
@@ -2688,13 +2690,13 @@ function initNotificationSettings() {
   if (btnToggleTg && tgTokenInput) {
     btnToggleTg.onclick = () => {
       tgTokenInput.type = tgTokenInput.type === 'password' ? 'text' : 'password';
-      btnToggleTg.textContent = tgTokenInput.type === 'password' ? '👁️' : '🔒';
+      btnToggleTg.textContent = tgTokenInput.type === 'password' ? 'ðŸ‘ï¸' : 'ðŸ”’';
     };
   }
   if (btnToggleCmb && cmbKeyInput) {
     btnToggleCmb.onclick = () => {
       cmbKeyInput.type = cmbKeyInput.type === 'password' ? 'text' : 'password';
-      btnToggleCmb.textContent = cmbKeyInput.type === 'password' ? '👁️' : '🔒';
+      btnToggleCmb.textContent = cmbKeyInput.type === 'password' ? 'ðŸ‘ï¸' : 'ðŸ”’';
     };
   }
 
@@ -2703,19 +2705,19 @@ function initNotificationSettings() {
     if (hasTg && hasCmb) {
       badge.style.background = '#dcfce7';
       badge.style.color = '#15803d';
-      badge.textContent = '🟢 Ativo (Telegram & WhatsApp)';
+      badge.textContent = 'ðŸŸ¢ Ativo (Telegram & WhatsApp)';
     } else if (hasTg) {
       badge.style.background = '#dcfce7';
       badge.style.color = '#15803d';
-      badge.textContent = '🟢 Ativo (Telegram Bot)';
+      badge.textContent = 'ðŸŸ¢ Ativo (Telegram Bot)';
     } else if (hasCmb) {
       badge.style.background = '#dcfce7';
       badge.style.color = '#15803d';
-      badge.textContent = '🟢 Ativo (WhatsApp CallMeBot)';
+      badge.textContent = 'ðŸŸ¢ Ativo (WhatsApp CallMeBot)';
     } else {
       badge.style.background = '#fee2e2';
       badge.style.color = '#dc2626';
-      badge.textContent = '🔴 Notificações Desativadas';
+      badge.textContent = 'ðŸ”´ NotificaÃ§Ãµes Desativadas';
     }
   }
 
@@ -2787,7 +2789,7 @@ function initNotificationSettings() {
         updateStatusBadge(hasTg, hasCmb);
       }
     } catch (e) {
-      console.error('Erro ao carregar configurações de notificação:', e);
+      console.error('Erro ao carregar configuraÃ§Ãµes de notificaÃ§Ã£o:', e);
     }
   }
 
@@ -2805,7 +2807,7 @@ function initNotificationSettings() {
     const keyVal = (cmbKeyInput?.value || local.callMeBotApiKey || '').trim();
 
     if (!tokenVal && !chatIdVal && !phoneVal) {
-      alert('⚠️ Por favor, informe ao menos o Bot Token e Chat ID do Telegram.');
+      alert('âš ï¸ Por favor, informe ao menos o Bot Token e Chat ID do Telegram.');
       return;
     }
 
@@ -2828,7 +2830,7 @@ function initNotificationSettings() {
 
     const btnSave = document.getElementById('btn-save-notify-settings');
     const oldBtnHtml = btnSave ? btnSave.innerHTML : '';
-    if (btnSave) btnSave.innerHTML = '<span>⏳</span> Salvando Configurações...';
+    if (btnSave) btnSave.innerHTML = '<span>â³</span> Salvando ConfiguraÃ§Ãµes...';
 
     try {
       const res = await fetch('/api/admin/settings', {
@@ -2838,15 +2840,15 @@ function initNotificationSettings() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('✔ Configurações salvas com sucesso! As notificações automáticas no seu celular estão ativas.');
+        alert('âœ” ConfiguraÃ§Ãµes salvas com sucesso! As notificaÃ§Ãµes automÃ¡ticas no seu celular estÃ£o ativas.');
         loadNotifySettings();
       } else {
         alert('Erro: ' + (data.error || 'Falha ao salvar no servidor.'));
       }
     } catch (err) {
-      alert('Erro de conexão: ' + err.message);
+      alert('Erro de conexÃ£o: ' + err.message);
     } finally {
-      if (btnSave) btnSave.innerHTML = oldBtnHtml || '<span>💾</span> Salvar Configurações de Notificação';
+      if (btnSave) btnSave.innerHTML = oldBtnHtml || '<span>ðŸ’¾</span> Salvar ConfiguraÃ§Ãµes de NotificaÃ§Ã£o';
     }
   });
 
@@ -2863,7 +2865,7 @@ function initNotificationSettings() {
     } catch (err) {
       alert('Erro ao enviar teste: ' + err.message);
     } finally {
-      btnTest.innerHTML = '<span>📲</span> Enviar Notificação de Teste';
+      btnTest.innerHTML = '<span>ðŸ“²</span> Enviar NotificaÃ§Ã£o de Teste';
     }
   });
 }
