@@ -1,4 +1,4 @@
-﻿if (window.firebase && !window.firebase.apps.length) {
+if (window.firebase && !window.firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyCnkBupjz-FzYoFhHcUpnQYZ7_Wra12zh4",
     authDomain: "vion-player.firebaseapp.com",
@@ -398,28 +398,34 @@ const App = {
 
   async queryPortalPlaylists(mac) {
     if (!mac) return null;
-    const cleanMac = String(mac).replace(/:/g, '').toUpperCase();
+    const cleanMac = this.normalizeMac(mac);
     try {
-      if (!window.firebase || !firebase.firestore) return null;
-      const db = firebase.firestore();
-      
-      const cliDoc = await db.collection("clientes").doc(cleanMac).get();
-      if (!cliDoc.exists) return null;
-      
-      const cliData = cliDoc.data();
-      if (!cliData.listaId) return null;
-      
-      const lstDoc = await db.collection("listas").doc(cliData.listaId).get();
-      if (!lstDoc.exists) return null;
-      
-      const lstData = lstDoc.data();
-      
-      const playlistData = { name: lstData.nome, url: lstData.url };
-      localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify([playlistData]));
-      localStorage.setItem('vion_has_playlist', 'true');
-      return playlistData;
+      const endpoints = [
+        `https://vion.gestorpro.app.br/api/device?mac=${encodeURIComponent(cleanMac)}`,
+        `/api/device?mac=${encodeURIComponent(cleanMac)}`,
+        `http://192.168.1.197:3000/api/device?mac=${encodeURIComponent(cleanMac)}`,
+        `http://localhost:3000/api/device?mac=${encodeURIComponent(cleanMac)}`
+      ];
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success && data.playlists && data.playlists.length > 0) {
+              const p = data.playlists[0];
+              const playlistData = { name: p.name, url: p.url, id: p.id };
+              localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify(data.playlists));
+              localStorage.setItem('vion_has_playlist', 'true');
+              return playlistData;
+            } else if (data && data.success && data.playlists && data.playlists.length === 0) {
+              localStorage.removeItem(`vion_playlists_${mac}`);
+              return null;
+            }
+          }
+        } catch(e) {}
+      }
     } catch(e) {
-      console.warn("Erro ao buscar no Firebase:", e);
+      console.warn("Erro ao buscar playlists da API Vion:", e);
     }
     const stored = localStorage.getItem(`vion_playlists_${mac}`);
     if (stored) {

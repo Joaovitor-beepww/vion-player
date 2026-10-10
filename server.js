@@ -1634,32 +1634,23 @@ downloadStateFromFirebase().then(() => {
             return;
           }
 
-          // 2. Validação de Login do Portal
+                   // 2. Validação de Login do Portal
           if (pathname === '/api/device/validate' || pathname === '/api/device/login') {
             let existing = findDevice(devices, rawMac);
             const now = Date.now();
 
             if (!existing) {
-              const fallbackKey = String(Math.abs(normMac.split(':').reduce((acc, part) => acc + parseInt(part || '0', 16), 0) * 31) % 9000 + 1000);
-              existing = {
-                mac: normMac,
-                key: key || fallbackKey,
-                playlists: [],
-                activated: true,
-                active: true,
-                registeredAt: now,
-                trialExpiresAt: now + (7 * 24 * 60 * 60 * 1000),
-                createdAt: now
-              };
-              devices[normMac] = existing;
-              devices[cleanMac] = existing;
-              saveDevices(devices);
-              console.log(`[Portal Login] Dispositivo auto-registrado para MAC: ${normMac} com KEY: ${existing.key}`);
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                success: false,
+                error: 'Dispositivo nao encontrado. Por favor, abra o aplicativo Vion Player na sua TV primeiro para registrar o aparelho.'
+              }));
+              return;
             } else if (existing.key && key && existing.key !== key) {
               res.writeHead(401, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({
                 success: false,
-                error: 'Device Key incorreta! Verifique os dígitos exibidos na tela do seu aplicativo.'
+                error: 'Device Key incorreta! Verifique os digitos exibidos na tela do seu aplicativo.'
               }));
               return;
             } else if (!existing.key && key) {
@@ -1669,8 +1660,7 @@ downloadStateFromFirebase().then(() => {
               saveDevices(devices);
             }
 
-            console.log(`[Portal Login] Acesso AUTORIZADO para MAC: ${normMac}`);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            console.log(`[Portal Login] Acesso AUTORIZADO para MAC: ${normMac}`);         res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
               success: true,
               device: existing,
