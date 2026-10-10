@@ -212,7 +212,7 @@ const XtreamCodesEngine = {
         res = await fetch(urlToTry);
       } catch (e) {
         console.warn('Bloqueio CORS em Xtream, usando proxy...', e);
-        res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+        res = await fetch('https://vion.gestorpro.app.br/api/proxy?url=' + encodeURIComponent(url));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const proxyData = await res.json();
         return JSON.parse(proxyData.contents);
@@ -1088,11 +1088,11 @@ const M3UParser = {
             response = await fetch(url.replace('http://', 'https://'));
           } catch (e2) {
             console.warn('Bloqueio CORS ou Mixed Content. Usando proxy...', e2);
-            response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+            response = await fetch('https://vion.gestorpro.app.br/api/proxy?url=' + encodeURIComponent(url));
           }
         } else {
           console.warn('Bloqueio CORS. Usando proxy...', e);
-          response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+          response = await fetch('https://vion.gestorpro.app.br/api/proxy?url=' + encodeURIComponent(url));
         }
       }
       if (!response.ok) {

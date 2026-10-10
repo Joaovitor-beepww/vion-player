@@ -414,7 +414,14 @@ const App = {
             if (data && data.success && data.playlists && data.playlists.length > 0) {
               const p = data.playlists[0];
               const playlistData = { name: p.name, url: p.url, id: p.id };
-              localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify(data.playlists));
+              
+                const portalPlaylists = data.playlists || [];
+                const localStr = localStorage.getItem(`vion_playlists_${mac}`);
+                const localList = localStr ? JSON.parse(localStr) : [];
+                const manualPlaylists = localList.filter(p => !portalPlaylists.some(lp => lp.url === p.url));
+                const merged = [...portalPlaylists, ...manualPlaylists];
+                localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify(merged));
+
               localStorage.setItem('vion_has_playlist', 'true');
               return playlistData;
             } else if (data && data.success && data.playlists && data.playlists.length === 0) {

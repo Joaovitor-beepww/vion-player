@@ -530,7 +530,35 @@ downloadStateFromFirebase().then(() => {
   // ===================================================================
   // 1a. ENDPOINTS DE API PARA CÓDIGOS DE PARCERIA (/api/partnerships)
   // ===================================================================
-  if (pathname === '/api/partnerships' || pathname.startsWith('/api/partnerships/')) {
+  
+  // ===================================================================
+  // API PROXY (Bypass CORS/Mixed Content streaming)
+  // ===================================================================
+  if (pathname === '/api/proxy') {
+    const targetUrl = urlObj.searchParams.get('url');
+    if (!targetUrl) {
+      res.writeHead(400);
+      res.end('Missing url param');
+      return;
+    }
+    const client = targetUrl.startsWith('https') ? require('https') : require('http');
+    client.get(targetUrl, { rejectUnauthorized: false }, (proxyRes) => {
+      // Remove headers restritivos
+      delete proxyRes.headers['access-control-allow-origin'];
+      delete proxyRes.headers['access-control-allow-credentials'];
+      delete proxyRes.headers['access-control-allow-headers'];
+      delete proxyRes.headers['access-control-allow-methods'];
+      
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res);
+    }).on('error', (err) => {
+      res.writeHead(500);
+      res.end('Proxy Error: ' + err.message);
+    });
+    return;
+  }
+
+    if (pathname === '/api/partnerships' || pathname.startsWith('/api/partnerships/')) {
     if (req.method === 'GET') {
       const partnerships = loadPartnerships();
       res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
