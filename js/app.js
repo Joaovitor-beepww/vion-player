@@ -743,7 +743,7 @@ const App = {
 
   getTrialInfo() {
     if (localStorage.getItem('vion_saved_provider_code')) {
-      return { expired: false, days: 999, hours: 0, minutes: 0, dateFormatted: 'Parceria', text: '⭐ Licença Parceiro' };
+      return { expired: false, days: 999, hours: 0, minutes: 0, dateFormatted: 'Parceria', text: '? Licença Parceiro' };
     }
     const isLicenseActive = localStorage.getItem('vion_license_active') === 'true';
     if (isLicenseActive) {
@@ -1765,6 +1765,8 @@ const App = {
   },
 
   selectLiveCategory(categoryName, pillElement, isInitialScreenLoad = false) {
+    if (this._catDebounce && Date.now() - this._catDebounce < 300) return;
+    this._catDebounce = Date.now();
     if (ParentalControl.isAdult(categoryName)) {
       if (!ParentalControl._sessionUnlocked) {
         ParentalControl.checkAccess(categoryName, '', () => {
@@ -2159,6 +2161,8 @@ const App = {
   },
 
   selectVodCategory(categoryName, pillElement) {
+    if (this._vodCatDebounce && Date.now() - this._vodCatDebounce < 300) return;
+    this._vodCatDebounce = Date.now();
     if (ParentalControl.isAdult(categoryName)) {
       if (!ParentalControl._sessionUnlocked) {
         ParentalControl.checkAccess(categoryName, '', () => {
@@ -4149,5 +4153,7 @@ function escapeHtml(str) {
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
 });
+
+
 
 

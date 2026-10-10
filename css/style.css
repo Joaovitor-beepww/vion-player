@@ -8908,3 +8908,24 @@ html[data-platform="tv"], html.is-tv, html[data-platform="tv"] body, html.is-tv 
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
 }
+
+/* Prevenir rolagem de tela em dispositivos moveis (apenas app de TV) */
+html, body {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Esconder controles nativos de video que celulares possam injetar */
+video::-webkit-media-controls {
+  display: none !important;
+}
+video::-webkit-media-controls-volume-slider,
+video::-webkit-media-controls-mute-button,
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-timeline {
+  display: none !important;
+}
