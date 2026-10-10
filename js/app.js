@@ -10,15 +10,15 @@ if (window.firebase && !window.firebase.apps.length) {
 }
 /**
  * Vion Player - Controlador Principal do Aplicativo
- * VersÃ£o Super Play Oficial:
+ * Versão Super Play Oficial:
  * - Live TV: 3 Colunas (Categorias, Lista de Canais, Mini-Player ao Vivo + EPG) - Imagem 4
- * - Filmes e SÃ©ries: Grade de Posters Verticais (Aspecto 2:3) com Sidebar de Categorias - Imagem 3
- * - SÃ©ries Agrupadas por Nome com Modal de Temporadas e EpisÃ³dios (sem duplicar 248 mil sÃ©ries)
- * - Suporte a testes imediatos de reproduÃ§Ã£o e compatibilidade Samsung Tizen / LG webOS / Navegador.
+ * - Filmes e Séries: Grade de Posters Verticais (Aspecto 2:3) com Sidebar de Categorias - Imagem 3
+ * - Séries Agrupadas por Nome com Modal de Temporadas e Episódios (sem duplicar 248 mil séries)
+ * - Suporte a testes imediatos de reprodução e compatibilidade Samsung Tizen / LG webOS / Navegador.
 /**
- * Motor de ResoluÃ§Ã£o de Capas e Metadados do TMDB (TheMovieDb)
- * Busca capas oficiais em portuguÃªs em alta resoluÃ§Ã£o quando a lista IPTV
- * nÃ£o fornecer ou tiver links quebrados/bloqueados.
+ * Motor de Resolução de Capas e Metadados do TMDB (TheMovieDb)
+ * Busca capas oficiais em português em alta resolução quando a lista IPTV
+ * não fornecer ou tiver links quebrados/bloqueados.
  */
 const TmdbResolver = {
   _cache: new Map(),
@@ -54,10 +54,10 @@ const TmdbResolver = {
     if (!raw) return '';
     let s = String(raw).trim();
     // Remove prefixos de IPTV como "4K | ", "FILMES | ", "CINE | ", "01 - "
-    s = s.replace(/^(?:(?:4K|FHD|HD|FILMES?|CINE|VOD|LANÃ‡AMENTOS?|LANCAMENTOS?)\s*\|\s*|\d+\s*[-â€“â€”.:]\s*)/i, '');
+    s = s.replace(/^(?:(?:4K|FHD|HD|FILMES?|CINE|VOD|LANÇAMENTOS?|LANCAMENTOS?)\s*\|\s*|\d+\s*[-â€“â€”.:]\s*)/i, '');
     // Remove tags de qualidade, codec e idioma
     s = s.replace(/\b(?:4K|UHD|FHD|HD|SD|1080p|720p|HDR|HDR10|DV|H264|H265|HEVC|DUBLADO|LEGENDADO|NACIONAL|HYBRID|LEG|DUB)\b/gi, '');
-    // Remove colchetes e parÃªnteses
+    // Remove colchetes e parênteses
     s = s.replace(/\[.*?\]|\(.*?\)/g, '');
     s = s.replace(/[-â€“â€”_.:|]+/g, ' ');
     return s.replace(/\s+/g, ' ').trim();
@@ -226,7 +226,7 @@ const TmdbResolver = {
 TmdbResolver.init();
 
 // ===================================================================
-// CONTROLE PARENTAL COM PIN (PROTEÃ‡ÃƒO DE CATEGORIAS +18)
+// CONTROLE PARENTAL COM PIN (PROTEÇÃO DE CATEGORIAS +18)
 // ===================================================================
 const ParentalControl = {
   _sessionUnlocked: false,
@@ -247,7 +247,7 @@ const ParentalControl = {
       return M3UParser.isAdultItem({ category: categoryName, name: itemName });
     }
     const str = `${categoryName || ''} ${itemName || ''}`.toLowerCase();
-    return /(?:xxx|\+18|\b18\+|\badulto\b|\badultos\b|\badult\b|\bporn\b|\bporno\b|\bpornÃ´\b|\bsexy\b|\berotico\b|\berÃ³tico\b)/i.test(str);
+    return /(?:xxx|\+18|\b18\+|\badulto\b|\badultos\b|\badult\b|\bporn\b|\bporno\b|\bpornô\b|\bsexy\b|\berotico\b|\berótico\b)/i.test(str);
   },
 
   checkAccess(categoryName, itemName, onSuccess) {
@@ -277,8 +277,8 @@ const ParentalControl = {
 
     if (title) title.textContent = isChangingPin ? 'Alterar PIN Parental' : 'Controle Parental';
     if (desc) desc.textContent = isChangingPin 
-      ? 'Digite o novo PIN de 4 dÃ­gitos desejado:' 
-      : 'Esta categoria contÃ©m conteÃºdo adulto (+18). Digite o PIN de 4 dÃ­gitos para acessar (PadrÃ£o: 0000):';
+      ? 'Digite o novo PIN de 4 dígitos desejado:' 
+      : 'Esta categoria contém conteúdo adulto (+18). Digite o PIN de 4 dígitos para acessar (Padrão: 0000):';
     if (errorEl) errorEl.style.display = 'none';
 
     this.updateDots();
@@ -393,7 +393,7 @@ const App = {
     const txt = document.getElementById('splash-status-text');
     if (bar && percent !== undefined) bar.style.width = `${Math.min(100, Math.max(5, percent))}%`;
     if (pct && percent !== undefined) pct.textContent = `${Math.min(100, Math.max(0, Math.round(percent)))}%`;
-    if (txt && title) txt.textContent = status ? `${title} â€¢ ${status}` : title;
+    if (txt && title) txt.textContent = status ? `${title} • ${status}` : title;
   },
 
   async queryPortalPlaylists(mac) {
@@ -453,7 +453,7 @@ const App = {
     const mac = localStorage.getItem('vion_mac_address');
 
     // 1. Verifica cache local do dispositivo
-    this.setSplashProgress(25, 'Verificando catÃ¡logo salvo...', 'Lendo armazenamento local');
+    this.setSplashProgress(25, 'Verificando catálogo salvo...', 'Lendo armazenamento local');
     let cached = null;
     try {
       cached = await M3UParser.loadFromCache();
@@ -461,8 +461,8 @@ const App = {
       console.warn('Erro ao carregar cache local:', e);
     }
 
-    // ValidaÃ§Ã£o estrita da integridade do cache:
-    // Exige _schemaVersion === 25 e formato Xtream com live, movies e series vÃ¡lidos
+    // Validação estrita da integridade do cache:
+    // Exige _schemaVersion === 25 e formato Xtream com live, movies e series válidos
     const isCacheFresh = cached && 
       cached._schemaVersion === 25 && 
       cached.channels && 
@@ -485,19 +485,19 @@ const App = {
         this.goToScreen('home');
       }
 
-      // Em segundo plano silencioso, verifica se houve alteraÃ§Ã£o de lista no portal
+      // Em segundo plano silencioso, verifica se houve alteração de lista no portal
       setTimeout(() => this.checkPortalUpdatesSilently(), 4000);
       return;
     } else {
       // Se for cache legado antigo com capas ausentes ou desordenadas, limpa para sincronizar fresh
       if (cached) {
-        console.log('Cache legado detectado. Limpando para baixar catÃ¡logo Xtream com capas oficiais TMDB...');
+        console.log('Cache legado detectado. Limpando para baixar catálogo Xtream com capas oficiais TMDB...');
         await TVStorage.remove('cached_playlist');
         cached = null;
       }
     }
 
-    // 2. Se nÃ£o tem cache, busca lista vinculada ao MAC no portal
+    // 2. Se não tem cache, busca lista vinculada ao MAC no portal
     this.setSplashProgress(35, 'Conectando ao Portal...', 'Verificando lista vinculada ao MAC');
     let portalPlaylist = await this.queryPortalPlaylists(mac);
 
@@ -511,7 +511,7 @@ const App = {
       }
     }
 
-    // 3. Somente se nÃ£o houver cache nem lista vinculada no portal, vai para login
+    // 3. Somente se não houver cache nem lista vinculada no portal, vai para login
     this.setSplashProgress(100, 'Nenhuma playlist vinculada.', 'Redirecionando...');
     await new Promise(r => setTimeout(r, 600));
     if (this.isDeviceExpired()) {
@@ -606,7 +606,7 @@ const App = {
       key = localStorage.getItem('vion_device_key');
     }
 
-    // 4. Se ainda nÃ£o tiver (ex: navegador Web no PC pela primeira vez), gera identificador fixo e determinÃ­stico
+    // 4. Se ainda não tiver (ex: navegador Web no PC pela primeira vez), gera identificador fixo e determinístico
     if (!mac) {
       const seed = (navigator.userAgent || '') + (screen.width || '') + (screen.height || '') + (navigator.language || '');
       let hash = 0;
@@ -671,7 +671,7 @@ const App = {
       localStorage.removeItem('vion_license_expiry');
     }
 
-    // Trava de perÃ­odo de teste definitiva e imutÃ¡vel pelo servidor
+    // Trava de período de teste definitiva e imutável pelo servidor
     if (device.registeredAt) {
       localStorage.setItem('vion_registered_at', device.registeredAt.toString());
     }
@@ -702,7 +702,7 @@ const App = {
     const rawMac = localStorage.getItem('vion_mac_address');
     const mac = this.normalizeMac(rawMac);
     if (!mac) return false;
-    if (showToasts) this.showToast('ðŸ”„ Consultando status da licenÃ§a no servidor...');
+    if (showToasts) this.showToast('🔄 Consultando status da licença no servidor...');
     const endpoints = [
       `https://vion.gestorpro.app.br/api/device?mac=${encodeURIComponent(mac)}`,
       `/api/device?mac=${encodeURIComponent(mac)}`,
@@ -719,7 +719,7 @@ const App = {
             this.handleDeviceSyncData(data.device);
             if (!this.isDeviceExpired()) {
               if (this._expiredPollTimer) clearInterval(this._expiredPollTimer);
-              if (showToasts) this.showToast('ðŸŽ‰ ParabÃ©ns! Aparelho ativado com sucesso!');
+              if (showToasts) this.showToast('ðŸŽ‰ Parabéns! Aparelho ativado com sucesso!');
               if (this.currentScreen === 'expired') {
                 this.goToScreen('home');
               }
@@ -731,7 +731,7 @@ const App = {
     }
 
     if (showToasts) {
-      this.showToast('âš ï¸ LicenÃ§a ainda nÃ£o ativada. Conclua o pagamento em vion.gestorpro.app.br');
+      this.showToast('âš ï¸ Licença ainda não ativada. Conclua o pagamento em vion.gestorpro.app.br');
     }
     return false;
   },
@@ -760,8 +760,8 @@ const App = {
           days: 99999,
           hours: 0,
           minutes: 0,
-          dateFormatted: 'VitalÃ­cia',
-          text: 'â­ LicenÃ§a VitalÃ­cia Ativa'
+          dateFormatted: 'Vitalícia',
+          text: 'â­ Licença Vitalícia Ativa'
         };
       }
       const expiry = parseInt(localStorage.getItem('vion_license_expiry'), 10);
@@ -777,7 +777,7 @@ const App = {
             hours: 0,
             minutes: 0,
             dateFormatted,
-            text: 'LicenÃ§a Anual Expirada â€¢ Renovar'
+            text: 'Licença Anual Expirada • Renovar'
           };
         }
         return {
@@ -786,7 +786,7 @@ const App = {
           hours: 0,
           minutes: 0,
           dateFormatted,
-          text: `LicenÃ§a Anual (atÃ© ${dateFormatted})`
+          text: `Licença Anual (até ${dateFormatted})`
         };
       }
     }
@@ -820,7 +820,7 @@ const App = {
         hours: 0,
         minutes: 0,
         dateFormatted,
-        text: 'Teste Expirado â€¢ Ativar LicenÃ§a'
+        text: 'Teste Expirado • Ativar Licença'
       };
     }
 
@@ -845,7 +845,7 @@ const App = {
       hours: totalHours,
       minutes: totalMinutes,
       dateFormatted,
-      text: `Teste GrÃ¡tis: ${countdownText}`
+      text: `Teste Grátis: ${countdownText}`
     };
   },
 
@@ -880,7 +880,7 @@ const App = {
 
     const liveCount = ((this.playlistData.live && this.playlistData.live.channels ? this.playlistData.live.channels.length : 0) || 0);
     const movieCount = ((this.playlistData.movies && this.playlistData.movies.channels ? this.playlistData.movies.channels.length : 0) || 0);
-    // Para SÃ©ries, mostra o nÃºmero REAL de sÃ©ries agrupadas (e nÃ£o 248 mil episÃ³dios!)
+    // Para Séries, mostra o número REAL de séries agrupadas (e não 248 mil episódios!)
     const seriesCount = ((this.playlistData.series && this.playlistData.series.channels ? this.playlistData.series.channels.length : 0) || 0);
 
     const elLive = document.getElementById('dash-count-live');
@@ -890,7 +890,7 @@ const App = {
     if (elMovies) elMovies.textContent = `${movieCount.toLocaleString('pt-BR')} Filmes`;
 
     const elSeries = document.getElementById('dash-count-series');
-    if (elSeries) elSeries.textContent = `${seriesCount.toLocaleString('pt-BR')} SÃ©ries`;
+    if (elSeries) elSeries.textContent = `${seriesCount.toLocaleString('pt-BR')} Séries`;
 
     const mac = localStorage.getItem('vion_mac_address');
     const storedPortal = localStorage.getItem(`vion_playlists_${mac}`);
@@ -899,16 +899,16 @@ const App = {
     if (elPlaylists) elPlaylists.textContent = `${playlists.length || 1} Ativa`;
   },
 
-  // Cenas cinematogrÃ¡ficas Ã©picas e em alta definiÃ§Ã£o (16:9 Widescreen)
+  // Cenas cinematográficas épicas e em alta definição (16:9 Widescreen)
   CINEMA_BACKDROPS: [
     'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1920&auto=format&fit=crop', // Sala de Cinema e Luzes
     'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=1920&auto=format&fit=crop', // Duna / Deserto Sci-Fi
-    'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1920&auto=format&fit=crop', // Interestelar / EspaÃ§o CÃ³smico
+    'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1920&auto=format&fit=crop', // Interestelar / Espaço Cósmico
     'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1920&auto=format&fit=crop', // Cyberpunk / Cidade Noturna
-    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920&auto=format&fit=crop', // Ã‰pico Fantasia / Natureza
-    'https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=1920&auto=format&fit=crop', // Gotham / MetrÃ³pole Noturna
-    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1920&auto=format&fit=crop', // Cinema ClÃ¡ssico
-    'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1920&auto=format&fit=crop'  // AÃ§Ã£o e Aventura
+    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920&auto=format&fit=crop', // Épico Fantasia / Natureza
+    'https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=1920&auto=format&fit=crop', // Gotham / Metrópole Noturna
+    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1920&auto=format&fit=crop', // Cinema Clássico
+    'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1920&auto=format&fit=crop'  // Ação e Aventura
   ],
   backdropIndex: 0,
   backdropInterval: null,
@@ -921,13 +921,13 @@ const App = {
     let activeLayer = l1;
     let nextLayer = l2;
 
-    // Define a primeira cena cinematogrÃ¡fica imediatamente
+    // Define a primeira cena cinematográfica imediatamente
     activeLayer.style.backgroundImage = `url("${this.CINEMA_BACKDROPS[0]}")`;
     activeLayer.classList.add('active');
 
     if (this.backdropInterval) clearInterval(this.backdropInterval);
 
-    // Faz transiÃ§Ã£o suave entre cenas de filmes a cada 18 segundos (economia de CPU/GPU em TV)
+    // Faz transição suave entre cenas de filmes a cada 18 segundos (economia de CPU/GPU em TV)
     this.backdropInterval = setInterval(() => {
       this.backdropIndex = (this.backdropIndex + 1) % this.CINEMA_BACKDROPS.length;
       const nextUrl = this.CINEMA_BACKDROPS[this.backdropIndex];
@@ -998,7 +998,7 @@ const App = {
       this.handleM3uLogin();
     });
 
-    // 2. Pular e Ir para o InÃ­cio
+    // 2. Pular e Ir para o Início
     var _el_btn_skip_login = document.getElementById('btn-skip-login'); if (_el_btn_skip_login) _el_btn_skip_login.addEventListener('click', () => {
       this.goToScreen('home');
     });
@@ -1036,17 +1036,17 @@ const App = {
       }
     } catch (e) {}
 
-    // Ir para Login a partir de ConfiguraÃ§Ãµes
+    // Ir para Login a partir de Configurações
     var _el_btn_goto_login = document.getElementById('btn-goto-login'); if (_el_btn_goto_login) _el_btn_goto_login.addEventListener('click', () => {
       this.goToScreen('reseller-login');
     });
 
-    // Alterar PIN de Controle Parental a partir de ConfiguraÃ§Ãµes
+    // Alterar PIN de Controle Parental a partir de Configurações
     var _el_btn_settings_parental_pin = document.getElementById('btn-settings-parental-pin'); if (_el_btn_settings_parental_pin) _el_btn_settings_parental_pin.addEventListener('click', () => {
       ParentalControl.openPinModal(true);
     });
 
-    // Teclado NumÃ©rico do PIN Parental na tela
+    // Teclado Numérico do PIN Parental na tela
     document.querySelectorAll('.pin-key-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1062,7 +1062,7 @@ const App = {
       });
     });
 
-    // BotÃ£o Cancelar PIN Parental
+    // Botão Cancelar PIN Parental
     var _el_btn_parental_pin_cancel = document.getElementById('btn-parental-pin-cancel'); if (_el_btn_parental_pin_cancel) _el_btn_parental_pin_cancel.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -1086,7 +1086,7 @@ const App = {
       });
     });
 
-    // BotÃ£o de Favoritos na tela ao vivo
+    // Botão de Favoritos na tela ao vivo
     var _el_btn_live_favorites = document.getElementById('btn-live-favorites'); if (_el_btn_live_favorites) _el_btn_live_favorites.addEventListener('click', () => {
       this.openFavoritesSection();
     });
@@ -1106,7 +1106,7 @@ const App = {
       });
     });
 
-    // BotÃµes de Voltar
+    // Botões de Voltar
     var _el_btn_back_from_live = document.getElementById('btn-back-from-live'); if (_el_btn_back_from_live) _el_btn_back_from_live.addEventListener('click', () => {
       this.player.stopMini();
       this.goToScreen('home');
@@ -1128,7 +1128,7 @@ const App = {
       }
     });
 
-    // BotÃµes da Tela de LicenÃ§a Expirada (#screen-expired)
+    // Botões da Tela de Licença Expirada (#screen-expired)
     var _el_btn_expired_check = document.getElementById('btn-expired-check'); if (_el_btn_expired_check) _el_btn_expired_check.addEventListener('click', () => {
       this.verifyLicenseNow(true);
     });
@@ -1157,20 +1157,20 @@ const App = {
       this.logoutAccount();
     });
 
-    // ExpansÃ£o para Tela Cheia a partir do Mini-Player
+    // Expansão para Tela Cheia a partir do Mini-Player
     var _el_btn_expand_fullscreen = document.getElementById('btn-expand-fullscreen'); if (_el_btn_expand_fullscreen) _el_btn_expand_fullscreen.addEventListener('click', (e) => {
       e.stopPropagation();
       this.expandMiniToFullscreen();
     });
     var _el_mini_player_container = document.getElementById('mini-player-container'); if (_el_mini_player_container) _el_mini_player_container.addEventListener('click', (e) => {
-      // Se clicou no botÃ£o voltar da tela cheia ou se jÃ¡ estÃ¡ em tela cheia, nÃ£o dispara expansÃ£o!
+      // Se clicou no botão voltar da tela cheia ou se já está em tela cheia, não dispara expansão!
       if (e.target && e.target.closest('#btn-mini-fs-back, .mini-fs-topbar')) return;
       if (!this.player || !this.player.isMiniFullscreen) {
         this.expandMiniToFullscreen();
       }
     });
 
-    // Modal de SÃ©ries - Fechar e NavegaÃ§Ã£o de Temporadas
+    // Modal de Séries - Fechar e Navegação de Temporadas
     var _el_btn_close_series_modal = document.getElementById('btn-close-series-modal'); if (_el_btn_close_series_modal) _el_btn_close_series_modal.addEventListener('click', () => {
       this.closeSeriesModal();
     });
@@ -1245,7 +1245,7 @@ const App = {
         const sectionData = this.getActiveSectionData();
         this.filteredItems = sectionData.channels.filter(c => this.activeCategory === 'Todos' || c.category === this.activeCategory);
         const badgeEl = document.getElementById('vod-count-badge');
-        if (badgeEl) badgeEl.textContent = `${this.filteredItems.length.toLocaleString('pt-BR')} ${this.activeSection === 'movies' ? 'filmes' : 'sÃ©ries'}`;
+        if (badgeEl) badgeEl.textContent = `${this.filteredItems.length.toLocaleString('pt-BR')} ${this.activeSection === 'movies' ? 'filmes' : 'séries'}`;
         this.renderedCount = 0;
         const grid = document.getElementById('vod-grid');
         if (grid) {
@@ -1265,7 +1265,7 @@ const App = {
         const sectionData = this.getActiveSectionData();
         this.filteredItems = sectionData.channels.filter(c => this.activeCategory === 'Todos' || c.category === this.activeCategory);
         const badgeEl = document.getElementById('vod-count-badge');
-        if (badgeEl) badgeEl.textContent = `${this.filteredItems.length.toLocaleString('pt-BR')} ${this.activeSection === 'movies' ? 'filmes' : 'sÃ©ries'}`;
+        if (badgeEl) badgeEl.textContent = `${this.filteredItems.length.toLocaleString('pt-BR')} ${this.activeSection === 'movies' ? 'filmes' : 'séries'}`;
         this.renderedCount = 0;
         const grid = document.getElementById('vod-grid');
         if (grid) {
@@ -1282,7 +1282,7 @@ const App = {
       this.logoutAccount();
     });
 
-    // DiÃ¡logo Customizado
+    // Diálogo Customizado
     var _el_btn_dialog_cancel = document.getElementById('btn-dialog-cancel'); if (_el_btn_dialog_cancel) _el_btn_dialog_cancel.addEventListener('click', () => {
       this.closeDialog();
     });
@@ -1304,7 +1304,7 @@ const App = {
   },
 
   // ===================================================================
-  // CÃ“DIGOS DE PARCERIA (CONSUMO NO APP TV - GERENCIADOS NO PAINEL WEB)
+  // CÓDIGOS DE PARCERIA (CONSUMO NO APP TV - GERENCIADOS NO PAINEL WEB)
   // ===================================================================
 
   getPartnershipCodes() {
@@ -1316,7 +1316,7 @@ const App = {
       }
     } catch(e) {}
 
-    // PadrÃ£o com o cÃ³digo TOURO cadastrado pelo administrador
+    // Padrão com o código TOURO cadastrado pelo administrador
     const defaultCodes = [
       {
         id: 'code_touro',
@@ -1365,30 +1365,30 @@ const App = {
     const pass = document.getElementById('input-reseller-pass').value.trim();
 
     if (!rawInput || !user || !pass) {
-      this.showToast('Preencha o cÃ³digo, usuÃ¡rio e senha.');
+      this.showToast('Preencha o código, usuário e senha.');
       return;
     }
 
     // Tenta atualizar parcerias do painel do administrador em tempo real
     try { await this.syncPartnershipsSilently(); } catch(e) {}
 
-    // 1. Busca nos cÃ³digos de parceria cadastrados pelo administrador
+    // 1. Busca nos códigos de parceria cadastrados pelo administrador
     const partnershipCodes = this.getPartnershipCodes();
     const partner = partnershipCodes.find(p => (p.code || '').trim().toUpperCase() === codeUpper);
 
-    // Se o cÃ³digo NÃƒO existir: bloqueia completamente!
+    // Se o código NÃO existir: bloqueia completamente!
     if (!partner) {
-      this.showToast(`âŒ CÃ³digo de parceria "${rawInput}" nÃ£o cadastrado!`);
+      this.showToast(`âŒ Código de parceria "${rawInput}" não cadastrado!`);
       return;
     }
 
-    // Se o cÃ³digo existir mas estiver DESATIVADO pelo administrador: bloqueia o login!
+    // Se o código existir mas estiver DESATIVADO pelo administrador: bloqueia o login!
     if (!partner.active) {
-      this.showToast(`âš ï¸ O cÃ³digo de parceria "${partner.code}" estÃ¡ desativado!`);
+      this.showToast(`âš ï¸ O código de parceria "${partner.code}" está desativado!`);
       return;
     }
 
-    // CÃ³digo vÃ¡lido e ATIVO: conecta ao servidor correspondente
+    // Código válido e ATIVO: conecta ao servidor correspondente
     this.showToast(`Conectando ao provedor (${partner.name || partner.code})...`);
 
     const serverUrl = partner.server.replace(/\/+$/, '');
@@ -1440,7 +1440,7 @@ const App = {
     }
 
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      this.showToast('A URL deve comeÃ§ar com http:// ou https://');
+      this.showToast('A URL deve começar com http:// ou https://');
       return;
     }
 
@@ -1463,7 +1463,7 @@ const App = {
   },
 
   async activateEvaluationMode() {
-    this.showToast('Iniciando modo de avaliaÃ§Ã£o oficial...');
+    this.showToast('Iniciando modo de avaliação oficial...');
     const demo = M3UParser.parse(M3UParser.DEMO_PLAYLIST);
     this.playlistData = demo;
     await M3UParser.saveToCache(demo);
@@ -1471,13 +1471,13 @@ const App = {
     const mac = localStorage.getItem('vion_mac_address');
     const evalPlaylist = {
       id: 'eval_1',
-      name: 'DemonstraÃ§Ã£o PÃºblica (Creative Commons)',
+      name: 'Demonstração Pública (Creative Commons)',
       url: 'demo'
     };
     localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify([evalPlaylist]));
     this.updateDashboardCounters();
 
-    this.showToast('âœ” Ambiente de avaliaÃ§Ã£o pronto para testes!');
+    this.showToast('✔ Ambiente de avaliação pronto para testes!');
     setTimeout(() => {
       this.goToScreen('home');
     }, 300);
@@ -1503,7 +1503,7 @@ const App = {
   activatePlaylistByUrl(url, name, notify = true, isInitialSplash = false, forceSync = false) {
     if (this.isSyncing) return Promise.resolve(this.playlistData);
 
-    // Se jÃ¡ estiver com essa URL carregada, dados em memÃ³ria e schema 25 vÃ¡lido, sÃ³ pula se NÃƒO for forÃ§ado
+    // Se já estiver com essa URL carregada, dados em memória e schema 25 válido, só pula se NÃO for forçado
     if (!forceSync && this.activePlaylistUrl === url && this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0 && this.playlistData._schemaVersion === 25) {
       if (this.currentScreen === 'reseller-login' || this.currentScreen === 'loading') {
         this.goToScreen('home');
@@ -1518,7 +1518,7 @@ const App = {
       M3UParser.saveToCache(demo);
       this.updateDashboardCounters();
       this.goToScreen('home');
-      if (notify) this.showToast(`âœ” Conectado Ã  demonstraÃ§Ã£o!`);
+      if (notify) this.showToast(`✔ Conectado Ã  demonstração!`);
       return Promise.resolve(demo);
     }
 
@@ -1534,11 +1534,11 @@ const App = {
       }
     };
 
-    onProgress(10, `Sincronizando ${name}`, 'Iniciando conexÃ£o...');
+    onProgress(10, `Sincronizando ${name}`, 'Iniciando conexão...');
 
     return M3UParser.fetchPlaylist(url, onProgress)
       .then(async (parsed) => {
-        onProgress(90, `Sincronizando ${name}`, 'Gravando catÃ¡logo no dispositivo...');
+        onProgress(90, `Sincronizando ${name}`, 'Gravando catálogo no dispositivo...');
         this.playlistData = parsed;
         this.activePlaylistUrl = url;
         localStorage.setItem('vion_has_playlist', 'true');
@@ -1551,7 +1551,7 @@ const App = {
         const movieCount = (parsed.movies && parsed.movies.channels ? parsed.movies.channels.length : 0) || 0;
         const seriesCount = (parsed.series && parsed.series.channels ? parsed.series.channels.length : 0) || 0;
 
-        onProgress(100, 'âœ” SincronizaÃ§Ã£o ConcluÃ­da!', `${liveCount} canais â€¢ ${movieCount} filmes â€¢ ${seriesCount} sÃ©ries`);
+        onProgress(100, '✔ Sincronização Concluída!', `${liveCount} canais • ${movieCount} filmes • ${seriesCount} séries`);
 
         await new Promise(r => setTimeout(r, 600));
         this.hideSyncProgress();
@@ -1569,7 +1569,7 @@ const App = {
           this.setSplashProgress(100, 'Falha ao sincronizar', err.message || 'Verifique o servidor');
           setTimeout(() => this.goToScreen('reseller-login'), 1800);
         } else {
-          this.showSyncProgress(`âŒ Falha na SincronizaÃ§Ã£o`, err.message || 'Verifique o link ou se o servidor estÃ¡ ativo', 'Tentando novamente...');
+          this.showSyncProgress(`âŒ Falha na Sincronização`, err.message || 'Verifique o link ou se o servidor está ativo', 'Tentando novamente...');
           setTimeout(() => this.hideSyncProgress(), 3200);
         }
         this.showToast(`Falha ao sincronizar: ${err.message || 'Verifique o link'}`);
@@ -1585,9 +1585,9 @@ const App = {
     const mac = this.normalizeMac(rawMac);
     if (!mac) return;
 
-    if (notify) this.showToast('ðŸ”„ Sincronizando licenÃ§a e playlists...');
+    if (notify) this.showToast('🔄 Sincronizando licença e playlists...');
 
-    // Sempre verifica e sincroniza a licenÃ§a imediatamente
+    // Sempre verifica e sincroniza a licença imediatamente
     try {
       await this.verifyLicenseNow(false);
     } catch(e) {}
@@ -1609,14 +1609,14 @@ const App = {
       if (!forceSync && this.activePlaylistUrl === targetPlaylist.url && this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0 && this.playlistData._schemaVersion === 25) {
         if (this.currentScreen === 'reseller-login') this.goToScreen('home');
         this.updateTrialDisplay();
-        if (notify) this.showToast('âœ”ï¸ Playlist ativa');
+        if (notify) this.showToast('✔ï¸ Playlist ativa');
         return;
       }
       if (notify) this.showToast(`Carregando "${targetPlaylist.name}"...`);
       await this.activatePlaylistByUrl(targetPlaylist.url, targetPlaylist.name, notify, false, forceSync);
     } else {
       this.updateTrialDisplay();
-      if (notify) this.showToast('âœ” Status e playlists sincronizados com sucesso!');
+      if (notify) this.showToast('✔ Status e playlists sincronizados com sucesso!');
     }
   },
 
@@ -1626,7 +1626,7 @@ const App = {
       const userInp = document.getElementById('input-reseller-user');
       if (userInp && userInp.value.trim().length > 0) return; // Bloqueia auto-login se estiver digitando
 
-      // SÃ³ pesquisa se ainda NÃƒO tiver playlist carregada e estiver na tela de login
+      // Só pesquisa se ainda NÃO tiver playlist carregada e estiver na tela de login
       if (this.currentScreen === 'reseller-login' && !this.isSyncing && (!this.playlistData || !this.playlistData.channels || this.playlistData.channels.length === 0)) {
         const mac = localStorage.getItem('vion_mac_address');
         const p = await this.queryPortalPlaylists(mac);
@@ -1651,7 +1651,7 @@ const App = {
     const savedCode = localStorage.getItem('vion_saved_provider_code') || '';
     const savedUser = localStorage.getItem('vion_saved_provider_user') || '';
 
-    // Se tiver lista em memÃ³ria ou credenciais de provedor salvas (ex: TOURO), exibe card da conta
+    // Se tiver lista em memória ou credenciais de provedor salvas (ex: TOURO), exibe card da conta
     if (playlists.length === 0 && (this.playlistData || savedCode)) {
       const pName = savedCode ? `Provedor ${savedCode} (${savedUser || 'Conectado'})` : 'Lista Conectada';
       playlists = [{ name: pName, url: this.activePlaylistUrl || 'cached' }];
@@ -1683,12 +1683,12 @@ const App = {
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
-          <button class="pill-btn focusable btn-item-reload" tabindex="0" style="padding:8px 18px;font-size:13px;background:#ffffff;color:#000;font-weight:700;">ðŸ”„ Acessar Playlist</button>
+          <button class="pill-btn focusable btn-item-reload" tabindex="0" style="padding:8px 18px;font-size:13px;background:#ffffff;color:#000;font-weight:700;">🔄 Acessar Playlist</button>
           <button class="pill-btn focusable btn-item-disconnect" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">ðŸšª Desconectar</button>
         </div>
       `;
 
-      // BotÃ£o Recarregar
+      // Botão Recarregar
       var _qs_btn_item_reload = item.querySelector('.btn-item-reload'); if (_qs_btn_item_reload) _qs_btn_item_reload.addEventListener('click', (e) => {
         e.stopPropagation();
         if (p.url && p.url !== 'cached') {
@@ -1698,7 +1698,7 @@ const App = {
         }
       });
 
-      // BotÃ£o Desconectar
+      // Botão Desconectar
       var _qs_btn_item_disconnect = item.querySelector('.btn-item-disconnect'); if (_qs_btn_item_disconnect) _qs_btn_item_disconnect.addEventListener('click', (e) => {
         e.stopPropagation();
         this.logoutAccount();
@@ -1709,7 +1709,7 @@ const App = {
   },
 
   // ===================================================================
-  // NAVEGAÃ‡ÃƒO E ABERTURA DE SEÃ‡Ã•ES (LIVE TV vs FILMES vs SÃ‰RIES)
+  // NAVEGAÇÃO E ABERTURA DE SEÇÕES (LIVE TV vs FILMES vs SÉRIES)
   // ===================================================================
   openSection(sectionType) {
     if (this.isDeviceExpired()) {
@@ -1734,14 +1734,14 @@ const App = {
       this.setupLiveTvScreen();
       this.goToScreen('channels');
     } else {
-      // Abre Tela de Filmes ou SÃ©ries Super Play (Imagem 3: Posters Verticais)
+      // Abre Tela de Filmes ou Séries Super Play (Imagem 3: Posters Verticais)
       this.setupVodScreen(sectionType);
       this.goToScreen('vod');
     }
   },
 
   // ===================================================================
-  // 1. TELA DE CANAIS AO VIVO (3 COLUNAS - IDÃŠNTICO Ã€ IMAGEM 4)
+  // 1. TELA DE CANAIS AO VIVO (3 COLUNAS - IDÊNTICO Ã€ IMAGEM 4)
   // ===================================================================
   setupLiveTvScreen() {
     const liveData = this.playlistData.live || { channels: [], categories: ['Todos'] };
@@ -1860,7 +1860,7 @@ const App = {
         </div>
       `;
 
-      // Ao navegar pelo controle da TV (Cima/Baixo): apenas atualiza o EPG/guia, SEM trocar o canal da transmissÃ£o!
+      // Ao navegar pelo controle da TV (Cima/Baixo): apenas atualiza o EPG/guia, SEM trocar o canal da transmissão!
       row.addEventListener('focus', () => {
         clearTimeout(this.previewFocusTimer);
         this.previewFocusTimer = setTimeout(() => {
@@ -1869,13 +1869,13 @@ const App = {
           }
         }, 120);
 
-        // Se estiver chegando perto do fim da lista renderizada, carrega prÃ³ximo lote automaticamente
+        // Se estiver chegando perto do fim da lista renderizada, carrega próximo lote automaticamente
         if (idx >= this.renderedChannelsCount - 12 && this.renderedChannelsCount < this.currentLiveList.length) {
           this.renderMoreLiveChannels();
         }
       });
 
-      // Ao clicar ou pressionar OK/Enter no controle remoto: troca de canal, ou abre tela cheia se jÃ¡ for o ativo
+      // Ao clicar ou pressionar OK/Enter no controle remoto: troca de canal, ou abre tela cheia se já for o ativo
       row.addEventListener('click', () => {
         clearTimeout(this.previewFocusTimer);
         const isAlreadyPlaying = (this.currentPlayingChannel && (
@@ -1884,7 +1884,7 @@ const App = {
         ));
 
         if (isAlreadyPlaying) {
-          // Se clicou no canal que jÃ¡ estÃ¡ tocando, expande para tela cheia
+          // Se clicou no canal que já está tocando, expande para tela cheia
           this.expandMiniToFullscreen();
         } else {
           // Canal novo: muda o canal ativo, inicia o stream no mini-player e atualiza o EPG
@@ -1898,7 +1898,7 @@ const App = {
         }
       });
 
-      // Duplo clique ou duplo toque rÃ¡pido: abre tela cheia instantaneamente
+      // Duplo clique ou duplo toque rápido: abre tela cheia instantaneamente
       row.addEventListener('dblclick', () => {
         this.currentPlayingChannel = ch;
         this.activeChannelIndex = idx;
@@ -1991,30 +1991,30 @@ const App = {
   },
 
   // ===================================================================
-  // 2. TELA DE FILMES E SÃ‰RIES VOD (POSTERS VERTICAIS 2:3 - IMAGEM 3)
+  // 2. TELA DE FILMES E SÉRIES VOD (POSTERS VERTICAIS 2:3 - IMAGEM 3)
   // ===================================================================
   getCategoryIcon(catName) {
     const name = (catName || '').toLowerCase().trim();
-    if (name === 'todos' || name === 'recently added') return 'ðŸŒŸ';
-    if (name.includes('netflix')) return 'ðŸ”´';
+    if (name === 'todos' || name === 'recently added') return '🌟';
+    if (name.includes('netflix')) return '🔴';
     if (name.includes('prime') || name.includes('amazon')) return 'ðŸ”µ';
     if (name.includes('disney')) return 'âœ¨';
     if (name.includes('hbo') || name.includes('max')) return 'ðŸŸ£';
-    if (name.includes('apple')) return 'âšª';
+    if (name.includes('apple')) return '⚪';
     if (name.includes('globo')) return 'ðŸŸ ';
     if (name.includes('paramount')) return 'â­';
-    if (name.includes('star')) return 'âš¡';
+    if (name.includes('star')) return '⚡';
     if (name.includes('brasil paralelo')) return 'ðŸŸ¢';
     if (name.includes('discovery')) return 'ðŸŒ';
     if (name.includes('sbt')) return 'ðŸŸ¡';
-    if (name.includes('anime')) return 'âš¡';
+    if (name.includes('anime')) return '⚡';
     if (name.includes('4k') || name.includes('uhd')) return 'ðŸ’Ž';
     if (name.includes('novela')) return 'ðŸ“º';
     if (name.includes('infantil') || name.includes('kids') || name.includes('desenho')) return 'ðŸŽˆ';
-    if (name.includes('aÃ§Ã£o') || name.includes('acao')) return 'ðŸ’¥';
-    if (name.includes('comÃ©dia') || name.includes('comedia')) return 'ðŸŽ­';
+    if (name.includes('ação') || name.includes('acao')) return 'ðŸ’¥';
+    if (name.includes('comédia') || name.includes('comedia')) return 'ðŸŽ­';
     if (name.includes('terror') || name.includes('suspense')) return 'ðŸ‘»';
-    if (name.includes('ficÃ§Ã£o') || name.includes('ficcao') || name.includes('sci-fi')) return 'ðŸš€';
+    if (name.includes('ficção') || name.includes('ficcao') || name.includes('sci-fi')) return '🚀';
     if (name.includes('document')) return 'ðŸ“œ';
     if (name.includes('guerra') || name.includes('faroeste')) return 'âš”ï¸';
     if (name.includes('romance') || name.includes('drama')) return 'ðŸŒ¹';
@@ -2028,10 +2028,10 @@ const App = {
 
     const headingEl = document.getElementById('vod-section-heading');
     if (headingEl) {
-      headingEl.textContent = type === 'movies' ? 'Filmes | Adicionados Recentemente' : 'SÃ©ries | Adicionados Recentemente';
+      headingEl.textContent = type === 'movies' ? 'Filmes | Adicionados Recentemente' : 'Séries | Adicionados Recentemente';
     }
 
-    // Calcula a contagem de cada categoria (memoizado para performance instantÃ¢nea)
+    // Calcula a contagem de cada categoria (memoizado para performance instantânea)
     if (!sectionData._catCounts) {
       const counts = {};
       (sectionData.channels || []).forEach(item => {
@@ -2042,7 +2042,7 @@ const App = {
     }
     const catCounts = sectionData._catCounts;
 
-    // Atualiza contadores das categorias rÃ¡pidas (Imagem 2)
+    // Atualiza contadores das categorias rápidas (Imagem 2)
     const favs = this.getFavorites().filter(f => f.type === type);
     const countFavsEl = document.getElementById('count-favorites');
     if (countFavsEl) countFavsEl.textContent = favs.length;
@@ -2054,7 +2054,7 @@ const App = {
     const countContinueEl = document.getElementById('count-continue-watching');
     if (countContinueEl) countContinueEl.textContent = String(continueList.length);
 
-    // Eventos das categorias rÃ¡pidas (Imagem 2)
+    // Eventos das categorias rápidas (Imagem 2)
     const quickContinue = document.getElementById('cat-continue-watching');
     if (quickContinue) {
       quickContinue.onclick = () => {
@@ -2097,7 +2097,7 @@ const App = {
       categoriesContainer.appendChild(itemEl);
     });
 
-    // Inicia na primeira categoria dinÃ¢mica
+    // Inicia na primeira categoria dinâmica
     if (categoriesContainer.firstChild) {
       this.selectVodCategory(cats[0], categoriesContainer.firstChild);
     }
@@ -2111,21 +2111,21 @@ const App = {
     const headingEl = document.getElementById('vod-section-heading');
 
     if (type === 'favorites') {
-      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'SÃ©ries'} | Favoritos`;
+      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Favoritos`;
       const favs = this.getFavorites().filter(f => f.type === this.activeSection);
       const favKeys = new Set(favs.map(f => f.url || f.name));
       let matches = (sectionData.channels || []).filter(c => favKeys.has(c.url || c.name));
       if (matches.length === 0) matches = favs;
       this.filteredItems = matches;
     } else if (type === 'recent') {
-      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'SÃ©ries'} | Adicionados Recentemente`;
+      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Adicionados Recentemente`;
       if (!sectionData._todosList || !sectionData._todosListSorted) {
         this.selectVodCategory('Todos');
         return;
       }
       this.filteredItems = (sectionData._todosList || sectionData.channels || []).slice(0, 100);
     } else if (type === 'continue') {
-      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'SÃ©ries'} | Continuar Assistindo`;
+      if (headingEl) headingEl.textContent = `${this.activeSection === 'movies' ? 'Filmes' : 'Séries'} | Continuar Assistindo`;
       this.filteredItems = this.getContinueWatchingList(this.activeSection);
       if (this.filteredItems.length === 0) {
         const badgeEl = document.getElementById('vod-count-badge');
@@ -2135,8 +2135,8 @@ const App = {
           grid.innerHTML = `
             <div style="grid-column: 1 / -1; padding: 70px 20px; text-align: center; color: #94a3b8; font-size: 18px;">
               <div style="font-size: 48px; margin-bottom: 16px;">ðŸŽ¬</div>
-              <div style="font-weight: 700; color: #f1f5f9; font-size: 20px; margin-bottom: 8px;">Nenhum tÃ­tulo em andamento</div>
-              <span style="font-size: 15px; opacity: 0.8;">Comece a assistir a um filme ou sÃ©rie e vocÃª poderÃ¡ continuar de onde parou por aqui!</span>
+              <div style="font-weight: 700; color: #f1f5f9; font-size: 20px; margin-bottom: 8px;">Nenhum título em andamento</div>
+              <span style="font-size: 15px; opacity: 0.8;">Comece a assistir a um filme ou série e você poderá continuar de onde parou por aqui!</span>
             </div>
           `;
           grid.scrollTop = 0;
@@ -2203,7 +2203,7 @@ const App = {
           const a4k = aCat.includes('4K') || aCat.includes('UHD') || aCat.includes('2160P') || aName.includes('4K') || aName.includes('UHD') || aName.includes('2160P');
           const b4k = bCat.includes('4K') || bCat.includes('UHD') || bCat.includes('2160P') || bName.includes('4K') || bName.includes('UHD') || bName.includes('2160P');
 
-          // 1. Filmes 100% compatÃ­veis (FHD/HD) SEMPRE antes de 4K (evita tela preta com som)
+          // 1. Filmes 100% compatíveis (FHD/HD) SEMPRE antes de 4K (evita tela preta com som)
           if (a4k !== b4k) return a4k ? 1 : -1;
 
           // 2. Filmes COM capa oficial antes de filmes sem capa
@@ -2211,9 +2211,9 @@ const App = {
           const bCover = !!(b.logo && typeof b.logo === 'string' && b.logo.trim().startsWith('http'));
           if (aCover !== bCover) return aCover ? -1 : 1;
 
-          // 3. LanÃ§amentos recentes
-          const aLanc = aCat.includes('LANÃ‡AMENTO') || aCat.includes('LANCAMENTO');
-          const bLanc = bCat.includes('LANÃ‡AMENTO') || bCat.includes('LANCAMENTO');
+          // 3. Lançamentos recentes
+          const aLanc = aCat.includes('LANÇAMENTO') || aCat.includes('LANCAMENTO');
+          const bLanc = bCat.includes('LANÇAMENTO') || bCat.includes('LANCAMENTO');
           if (aLanc !== bLanc) return aLanc ? -1 : 1;
 
           // 4. Mais Assistidos e Populares
@@ -2242,7 +2242,7 @@ const App = {
     this.filteredItems = baseList;
     const badgeEl = document.getElementById('vod-count-badge');
     if (badgeEl) {
-      const unit = this.activeSection === 'movies' ? 'filmes' : 'sÃ©ries';
+      const unit = this.activeSection === 'movies' ? 'filmes' : 'séries';
       badgeEl.textContent = `${this.filteredItems.length.toLocaleString('pt-BR')} ${unit}`;
     }
 
@@ -2298,10 +2298,10 @@ const App = {
       const thumbContainer = document.createElement('div');
       thumbContainer.className = 'vod-poster-thumb';
 
-      // 1. Capa fallback base com Ã­cone e tÃ­tulo (fica sempre por baixo a z-index: 1)
+      // 1. Capa fallback base com ícone e título (fica sempre por baixo a z-index: 1)
       thumbContainer.appendChild(createFallbackCover());
 
-      // 2. Imagem oficial do poster (sobrepÃµe o fallback a z-index: 2 quando carrega)
+      // 2. Imagem oficial do poster (sobrepõe o fallback a z-index: 2 quando carrega)
       const rawLogo = (item.logo || '').trim();
       const logoUrl = (typeof normalizeImageUrl === 'function') ? normalizeImageUrl(rawLogo) : rawLogo;
 
@@ -2357,7 +2357,7 @@ const App = {
           img.style.display = 'block';
         }
       } else {
-        // Logo ausente: exibe capa grÃ¡fica estilizada de 0ms sem bloquear o carregamento
+        // Logo ausente: exibe capa gráfica estilizada de 0ms sem bloquear o carregamento
         img.classList.add('img-hidden');
         img.style.display = 'none';
       }
@@ -2400,7 +2400,7 @@ const App = {
         }
       });
 
-      // Lazy TMDB on focus: resolve poster oficial apenas ao navegar atÃ© o card
+      // Lazy TMDB on focus: resolve poster oficial apenas ao navegar até o card
       const fetchTmdbOnFocus = () => {
         if (!item.logo || !item.logo.startsWith('http') || img.classList.contains('img-hidden')) {
           TmdbResolver.resolve(item.name, isSeries).then(meta => {
@@ -2422,12 +2422,12 @@ const App = {
       };
       card.addEventListener('focus', fetchTmdbOnFocus, { passive: true });
 
-      // Se a capa estiver ausente ou invÃ¡lida, busca automaticamente no TMDB em segundo plano
+      // Se a capa estiver ausente ou inválida, busca automaticamente no TMDB em segundo plano
       if (!item.logo || !item.logo.startsWith('http')) {
         setTimeout(fetchTmdbOnFocus, Math.min(idx * 70, 2000));
       }
 
-      // Atualiza o fundo da tela com o pÃ´ster/fanart do filme ou sÃ©rie em foco
+      // Atualiza o fundo da tela com o pôster/fanart do filme ou série em foco
       const updateVodBackdrop = () => {
         clearTimeout(this._vodBackdropTimer);
         this._vodBackdropTimer = setTimeout(() => {
@@ -2485,7 +2485,7 @@ const App = {
   },
 
   // ===================================================================
-  // 3. TELA CINEMATOGRÃFICA DE SÃ‰RIES (ESTILO NETFLIX / HBO MAX)
+  // 3. TELA CINEMATOGRÃFICA DE SÉRIES (ESTILO NETFLIX / HBO MAX)
   // ===================================================================
   async openSeriesDetails(seriesGroup, realIndex = 0) {
     this.activeSeries = seriesGroup;
@@ -2493,12 +2493,12 @@ const App = {
     const overlay = document.getElementById('modal-series-details');
     if (!overlay) return;
 
-    // TÃ­tulo, Categoria e Metas
+    // Título, Categoria e Metas
     const titleEl = document.getElementById('series-modal-title');
     if (titleEl) titleEl.textContent = seriesGroup.name;
 
     const catEl = document.getElementById('series-modal-category');
-    if (catEl) catEl.textContent = seriesGroup.category || 'SÃ©ries';
+    if (catEl) catEl.textContent = seriesGroup.category || 'Séries';
 
     const posterEl = document.getElementById('series-hero-poster');
     const bgBackdrop = document.getElementById('series-modal-bg');
@@ -2522,14 +2522,14 @@ const App = {
     }
 
     if (plotEl) {
-      plotEl.textContent = seriesGroup.plot || `Acompanhe todos os episÃ³dios de ${seriesGroup.name} com reproduÃ§Ã£o em alta definiÃ§Ã£o no Vion Player.`;
+      plotEl.textContent = seriesGroup.plot || `Acompanhe todos os episódios de ${seriesGroup.name} com reprodução em alta definição no Vion Player.`;
     }
 
     if (ratingEl) {
       ratingEl.textContent = seriesGroup.rating ? `â˜… ${seriesGroup.rating}` : 'â˜… 8.5';
     }
 
-    // Limpa seÃ§Ãµes anteriores de elenco, criador e gÃªneros
+    // Limpa seções anteriores de elenco, criador e gêneros
     const seriesGenresEl = document.getElementById('series-modal-genres');
     const seriesCreatorEl = document.getElementById('series-modal-creator');
     const seriesCastSec = document.getElementById('series-details-cast-section');
@@ -2539,7 +2539,7 @@ const App = {
     if (seriesCastSec) seriesCastSec.style.display = 'none';
     if (seriesCastList) seriesCastList.innerHTML = '';
 
-    // Busca automÃ¡tica no TMDB para completar capa, backdrop, sinopse, nota, gÃªneros, criador e elenco
+    // Busca automática no TMDB para completar capa, backdrop, sinopse, nota, gêneros, criador e elenco
     TmdbResolver.resolve(seriesGroup.name, true).then(async (meta) => {
       if (meta) {
         if (meta.id) {
@@ -2550,7 +2550,7 @@ const App = {
               seriesGenresEl.innerHTML = creds.genres.map(g => `<span class="genre-pill">${g}</span>`).join('');
             }
             if (creds.director && seriesCreatorEl) {
-              seriesCreatorEl.innerHTML = `<strong>Criador / ProduÃ§Ã£o:</strong> ${creds.director}`;
+              seriesCreatorEl.innerHTML = `<strong>Criador / Produção:</strong> ${creds.director}`;
               seriesCreatorEl.style.display = 'block';
             }
             if (creds.cast && creds.cast.length > 0 && seriesCastSec && seriesCastList) {
@@ -2558,7 +2558,7 @@ const App = {
                 <div class="cast-item">
                   <div class="cast-photo-wrap">
                     ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="cast-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-                    <div class="cast-photo-placeholder" style="${c.photo ? 'display:none;' : ''}">ðŸ‘¤</div>
+                    <div class="cast-photo-placeholder" style="${c.photo ? 'display:none;' : ''}">👤</div>
                   </div>
                   <span class="cast-name" title="${c.name}">${c.name}</span>
                   <span class="cast-character" title="${c.character}">${c.character}</span>
@@ -2588,14 +2588,14 @@ const App = {
       }
     });
 
-    // Se for sÃ©rie Xtream e ainda nÃ£o tiver episÃ³dios carregados, busca via API
+    // Se for série Xtream e ainda não tiver episódios carregados, busca via API
     if (seriesGroup.isXtream && (!seriesGroup.seasons || Object.keys(seriesGroup.seasons).length === 0)) {
       const episodesList = document.getElementById('series-episodes-list');
       if (episodesList) {
         episodesList.innerHTML = `
           <div class="series-loading-card">
             <div class="spinner-small"></div>
-            <span>Sincronizando temporadas e episÃ³dios com o servidor...</span>
+            <span>Sincronizando temporadas e episódios com o servidor...</span>
           </div>
         `;
       }
@@ -2606,7 +2606,7 @@ const App = {
       }
     }
 
-    // Identifica todas as temporadas disponÃ­veis ou informadas
+    // Identifica todas as temporadas disponíveis ou informadas
     const rawKeys = Object.keys(seriesGroup.seasons || {}).map(Number).filter(n => !isNaN(n) && n > 0);
     let seasonKeys = [];
     if (rawKeys.length > 0) {
@@ -2624,10 +2624,10 @@ const App = {
     const totalSeasons = seasonKeys.length;
     const badgeEl = document.getElementById('series-modal-badge');
     if (badgeEl) {
-      badgeEl.textContent = `${totalSeasons} Temporada${totalSeasons > 1 ? 's' : ''} â€¢ ${totalEps || seriesGroup.episodesCount || 0} EpisÃ³dio(s)`;
+      badgeEl.textContent = `${totalSeasons} Temporada${totalSeasons > 1 ? 's' : ''} • ${totalEps || seriesGroup.episodesCount || 0} Episódio(s)`;
     }
 
-    // Controle de exibiÃ§Ã£o dos botÃµes laterais de navegaÃ§Ã£o de temporadas
+    // Controle de exibição dos botões laterais de navegação de temporadas
     const prevBtn = document.getElementById('btn-season-prev');
     const nextBtn = document.getElementById('btn-season-next');
     if (prevBtn && nextBtn) {
@@ -2636,12 +2636,12 @@ const App = {
       nextBtn.style.display = hasMultipleSeasons ? 'flex' : 'none';
     }
 
-    // Abas de Temporada com rolagem suave e centralizaÃ§Ã£o automÃ¡tica no foco (Imagem 3)
+    // Abas de Temporada com rolagem suave e centralização automática no foco (Imagem 3)
     const tabsContainer = document.getElementById('series-seasons-tabs');
     tabsContainer.innerHTML = '';
     tabsContainer.scrollLeft = 0;
 
-    // Identifica se hÃ¡ progresso salvo nesta sÃ©rie
+    // Identifica se há progresso salvo nesta série
     const sProg = this.getSeriesProgress(seriesGroup);
 
     // Se houver temporada salva no progresso e ela existir, abre direto nela!
@@ -2676,7 +2676,7 @@ const App = {
       tabsContainer.appendChild(btn);
     });
 
-    // ConfiguraÃ§Ã£o dos BotÃµes de AÃ§Ã£o da SÃ©rie (PLAY / CONTINUAR, RESTART, TRAILER, FAVORITES)
+    // Configuração dos Botões de Ação da Série (PLAY / CONTINUAR, RESTART, TRAILER, FAVORITES)
     const btnPlayFirst = document.getElementById('btn-series-play-first');
     const btnRestart = document.getElementById('btn-series-restart');
     const btnTrailer = document.getElementById('btn-series-trailer');
@@ -2696,7 +2696,7 @@ const App = {
     if (hasSeriesProgress) {
       if (sWrap) sWrap.style.display = 'flex';
       if (sFill) sFill.style.width = `${sProg.percent}%`;
-      if (sLabel) sLabel.textContent = `Continuar: ${sProg.lastLabel || ('Temporada ' + sProg.lastSeason)} â€¢ Parou em ${this.formatTime(sCurTime)} de ${this.formatTime(sDurTime)} (${sProg.percent}%)`;
+      if (sLabel) sLabel.textContent = `Continuar: ${sProg.lastLabel || ('Temporada ' + sProg.lastSeason)} • Parou em ${this.formatTime(sCurTime)} de ${this.formatTime(sDurTime)} (${sProg.percent}%)`;
       if (playText) playText.textContent = `CONTINUAR: ${sProg.lastLabel || 'S' + sProg.lastSeason}`;
       if (btnRestart) {
         btnRestart.style.display = 'inline-flex';
@@ -2759,9 +2759,9 @@ const App = {
   },
 
   playSeriesEpisode(seriesGroup, ep, seasonEps, seasonNum, epIdx, startPositionSec = 0, isRestart = false) {
-    const seriesTitle = (seriesGroup && seriesGroup.name) ? seriesGroup.name : 'SÃ©rie';
+    const seriesTitle = (seriesGroup && seriesGroup.name) ? seriesGroup.name : 'Série';
     const epNum = ep.episode || (epIdx + 1);
-    const epTitle = ep.cleanTitle || `EpisÃ³dio ${epNum}`;
+    const epTitle = ep.cleanTitle || `Episódio ${epNum}`;
     const fullTitle = `${seriesTitle} - S${seasonNum}E${epNum} ${epTitle}`;
 
     this.nowPlayingVod = {
@@ -2794,7 +2794,7 @@ const App = {
     const eps = (seriesGroup.seasons && seriesGroup.seasons[firstSeason]) || [];
     const firstEp = eps[0] || { url: seriesGroup.url, name: seriesGroup.name };
 
-    // Reseta histÃ³rico da sÃ©rie no localStorage
+    // Reseta histórico da série no localStorage
     const seriesHistory = this.getSeriesHistory();
     const seriesKey = (seriesGroup.name || seriesGroup.url || '').trim();
     if (seriesKey && seriesHistory[seriesKey]) {
@@ -2809,7 +2809,7 @@ const App = {
     this.playSeriesEpisode(seriesGroup, firstEp, eps, firstSeason, 0, 0, true);
   },
 
-  // Renderiza EpisÃ³dios em Cards Widescreen 16:9 com foto de cena exclusiva de cada episÃ³dio do TMDB
+  // Renderiza Episódios em Cards Widescreen 16:9 com foto de cena exclusiva de cada episódio do TMDB
   renderSeriesEpisodes(seasonNum) {
     const listContainer = document.getElementById('series-episodes-list');
     if (!listContainer || !this.activeSeries) return;
@@ -2821,7 +2821,7 @@ const App = {
     if (episodes.length === 0) {
       listContainer.innerHTML = `
         <div class="empty-season-card">
-          <div class="empty-season-title" style="color: #94a3b8; font-size: 16px; padding: 20px;">Temporada ${seasonNum} IndisponÃ­vel</div>
+          <div class="empty-season-title" style="color: #94a3b8; font-size: 16px; padding: 20px;">Temporada ${seasonNum} Indisponível</div>
         </div>
       `;
       return;
@@ -2841,10 +2841,10 @@ const App = {
       const labelSE = `S${seasonNum} E${epNum}`;
       const epCode = `S${seasonNum}E${epNum}`;
 
-      // 1. Imagem de capa do episÃ³dio:
-      // Se o episÃ³dio jÃ¡ tem foto de cena salva (ep.still), usa ela.
-      // Se ep.logo for exclusivo do episÃ³dio (diferente da logo geral da sÃ©rie), usa ele.
-      // Caso contrÃ¡rio, usa como base o backdrop horizontal (16:9) da sÃ©rie ou logo.
+      // 1. Imagem de capa do episódio:
+      // Se o episódio já tem foto de cena salva (ep.still), usa ela.
+      // Se ep.logo for exclusivo do episódio (diferente da logo geral da série), usa ele.
+      // Caso contrário, usa como base o backdrop horizontal (16:9) da série ou logo.
       const epStill = (ep.still || '').trim();
       const rawEpLogo = (ep.logo || '').trim();
       const initialRaw = epStill || (rawEpLogo && rawEpLogo !== seriesLogo ? rawEpLogo : '') || seriesBackdrop || seriesLogo;
@@ -2890,7 +2890,7 @@ const App = {
       listContainer.appendChild(item);
     });
 
-    // 2. Busca assÃ­ncrona das fotos de cena exclusivas de cada episÃ³dio no TMDB
+    // 2. Busca assíncrona das fotos de cena exclusivas de cada episódio no TMDB
     const activeRef = this.activeSeries;
     const currentSeason = seasonNum;
 
@@ -2905,7 +2905,7 @@ const App = {
         const targetCard = listContainer.querySelector(`[data-ep-num="${numStr}"]`);
         if (!targetCard) return;
 
-        // Atualiza a imagem com a cena real do episÃ³dio (screenshot 16:9)
+        // Atualiza a imagem com a cena real do episódio (screenshot 16:9)
         if (epData.still) {
           const thumbWrap = targetCard.querySelector('.episode-widescreen-thumb');
           if (thumbWrap) {
@@ -2926,8 +2926,8 @@ const App = {
           if (matchEp) matchEp.still = epData.still;
         }
 
-        // Se houver tÃ­tulo oficial do episÃ³dio (ex.: "Piloto", "CapÃ­tulo 1"), exibe abaixo
-        if (epData.name && epData.name !== `EpisÃ³dio ${numStr}`) {
+        // Se houver título oficial do episódio (ex.: "Piloto", "Capítulo 1"), exibe abaixo
+        if (epData.name && epData.name !== `Episódio ${numStr}`) {
           const titleEl = targetCard.querySelector('.episode-title-name');
           if (titleEl) {
             titleEl.textContent = epData.name;
@@ -2988,7 +2988,7 @@ const App = {
     }
     if (durEl) durEl.textContent = 'â± HD 1080p';
     if (synopsisEl) {
-      synopsisEl.textContent = `Assista ${item.name} com reproduÃ§Ã£o em alta definiÃ§Ã£o no Vion Player.`;
+      synopsisEl.textContent = `Assista ${item.name} com reprodução em alta definição no Vion Player.`;
     }
     if (backdropEl) {
       const rawLogo = (item.logo || '').trim();
@@ -3000,7 +3000,7 @@ const App = {
       }
     }
 
-    // Limpa e prepara seÃ§Ãµes de elenco, diretor e gÃªneros
+    // Limpa e prepara seções de elenco, diretor e gêneros
     const genresEl = document.getElementById('movie-details-genres');
     const directorEl = document.getElementById('movie-details-director');
     const castSec = document.getElementById('movie-details-cast-section');
@@ -3010,7 +3010,7 @@ const App = {
     if (castSec) castSec.style.display = 'none';
     if (castList) castList.innerHTML = '';
 
-    // Busca dados no TMDB (sinopse, poster, backdrop, gÃªneros, diretor, elenco)
+    // Busca dados no TMDB (sinopse, poster, backdrop, gêneros, diretor, elenco)
     TmdbResolver.resolve(item.name, false).then(async (meta) => {
       if (meta) {
         if (meta.poster && backdropEl && backdropEl.style.backgroundImage === 'none') {
@@ -3042,7 +3042,7 @@ const App = {
                 <div class="cast-item">
                   <div class="cast-photo-wrap">
                     ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="cast-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-                    <div class="cast-photo-placeholder" style="${c.photo ? 'display:none;' : ''}">ðŸ‘¤</div>
+                    <div class="cast-photo-placeholder" style="${c.photo ? 'display:none;' : ''}">👤</div>
                   </div>
                   <span class="cast-name" title="${c.name}">${c.name}</span>
                   <span class="cast-character" title="${c.character}">${c.character}</span>
@@ -3055,7 +3055,7 @@ const App = {
       }
     });
 
-    // Configura botÃµes de aÃ§Ã£o e barra de progresso (Continuar Assistindo)
+    // Configura botões de ação e barra de progresso (Continuar Assistindo)
     const btnPlay = document.getElementById('btn-movie-play');
     const btnRestart = document.getElementById('btn-movie-restart');
     const btnTrailer = document.getElementById('btn-movie-trailer');
@@ -3162,7 +3162,7 @@ const App = {
 
     this.nowPlayingVod = { type: 'movie', item: item, realIndex: realIndex };
 
-    // Fecha o modal de detalhes do filme para nÃ£o cobrir o player com tela preta
+    // Fecha o modal de detalhes do filme para não cobrir o player com tela preta
     const modal = document.getElementById('modal-movie-details');
     if (modal) modal.classList.remove('active');
 
@@ -3193,7 +3193,7 @@ const App = {
   },
 
   // ===================================================================
-  // REPRODUÃ‡ÃƒO DE TRAILER VIA TMDB E YOUTUBE
+  // REPRODUÇÃO DE TRAILER VIA TMDB E YOUTUBE
   // ===================================================================
   async playTrailer(item) {
     if (!item) return;
@@ -3208,7 +3208,7 @@ const App = {
       const searchData = await searchRes.json();
       const tmdbItem = searchData.results && searchData.results[0];
       if (!tmdbItem || !tmdbItem.id) {
-        this.showToast('Trailer nÃ£o disponÃ­vel no catÃ¡logo.');
+        this.showToast('Trailer não disponível no catálogo.');
         return;
       }
       let vidUrl = `https://api.themoviedb.org/3/${searchType}/${tmdbItem.id}/videos?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&language=pt-BR`;
@@ -3222,13 +3222,13 @@ const App = {
         videos = (vidData.results || []).filter(v => v.site === 'YouTube');
       }
       if (videos.length === 0) {
-        this.showToast('Nenhum trailer encontrado para este tÃ­tulo.');
+        this.showToast('Nenhum trailer encontrado para este título.');
         return;
       }
       const trailer = videos.find(v => v.type === 'Trailer') || videos[0];
       this.openTrailerModal(trailer.key, item.name);
     } catch (e) {
-      this.showToast('Trailer indisponÃ­vel no momento.');
+      this.showToast('Trailer indisponível no momento.');
     }
   },
 
@@ -3237,7 +3237,7 @@ const App = {
     const iframe = document.getElementById('trailer-iframe');
     const titleEl = document.getElementById('trailer-title');
     if (!modal || !iframe) return;
-    if (titleEl) titleEl.textContent = `Trailer â€¢ ${title}`;
+    if (titleEl) titleEl.textContent = `Trailer • ${title}`;
 
     this._currentTrailerKey = ytKey;
 
@@ -3246,9 +3246,9 @@ const App = {
       ? window.location.origin 
       : 'https://vion.gestorpro.app.br';
 
-    // Se estiver em ambiente HTTP/HTTPS do mesmo domÃ­nio, carrega caminho relativo;
-    // senÃ£o (ex.: file:/// no Android TV), aponta para https://vion.gestorpro.app.br/trailer-embed.html
-    // que Ã© interceptado localmente pelo WebView (instantÃ¢neo) e fornece a origem HTTPS oficial ao YouTube.
+    // Se estiver em ambiente HTTP/HTTPS do mesmo domínio, carrega caminho relativo;
+    // senão (ex.: file:/// no Android TV), aponta para https://vion.gestorpro.app.br/trailer-embed.html
+    // que é interceptado localmente pelo WebView (instantâneo) e fornece a origem HTTPS oficial ao YouTube.
     const embedUrl = isHttp
       ? `trailer-embed.html?v=${encodeURIComponent(ytKey)}`
       : `https://vion.gestorpro.app.br/trailer-embed.html?v=${encodeURIComponent(ytKey)}`;
@@ -3455,28 +3455,28 @@ const App = {
       ae.blur();
     }
 
-    // 0. Fecha trailer de vÃ­deo se estiver aberto
+    // 0. Fecha trailer de vídeo se estiver aberto
     const trailerModal = document.getElementById('modal-trailer-player');
     if (trailerModal && trailerModal.classList.contains('active')) {
       this.closeTrailerModal();
       return;
     }
 
-    // 1. Se estiver no player de vÃ­deo HTML5 em tela cheia, fecha o player com prioridade absoluta
+    // 1. Se estiver no player de vídeo HTML5 em tela cheia, fecha o player com prioridade absoluta
     if (this.currentScreen === 'player') {
       this._lastBackTs = now + 450;
       this.closePlayer();
       return;
     }
 
-    // 2. Fecha diÃ¡logo de confirmaÃ§Ã£o se estiver aberto (corrigido id: modal-tv-dialog)
+    // 2. Fecha diálogo de confirmação se estiver aberto (corrigido id: modal-tv-dialog)
     const confirmOverlay = document.getElementById('modal-tv-dialog');
     if (confirmOverlay && confirmOverlay.classList.contains('active')) {
       this.closeDialog();
       return;
     }
 
-    // 3. Fecha modal de filme ou sÃ©rie se estiver aberto
+    // 3. Fecha modal de filme ou série se estiver aberto
     const movieModal = document.getElementById('modal-movie-details');
     if (movieModal && movieModal.classList.contains('active')) {
       this.closeMovieDetails();
@@ -3500,20 +3500,20 @@ const App = {
       return;
     }
 
-    // 5. Se estiver em canais ao vivo, para a prÃ©via e volta imediatamente para o inÃ­cio
+    // 5. Se estiver em canais ao vivo, para a prévia e volta imediatamente para o início
     if (this.currentScreen === 'channels') {
       this.player.stopMini();
       this.goToScreen('home');
       return;
     }
 
-    // 6. Se estiver em filmes ou sÃ©ries, volta imediatamente para o InÃ­cio
+    // 6. Se estiver em filmes ou séries, volta imediatamente para o Início
     if (this.currentScreen === 'vod') {
       this.goToScreen('home');
       return;
     }
 
-    // 7. Se estiver na tela de bloqueio por expiraÃ§Ã£o, pede confirmaÃ§Ã£o para sair
+    // 7. Se estiver na tela de bloqueio por expiração, pede confirmação para sair
     if (this.currentScreen === 'expired') {
       this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
         if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
@@ -3527,7 +3527,7 @@ const App = {
       return;
     }
 
-    // 8. Se estiver em playlists, configuraÃ§Ãµes ou login, volta para o inÃ­cio (ou expired se expirado)
+    // 8. Se estiver em playlists, configurações ou login, volta para o início (ou expired se expirado)
     if (this.currentScreen === 'playlists' || this.currentScreen === 'settings' || this.currentScreen === 'reseller-login') {
       if (this.isDeviceExpired()) {
         this.goToScreen('expired');
@@ -3547,7 +3547,7 @@ const App = {
       return;
     }
 
-    // 9. Se estiver na home, pede confirmaÃ§Ã£o para sair
+    // 9. Se estiver na home, pede confirmação para sair
     if (this.currentScreen === 'home') {
       this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
         if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
@@ -3683,7 +3683,7 @@ const App = {
   },
 
   // ===================================================================
-  // GUIA DE PROGRAMAÃ‡ÃƒO EPG DINÃ‚MICO E REALISTA
+  // GUIA DE PROGRAMAÇÃO EPG DINÂMICO E REALISTA
   // ===================================================================
   updateChannelEpgSchedule(channel, dayOffset = 0) {
     const scheduleContainer = document.getElementById('live-epg-schedule');
@@ -3691,7 +3691,7 @@ const App = {
 
     if (!channel) {
       scheduleContainer.innerHTML = `
-        <div class="epg-row"><span class="epg-dot">âšª</span> <span class="epg-time">--:-- â€¢ --:--</span> <span class="epg-name">Selecione um canal</span></div>
+        <div class="epg-row"><span class="epg-dot">⚪</span> <span class="epg-time">--:-- • --:--</span> <span class="epg-name">Selecione um canal</span></div>
       `;
       return;
     }
@@ -3729,7 +3729,7 @@ const App = {
       scheduleContainer.innerHTML = html;
     };
 
-    // 1. ObtÃ©m a programaÃ§Ã£o Ãºnica do canal via EpgService (instantÃ¢neo e personalizado)
+    // 1. Obtém a programação única do canal via EpgService (instantâneo e personalizado)
     const initialSlots = (window.EpgService && typeof EpgService.getChannelSchedule === 'function')
       ? EpgService.getChannelSchedule(channel, dayOffset)
       : [];
@@ -3738,7 +3738,7 @@ const App = {
       renderSlots(initialSlots);
     }
 
-    // 2. Tenta buscar EPG oficial do servidor Xtream se aplicÃ¡vel (assÃ­ncrono)
+    // 2. Tenta buscar EPG oficial do servidor Xtream se aplicável (assíncrono)
     if (dayOffset === 0 && window.EpgService && typeof EpgService.fetchXtreamEpg === 'function') {
       const activeChUrl = channel.url;
       EpgService.fetchXtreamEpg(channel, (serverSlots) => {
@@ -3752,13 +3752,13 @@ const App = {
   },
 
   // ===================================================================
-  // CALENDÃRIO EPG COM DATAS REAIS E SELEÃ‡ÃƒO INTERATIVA
+  // CALENDÃRIO EPG COM DATAS REAIS E SELEÇÃO INTERATIVA
   // ===================================================================
   updateEpgCalendar() {
     const cal = document.getElementById('live-epg-calendar');
     if (!cal) return;
     cal.innerHTML = '';
-    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'SÃ¡b'];
+    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const today = new Date();
     for (let i = 0; i < 7; i++) {
       const d = new Date(today);
@@ -3781,7 +3781,7 @@ const App = {
   },
 
   // ===================================================================
-  // HISTÃ“RICO DE REPRODUÃ‡ÃƒO & RETOMADA ("CONTINUAR ASSISTINDO")
+  // HISTÓRICO DE REPRODUÇÃO & RETOMADA ("CONTINUAR ASSISTINDO")
   // ===================================================================
   getPlaybackHistory() {
     try {
@@ -3888,7 +3888,7 @@ const App = {
     let cur = Math.floor(Number(curSec));
     let dur = (durSec && !isNaN(durSec) && Number(durSec) > 0) ? Math.floor(Number(durSec)) : 0;
 
-    // NormalizaÃ§Ã£o: se vier em milissegundos (> 86400 = 24h), converte para segundos
+    // Normalização: se vier em milissegundos (> 86400 = 24h), converte para segundos
     if (cur > 86400) cur = Math.round(cur / 1000);
     if (dur > 86400) dur = Math.round(dur / 1000);
 
@@ -3943,7 +3943,7 @@ const App = {
       const seriesKey = (seriesGroup.name || seriesGroup.url || '').trim();
       const epCode = `S${seasonNum}E${ep.episode || epIdx + 1}`;
 
-      // Salva episÃ³dio individual no playback history
+      // Salva episódio individual no playback history
       const playbackHistory = this.getPlaybackHistory();
       if (epKey) {
         playbackHistory[epKey] = {
@@ -3961,7 +3961,7 @@ const App = {
         this.savePlaybackHistory(playbackHistory);
       }
 
-      // Salva progresso geral da sÃ©rie
+      // Salva progresso geral da série
       const seriesHistory = this.getSeriesHistory();
       const existing = seriesHistory[seriesKey] || { watchedEpisodes: {} };
       if (!existing.watchedEpisodes) existing.watchedEpisodes = {};
@@ -3975,11 +3975,11 @@ const App = {
         name: seriesGroup.name,
         url: seriesGroup.url || ep.url,
         logo: seriesGroup.logo || ep.logo || '',
-        category: seriesGroup.category || 'SÃ©ries',
+        category: seriesGroup.category || 'Séries',
         type: 'series',
         lastSeason: seasonNum,
         lastEpisodeIndex: epIdx,
-        lastEpisodeTitle: ep.cleanTitle || ep.name || `EpisÃ³dio ${ep.episode || epIdx + 1}`,
+        lastEpisodeTitle: ep.cleanTitle || ep.name || `Episódio ${ep.episode || epIdx + 1}`,
         lastEpisodeUrl: ep.url,
         lastLabel: epCode,
         currentTime: completed ? 0 : cur,
@@ -4120,7 +4120,7 @@ const App = {
     const cal = document.getElementById('live-epg-calendar');
     if (!cal) return;
     cal.innerHTML = '';
-    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'SÃ¡b'];
+    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const today = new Date();
     for (let i = 0; i < 7; i++) {
       const d = new Date(today);
