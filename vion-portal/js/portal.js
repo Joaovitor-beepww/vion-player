@@ -2325,7 +2325,7 @@ function initAddSubModal() {
 
 async function fetchPartnershipCodes() {
   try {
-    const res = await fetch(${PORTAL_API}/api/partnerships);
+    const res = await fetch(`${PORTAL_API}/api/partnerships`);
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.codes)) return data.codes;
