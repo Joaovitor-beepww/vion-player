@@ -2328,7 +2328,7 @@ async function fetchPartnershipCodes() {
     const res = await fetch(`${PORTAL_API}/api/partnerships`);
     if (res.ok) {
       const data = await res.json();
-      if (data.success && Array.isArray(data.codes)) return data.codes;
+      if (data.success && Array.isArray(data.partnerships)) return data.partnerships;
     }
   } catch(e) {}
   return JSON.parse(localStorage.getItem('vion_partnership_codes') || '[]');
