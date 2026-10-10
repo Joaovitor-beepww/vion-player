@@ -1428,11 +1428,8 @@ const App = {
       }
     } catch (e) {}
 
-    this.activatePlaylistByUrl(playlistUrl, newPlaylist.name, true);
-
-    setTimeout(() => {
-      this.goToScreen('home');
-    }, 400);
+    await this.activatePlaylistByUrl(playlistUrl, newPlaylist.name, true);
+    this.goToScreen('home');
   },
 
   handleM3uLogin() {
@@ -1462,11 +1459,8 @@ const App = {
     };
 
     localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify([newPlaylist]));
-    this.activatePlaylistByUrl(url, name, true);
-
-    setTimeout(() => {
-      this.goToScreen('home');
-    }, 400);
+    await this.activatePlaylistByUrl(url, name, true);
+    this.goToScreen('home');
   },
 
   async activateEvaluationMode() {
