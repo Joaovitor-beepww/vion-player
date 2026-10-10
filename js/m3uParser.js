@@ -213,9 +213,11 @@ const XtreamCodesEngine = {
       } catch (e) {
         console.warn('Bloqueio CORS em Xtream, usando proxy...', e);
         res = await fetch('https://vion.gestorpro.app.br/api/proxy?url=' + encodeURIComponent(url));
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const proxyData = await res.json();
-        return JSON.parse(proxyData.contents);
+        if (proxyData && typeof proxyData === 'object' && proxyData.contents) {
+          return typeof proxyData.contents === 'string' ? JSON.parse(proxyData.contents) : proxyData.contents;
+        }
+        return proxyData;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();

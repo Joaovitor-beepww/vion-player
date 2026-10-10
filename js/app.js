@@ -1,4 +1,4 @@
-if (window.firebase && !window.firebase.apps.length) {
+﻿if (window.firebase && !window.firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyCnkBupjz-FzYoFhHcUpnQYZ7_Wra12zh4",
     authDomain: "vion-player.firebaseapp.com",
@@ -1432,7 +1432,7 @@ const App = {
     this.goToScreen('home');
   },
 
-  handleM3uLogin() {
+  async handleM3uLogin() {
     const nameInput = document.getElementById('input-m3u-name');
     const urlInput = document.getElementById('input-m3u-url');
     const name = ((nameInput ? nameInput.value.trim() : "")) || 'Minha Lista M3U';
@@ -4157,9 +4157,11 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { App.init(); });
+} else {
   App.init();
-});
+}
 
 
 
