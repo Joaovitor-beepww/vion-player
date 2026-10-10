@@ -2365,7 +2365,7 @@ async function renderPortalPartnerships(filterText = '') {
 
     tr.innerHTML = `
       <td>
-        <span style="font-family: monospace; font-weight: 800; font-size: 14px; background: rgba(255,255,255,0.08); padding: 5px 12px; border-radius: 6px; color: #fff; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.15);">
+        <span style="font-family: monospace; font-weight: 800; font-size: 14px; background: rgba(0,0,0,0.05); padding: 5px 12px; border-radius: 6px; color: #0f172a; letter-spacing: 1px; border: 1px solid rgba(0,0,0,0.15);">
           ${escapeHtml(p.code)}
         </span>
       </td>
@@ -2375,7 +2375,7 @@ async function renderPortalPartnerships(filterText = '') {
         </span>
       </td>
       <td>
-        <span style="color: #fff; font-weight: 600;">
+        <span style="color: #0f172a; font-weight: 600;">
           ${escapeHtml(p.name || p.code)}
         </span>
       </td>
