@@ -468,16 +468,12 @@ const App = {
       console.warn('Erro ao carregar cache local:', e);
     }
 
-    // Validação estrita da integridade do cache:
-    // Exige _schemaVersion === 25 e formato Xtream com live, movies e series válidos
+    // Validacao flexivel e segura da integridade do cache:
+    // Se houver canais salvos, USAMOS O CACHE IMEDIATAMENTE sem apagar!
     const isCacheFresh = cached && 
-      cached._schemaVersion === 25 && 
-      cached.channels && 
-      cached.channels.length > 0 &&
-      cached.movies && 
-      cached.movies.channels &&
-      cached.series &&
-      cached.series.channels;
+      ((cached.channels && cached.channels.length > 0) || 
+       (cached.live && cached.live.channels && cached.live.channels.length > 0) ||
+       (cached.movies && cached.movies.channels && cached.movies.channels.length > 0));
 
     if (isCacheFresh) {
       this.setSplashProgress(80, 'Carregando canais e filmes...', 'Quase pronto...');
@@ -492,24 +488,37 @@ const App = {
         this.goToScreen('home');
       }
 
-      // Em segundo plano silencioso, verifica se houve alteração de lista no portal
+      // Em segundo plano silencioso, verifica se houve alteracao de lista no portal
       setTimeout(() => this.checkPortalUpdatesSilently(), 4000);
       return;
-    } else {
-      // Se for cache legado antigo com capas ausentes ou desordenadas, limpa para sincronizar fresh
-      if (cached) {
-        console.log('Cache legado detectado. Limpando para baixar catálogo Xtream com capas oficiais TMDB...');
-        await TVStorage.remove('cached_playlist');
-        cached = null;
+    }
+
+    // 2. Se nao tem cache, verifica se ha credenciais de provedor salvas para auto-login
+    const savedCode = localStorage.getItem('vion_saved_provider_code') || '';
+    const savedUser = localStorage.getItem('vion_saved_provider_user') || '';
+    const savedPass = localStorage.getItem('vion_saved_provider_pass') || '';
+    if (savedCode && savedUser && savedPass) {
+      this.setSplashProgress(40, `Conectando ao provedor ${savedCode}...`, `Entrando como ${savedUser}`);
+      const cInput = document.getElementById('input-reseller-code');
+      const uInput = document.getElementById('input-reseller-user');
+      const pInput = document.getElementById('input-reseller-pass');
+      if (cInput) cInput.value = savedCode;
+      if (uInput) uInput.value = savedUser;
+      if (pInput) pInput.value = savedPass;
+      try {
+        await this.handleProviderLogin();
+        return;
+      } catch(e) {
+        console.warn('Erro ao auto-conectar com credenciais salvas:', e);
       }
     }
 
-    // 2. Se não tem cache, busca lista vinculada ao MAC no portal
-    this.setSplashProgress(35, 'Conectando ao Portal...', 'Verificando lista vinculada ao MAC');
+    // 3. Busca lista vinculada ao MAC no portal
+    this.setSplashProgress(45, 'Conectando ao Portal...', 'Verificando lista vinculada ao MAC');
     let portalPlaylist = await this.queryPortalPlaylists(mac);
 
     if (portalPlaylist && portalPlaylist.url) {
-      this.setSplashProgress(45, `Sincronizando ${portalPlaylist.name || 'Playlist'}`, 'Iniciando download...');
+      this.setSplashProgress(55, `Sincronizando ${portalPlaylist.name || 'Playlist'}`, 'Iniciando download...');
       try {
         await this.activatePlaylistByUrl(portalPlaylist.url, portalPlaylist.name || 'Playlist', false, true);
         return;
@@ -518,9 +527,12 @@ const App = {
       }
     }
 
-    // 3. Somente se não houver cache nem lista vinculada no portal, vai para login
-    this.setSplashProgress(100, 'Nenhuma playlist vinculada.', 'Redirecionando...');
-    await new Promise(r => setTimeout(r, 600));
+    // 4. Se nao houver cache nem lista vinculada, vai para login com campos preenchidos
+    this.setSplashProgress(100, 'Bem-vindo ao Vion Player!', 'Pronto');
+    await new Promise(r => setTimeout(r, 400));
+    if (savedCode) { const el = document.getElementById('input-reseller-code'); if (el) el.value = savedCode; }
+    if (savedUser) { const el = document.getElementById('input-reseller-user'); if (el) el.value = savedUser; }
+    if (savedPass) { const el = document.getElementById('input-reseller-pass'); if (el) el.value = savedPass; }
     if (this.isDeviceExpired()) {
       this.goToScreen('expired');
     } else {
@@ -869,7 +881,7 @@ const App = {
     document.querySelectorAll('.val-mac-address').forEach(el => el.textContent = mac);
     document.querySelectorAll('.val-device-key').forEach(el => el.textContent = key);
 
-    let vName = '1.3.2';
+    let vName = '1.3.3';
     if (window.AndroidDevice && typeof AndroidDevice.getAppVersionName === 'function') {
       try { const v = AndroidDevice.getAppVersionName(); if (v) vName = v; } catch(e) {}
     }
@@ -981,6 +993,18 @@ const App = {
   },
 
   bindEvents() {
+    // Auto-preenche credenciais salvas do provedor se existirem
+    try {
+      const savedCode = localStorage.getItem('vion_saved_provider_code') || '';
+      const savedUser = localStorage.getItem('vion_saved_provider_user') || '';
+      const savedPass = localStorage.getItem('vion_saved_provider_pass') || '';
+      const codeEl = document.getElementById('input-reseller-code');
+      const userEl = document.getElementById('input-reseller-user');
+      const passEl = document.getElementById('input-reseller-pass');
+      if (codeEl && savedCode && !codeEl.value) codeEl.value = savedCode;
+      if (userEl && savedUser && !userEl.value) userEl.value = savedUser;
+      if (passEl && savedPass && !passEl.value) passEl.value = savedPass;
+    } catch(e) {}
     // 1. Alternador de Abas de Login (Xtream Codes vs Link M3U)
     var _el_tab_login_xtream = document.getElementById('tab-login-xtream'); if (_el_tab_login_xtream) _el_tab_login_xtream.addEventListener('click', () => {
       var _elC_tab_login_xtream = document.getElementById('tab-login-xtream'); if (_elC_tab_login_xtream) _elC_tab_login_xtream.classList.add('active');
@@ -1143,10 +1167,8 @@ const App = {
     var _el_btn_back_from_playlists = document.getElementById('btn-back-from-playlists'); if (_el_btn_back_from_playlists) _el_btn_back_from_playlists.addEventListener('click', () => {
       if (this.isDeviceExpired()) {
         this.goToScreen('expired');
-      } else if (this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0) {
-        this.goToScreen('home');
       } else {
-        this.goToScreen('reseller-login');
+        this.goToScreen('home');
       }
     });
 
@@ -1440,17 +1462,49 @@ const App = {
     localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify([newPlaylist]));
 
     // Lembrar dados se o checkbox estiver ativo
+    // Lembrar dados se o checkbox estiver ativo (ou por padrao)
     try {
       const chk = document.getElementById('chk-remember-login');
-      if (chk && chk.checked) {
+      const remember = !chk || chk.checked;
+      if (remember) {
         localStorage.setItem('vion_saved_provider_code', rawInput);
         localStorage.setItem('vion_saved_provider_user', user);
+        localStorage.setItem('vion_saved_provider_pass', pass);
       } else {
         localStorage.removeItem('vion_saved_provider_code');
         localStorage.removeItem('vion_saved_provider_user');
+        localStorage.removeItem('vion_saved_provider_pass');
       }
     } catch (e) {}
 
+    // 1. SE O CONTEUDO JA ESTIVER EM MEMORIA (this.playlistData):
+    // Entra IMEDIATAMENTE sem re-baixar 50MB da rede!
+    if (this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0) {
+      this.activePlaylistUrl = playlistUrl;
+      localStorage.setItem('vion_has_playlist', 'true');
+      localStorage.setItem('vion_active_playlist_url', playlistUrl);
+      this.updateDashboardCounters();
+      this.showToast('✔ Conteudo ja carregado! Entrando...');
+      this.goToScreen('home');
+      return;
+    }
+
+    // 2. SE NAO ESTIVER EM MEMORIA, VERIFICA SE JA ESTA NO CACHE EM DISCO:
+    try {
+      const cached = await M3UParser.loadFromCache();
+      if (cached && ((cached.channels && cached.channels.length > 0) || (cached.live && cached.live.channels && cached.live.channels.length > 0))) {
+        this.playlistData = cached;
+        this.activePlaylistUrl = playlistUrl;
+        localStorage.setItem('vion_has_playlist', 'true');
+        localStorage.setItem('vion_active_playlist_url', playlistUrl);
+        this.updateDashboardCounters();
+        this.showToast('✔ Entrando com catalogo salvo...');
+        this.goToScreen('home');
+        return;
+      }
+    } catch(e) {}
+
+    // 3. Somente se nao houver em memoria nem em cache, faz o download via rede:
     await this.activatePlaylistByUrl(playlistUrl, newPlaylist.name, true);
     this.goToScreen('home');
   },
@@ -1811,10 +1865,21 @@ const App = {
   // ===================================================================
   // NAVEGAÇÃO E ABERTURA DE SEÇÕES (LIVE TV vs FILMES vs SÉRIES)
   // ===================================================================
-  openSection(sectionType) {
+  async openSection(sectionType) {
     if (this.isDeviceExpired()) {
       this.goToScreen('expired');
       return;
+    }
+
+    // Se this.playlistData estiver nulo, tenta restaurar imediatamente do cache em disco!
+    if (!this.playlistData || !this.playlistData.channels || this.playlistData.channels.length === 0) {
+      try {
+        const cached = await M3UParser.loadFromCache();
+        if (cached && ((cached.channels && cached.channels.length > 0) || (cached.live && cached.live.channels && cached.live.channels.length > 0))) {
+          this.playlistData = cached;
+          this.updateDashboardCounters();
+        }
+      } catch(e) {}
     }
 
     if (!this.playlistData || !this.playlistData.channels || this.playlistData.channels.length === 0) {
@@ -3674,10 +3739,8 @@ const App = {
     if (this.currentScreen === 'playlists' || this.currentScreen === 'settings') {
       if (this.isDeviceExpired()) {
         this.goToScreen('expired');
-      } else if (this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0) {
-        this.goToScreen('home');
       } else {
-        this.goToScreen('reseller-login');
+        this.goToScreen('home');
       }
       return;
     }

@@ -33,7 +33,7 @@ const TVStorage = {
   },
 
   async set(key, value) {
-    // 1. IndexedDB EM PRIMEIRO LUGAR (armazenamento nativo Chromium em disco, sem limite de 5MB e sem crash no JNI)
+    // 1. IndexedDB EM PRIMEIRO LUGAR (armazenamento nativo Chromium em disco, assíncrono e persistente)
     try {
       const db = await this.getDB();
       if (db) {
@@ -41,12 +41,15 @@ const TVStorage = {
           try {
             const tx = db.transaction('cache', 'readwrite');
             const store = tx.objectStore('cache');
-            store.put(value, key);
+            const req = store.put(value, key);
+            req.onsuccess = () => resolve(true);
+            req.onerror = () => resolve(false);
             tx.oncomplete = () => {
               localStorage.setItem('vion_has_playlist', 'true');
               resolve(true);
             };
             tx.onerror = () => resolve(false);
+            tx.onabort = () => resolve(false);
           } catch (e) {
             resolve(false);
           }
@@ -57,17 +60,7 @@ const TVStorage = {
       console.warn('IndexedDB set warning:', e);
     }
 
-    // 2. Android Bridge APENAS para chaves pequenas (< 500KB) - NUNCA para a lista completa de 75MB
-    if (key !== 'cached_playlist' && window.AndroidDevice && typeof AndroidDevice.saveCache === 'function') {
-      try {
-        const str = typeof value === 'string' ? value : JSON.stringify(value);
-        if (str.length < 500000) {
-          AndroidDevice.saveCache(key, str);
-        }
-      } catch (e) {}
-    }
-
-    // 3. Fallback LocalStorage (somente para pequenos metadados)
+    // 2. Fallback LocalStorage (somente para pequenos metadados)
     try {
       const str = typeof value === 'string' ? value : JSON.stringify(value);
       if (str.length < 4000000) {
@@ -128,11 +121,24 @@ const TVStorage = {
       const db = await this.getDB();
       if (db) {
         const tx = db.transaction('cache', 'readwrite');
-        tx.objectStore('cache').delete(key);
+        const store = tx.objectStore('cache');
+        store.delete(key);
+        if (key === 'cached_playlist') {
+          store.delete('cache_meta');
+          store.delete('cache_live');
+          store.delete('cache_movies');
+          store.delete('cache_series');
+        }
       }
     } catch (e) {}
     try {
       localStorage.removeItem(key);
+      if (key === 'cached_playlist') {
+        localStorage.removeItem('cache_meta');
+        localStorage.removeItem('cache_live');
+        localStorage.removeItem('cache_movies');
+        localStorage.removeItem('cache_series');
+      }
     } catch (e) {}
   }
 };
@@ -788,8 +794,25 @@ const M3UParser = {
 
   async saveToCache(data) {
     try {
+      if (!data) return;
+      // 1. Salva metadados
+      const meta = {
+        _schemaVersion: data._schemaVersion || 25,
+        isXtream: !!data.isXtream,
+        credentials: data.credentials || null,
+        time: Date.now().toString()
+      };
+      await TVStorage.set('cache_meta', meta);
+
+      // 2. Salva partições otimizadas no IndexedDB (evita estourar limite de transação única de 50MB)
+      if (data.live) await TVStorage.set('cache_live', data.live);
+      if (data.movies) await TVStorage.set('cache_movies', data.movies);
+      if (data.series) await TVStorage.set('cache_series', data.series);
+
+      // 3. Salva também o objeto completo para compatibilidade
       await TVStorage.set('cached_playlist', data);
       await TVStorage.set('cached_playlist_time', Date.now().toString());
+      localStorage.setItem('vion_has_playlist', 'true');
     } catch (e) {
       console.warn('Erro ao salvar cache:', e);
     }
@@ -797,15 +820,36 @@ const M3UParser = {
 
   async loadFromCache() {
     try {
+      // 1. Tenta carregar das partições otimizadas
+      const meta = await TVStorage.get('cache_meta');
+      const live = await TVStorage.get('cache_live');
+      const movies = await TVStorage.get('cache_movies');
+      const series = await TVStorage.get('cache_series');
+
+      if ((live && live.channels && live.channels.length > 0) || 
+          (movies && movies.channels && movies.channels.length > 0)) {
+        const allChannels = [...(live?.channels || []), ...(movies?.channels || [])];
+        return {
+          _schemaVersion: meta?._schemaVersion || 25,
+          isXtream: !!meta?.isXtream,
+          credentials: meta?.credentials,
+          channels: allChannels,
+          live: live || { channels: [], categories: ['Todos'] },
+          movies: movies || { channels: [], categories: ['Todos'] },
+          series: series || { channels: [], rawEpisodes: [], categories: ['Todos'] }
+        };
+      }
+
+      // 2. Fallback para chave única legada
       const data = await TVStorage.get('cached_playlist');
       if (!data) return null;
 
-      // Garante compatibilidade caso o cache anterior não estivesse particionado
       if (data && (!data.live || !data.movies || !data.series)) {
         return this.reorganizeCachedData(data);
       }
       return data;
     } catch (e) {
+      console.warn('Erro ao carregar cache:', e);
       return null;
     }
   },
