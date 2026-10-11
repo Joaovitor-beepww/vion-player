@@ -869,7 +869,7 @@ const App = {
     document.querySelectorAll('.val-mac-address').forEach(el => el.textContent = mac);
     document.querySelectorAll('.val-device-key').forEach(el => el.textContent = key);
 
-    let vName = '1.3.1';
+    let vName = '1.3.2';
     if (window.AndroidDevice && typeof AndroidDevice.getAppVersionName === 'function') {
       try { const v = AndroidDevice.getAppVersionName(); if (v) vName = v; } catch(e) {}
     }
@@ -1015,6 +1015,14 @@ const App = {
     });
 
     // 2. Pular e Ir para o Início
+        const loginScr = document.getElementById('screen-reseller-login');
+    if (loginScr) {
+      loginScr.addEventListener('wheel', (e) => { e.preventDefault(); }, { passive: false });
+      loginScr.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
+      loginScr.scrollTop = 0;
+      loginScr.scrollLeft = 0;
+    }
+
     var _el_btn_skip_login = document.getElementById('btn-skip-login'); if (_el_btn_skip_login) _el_btn_skip_login.addEventListener('click', () => {
       this.goToScreen('home');
     });
@@ -3491,6 +3499,11 @@ const App = {
     const target = document.getElementById(`screen-${screenId}`);
     if (target) {
       target.classList.add('active');
+      target.scrollTop = 0;
+      target.scrollLeft = 0;
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
 
       setTimeout(() => {
         const activeModal = document.querySelector('.tv-dialog-overlay.active, .movie-details-overlay.active, .trailer-modal-overlay.active, .sync-modal-overlay.active');

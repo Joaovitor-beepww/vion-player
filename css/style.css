@@ -155,12 +155,15 @@ html, body {
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
+  max-height: 100vh;
   background-color: #040711;
-  position: relative;
-  overflow-x: hidden;
-  overflow-y: auto;
+  position: fixed;
+  inset: 0;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
   box-sizing: border-box;
-  padding: 20px;
+  padding: 16px 20px;
 }
 
 #screen-reseller-login.active {
@@ -224,13 +227,15 @@ html, body {
 .login-lux-container {
   display: grid;
   grid-template-columns: 1.22fr 1fr;
-  gap: 40px;
+  gap: 32px;
   max-width: 1180px;
   width: 94%;
   margin: auto;
   align-items: center;
   position: relative;
   z-index: 10;
+  overflow: hidden !important;
+  max-height: 100vh !important;
 }
 
 /* Coluna Esquerda: Branding & Portal */
