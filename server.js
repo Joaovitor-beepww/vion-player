@@ -1499,11 +1499,11 @@ downloadStateFromFirebase().then(() => {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
     res.end(JSON.stringify({
       success: true,
-      versionCode: 20,
-      versionName: '1.1.9',
+      versionCode: 36,
+      versionName: '1.3.3',
       apkUrl: 'https://vion.gestorpro.app.br/download/vion-player.apk',
       directApk: 'https://vion.gestorpro.app.br/apk',
-      releaseNotes: 'Atualização automática integrada, player de vídeo aprimorado e navegação de controle remoto otimizada.',
+      releaseNotes: 'Novo ícone oficial centralizado, persistência aprimorada de catálogo e navegação mais rápida.',
       forceUpdate: false
     }));
     return;

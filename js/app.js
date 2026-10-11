@@ -490,6 +490,7 @@ const App = {
 
       // Em segundo plano silencioso, verifica se houve alteracao de lista no portal
       setTimeout(() => this.checkPortalUpdatesSilently(), 4000);
+      setTimeout(() => this.checkForAppUpdates(false), 5500);
       return;
     }
 
@@ -1330,6 +1331,10 @@ const App = {
     });
 
     // Desconectar Provedor / Sair da Conta
+    var _el_btn_check_updates_app = document.getElementById('btn-check-updates-app'); if (_el_btn_check_updates_app) _el_btn_check_updates_app.addEventListener('click', () => {
+      this.checkForAppUpdates(true);
+    });
+
     var _el_btn_clear_playlist = document.getElementById('btn-clear-playlist'); if (_el_btn_clear_playlist) _el_btn_clear_playlist.addEventListener('click', () => {
       this.logoutAccount();
     });
