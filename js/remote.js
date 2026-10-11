@@ -142,14 +142,15 @@ const RemoteControl = {
       }
 
       const ae = document.activeElement;
-      // Se estiver editando texto e apertar Backspace (8) com texto para apagar:
-      if (code === 8 && this.isEditingText(ae) && ae.value && ae.value.length > 0) {
-        return; // Deixa o navegador apagar o texto normalmente
+      // Se estiver em campo de texto e for tecla Backspace (8):
+      if (code === 8 && this.isEditingText(ae)) {
+        return; // Nunca chama handleBack ao apagar caracteres
       }
       e.preventDefault();
       e.stopPropagation();
       if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {
         ae.blur();
+        return; // Ao apertar Voltar num campo de texto, apenas fecha o teclado virtual
       }
       App.handleBack && App.handleBack();
       return;

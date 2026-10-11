@@ -1,4 +1,4 @@
-﻿if (window.firebase && !window.firebase.apps.length) {
+if (window.firebase && !window.firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyCnkBupjz-FzYoFhHcUpnQYZ7_Wra12zh4",
     authDomain: "vion-player.firebaseapp.com",
@@ -3311,6 +3311,11 @@ const App = {
   onNativePlayerClosed() {
     this._lastBackTs = Date.now() + 600;
 
+    // Se estiver no login, carregamento ou se nao tiver lista carregada, NUNCA redireciona
+    if (this.currentScreen === 'reseller-login' || this.currentScreen === 'loading' || !this.playlistData || !this.playlistData.channels || this.playlistData.channels.length === 0) {
+      return;
+    }
+
     // Sincroniza progresso salvo no player nativo do Android
     if (this.nowPlayingVod) {
       const url = (this.nowPlayingVod.item ? this.nowPlayingVod.item.url : null) || (this.nowPlayingVod.episode ? this.nowPlayingVod.episode.url : null);
@@ -3355,7 +3360,7 @@ const App = {
       return;
     }
 
-    if (this.activeSection === 'channels' || this.currentScreen === 'channels') {
+    if (this.currentScreen === 'channels') {
       this.goToScreen('channels');
       return;
     }
@@ -3450,10 +3455,11 @@ const App = {
     if (now - this._lastBackTs < 350) return;
     this._lastBackTs = now;
 
-    // Se um campo de texto estiver em foco, desfoque-o
+    // Se um campo de texto estiver em foco, desfoque-o e retorne (sem sair do app)
     const ae = document.activeElement;
     if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {
       ae.blur();
+      return;
     }
 
     // 0. Fecha trailer de vídeo se estiver aberto
@@ -3528,22 +3534,37 @@ const App = {
       return;
     }
 
-    // 8. Se estiver em playlists, configurações ou login, volta para o início (ou expired se expirado)
-    if (this.currentScreen === 'playlists' || this.currentScreen === 'settings' || this.currentScreen === 'reseller-login') {
+    // 8. Se estiver na tela de login
+    if (this.currentScreen === 'reseller-login') {
+      if (this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0) {
+        this.goToScreen('home');
+        return;
+      }
+      // Pressionar voltar na tela de login: duplo clique para sair (sem popup)
+      const now = Date.now();
+      if (this._lastLoginBackTs && (now - this._lastLoginBackTs < 2000)) {
+        if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
+          AndroidDevice.exitApp();
+          return;
+        }
+        if (window.tizen) { try { tizen.application.getCurrentApplication().exit(); } catch(e) {} return; }
+        if (window.webOS) { try { window.close(); } catch(e) {} return; }
+        window.close();
+      } else {
+        this._lastLoginBackTs = now;
+        this.showToast('Pressione Voltar novamente para sair');
+      }
+      return;
+    }
+
+    // 8.1 Se estiver em playlists ou configurações
+    if (this.currentScreen === 'playlists' || this.currentScreen === 'settings') {
       if (this.isDeviceExpired()) {
         this.goToScreen('expired');
       } else if (this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0) {
         this.goToScreen('home');
       } else {
-        this.openDialog('Sair do Aplicativo?', 'Deseja realmente fechar o Vion Player?', () => {
-          if (window.AndroidDevice && typeof AndroidDevice.exitApp === 'function') {
-            AndroidDevice.exitApp();
-            return;
-          }
-          if (window.tizen) { try { tizen.application.getCurrentApplication().exit(); } catch(e) {} return; }
-          if (window.webOS) { try { window.close(); } catch(e) {} return; }
-          window.close();
-        });
+        this.goToScreen('reseller-login');
       }
       return;
     }
