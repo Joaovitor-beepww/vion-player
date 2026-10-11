@@ -868,6 +868,15 @@ const App = {
   updateDeviceDisplay(mac, key) {
     document.querySelectorAll('.val-mac-address').forEach(el => el.textContent = mac);
     document.querySelectorAll('.val-device-key').forEach(el => el.textContent = key);
+
+    let vName = '1.3.1';
+    if (window.AndroidDevice && typeof AndroidDevice.getAppVersionName === 'function') {
+      try { const v = AndroidDevice.getAppVersionName(); if (v) vName = v; } catch(e) {}
+    }
+    document.querySelectorAll('.footer-tag').forEach(el => {
+      el.textContent = `VION PLAYER v${vName}`;
+    });
+
     if (mac) {
       const portalUrl = `https://vion.gestorpro.app.br/?mac=${encodeURIComponent(mac)}#activation`;
       const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(portalUrl)}`;
@@ -1124,7 +1133,13 @@ const App = {
     });
 
     var _el_btn_back_from_playlists = document.getElementById('btn-back-from-playlists'); if (_el_btn_back_from_playlists) _el_btn_back_from_playlists.addEventListener('click', () => {
-      this.goToScreen('home');
+      if (this.isDeviceExpired()) {
+        this.goToScreen('expired');
+      } else if (this.playlistData && this.playlistData.channels && this.playlistData.channels.length > 0) {
+        this.goToScreen('home');
+      } else {
+        this.goToScreen('reseller-login');
+      }
     });
 
     var _el_btn_back_from_settings = document.getElementById('btn-back-from-settings'); if (_el_btn_back_from_settings) _el_btn_back_from_settings.addEventListener('click', () => {
@@ -1641,7 +1656,8 @@ const App = {
   openPlaylistsManager() {
     this.goToScreen('playlists');
 
-    const mac = localStorage.getItem('vion_mac_address');
+    const rawMac = localStorage.getItem('vion_mac_address');
+    const mac = this.normalizeMac(rawMac);
     const container = document.getElementById('tv-playlists-list');
     if (!container) return;
 
@@ -1655,7 +1671,7 @@ const App = {
     // Se tiver lista em memória ou credenciais de provedor salvas (ex: TOURO), exibe card da conta
     if (playlists.length === 0 && (this.playlistData || savedCode)) {
       const pName = savedCode ? `Provedor ${savedCode} (${savedUser || 'Conectado'})` : 'Lista Conectada';
-      playlists = [{ name: pName, url: this.activePlaylistUrl || 'cached' }];
+      playlists = [{ id: 'provider_account', name: pName, url: this.activePlaylistUrl || 'cached' }];
     }
 
     if (playlists.length === 0) {
@@ -1680,17 +1696,18 @@ const App = {
           <span class="playlist-tv-badge" style="background:var(--primary-yellow);color:#000;font-weight:800;padding:6px 12px;border-radius:6px;font-size:12px;">${escapeHtml(p.name)}</span>
           <div>
             <div class="playlist-tv-title" style="font-size:16px;font-weight:700;color:#fff;">${escapeHtml(p.name)}</div>
-            <div class="playlist-tv-status" style="font-size:12px;color:#22c55e;">â— Conectada no Dispositivo</div>
+            <div class="playlist-tv-status" style="font-size:12px;color:#22c55e;">&bull; Conectada no Dispositivo</div>
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
           <button class="pill-btn focusable btn-item-reload" tabindex="0" style="padding:8px 18px;font-size:13px;background:#ffffff;color:#000;font-weight:700;">🔄 Acessar Playlist</button>
-          <button class="pill-btn focusable btn-item-disconnect" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">ðŸšª Desconectar</button>
+          <button class="pill-btn focusable btn-item-delete" tabindex="0" style="padding:8px 18px;font-size:13px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;color:#ef4444;font-weight:700;">🗑️ Excluir Playlist</button>
         </div>
       `;
 
-      // Botão Recarregar
-      var _qs_btn_item_reload = item.querySelector('.btn-item-reload'); if (_qs_btn_item_reload) _qs_btn_item_reload.addEventListener('click', (e) => {
+      // Botão Acessar
+      var _qs_btn_item_reload = item.querySelector('.btn-item-reload');
+      if (_qs_btn_item_reload) _qs_btn_item_reload.addEventListener('click', (e) => {
         e.stopPropagation();
         if (p.url && p.url !== 'cached') {
           this.activatePlaylistByUrl(p.url, p.name, true, false, true);
@@ -1699,14 +1716,88 @@ const App = {
         }
       });
 
-      // Botão Desconectar
-      var _qs_btn_item_disconnect = item.querySelector('.btn-item-disconnect'); if (_qs_btn_item_disconnect) _qs_btn_item_disconnect.addEventListener('click', (e) => {
+      // Botão Excluir Playlist
+      var _qs_btn_item_delete = item.querySelector('.btn-item-delete');
+      if (_qs_btn_item_delete) _qs_btn_item_delete.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.logoutAccount();
+        this.openDialog('Excluir Playlist?', `Deseja realmente excluir a playlist "${p.name}"? Ela será removida do aplicativo e do portal web.`, async () => {
+          await this.deletePlaylistAction(p);
+        });
       });
 
       container.appendChild(item);
     });
+  },
+
+  async deletePlaylistAction(p) {
+    const rawMac = localStorage.getItem('vion_mac_address');
+    const mac = this.normalizeMac(rawMac);
+    const key = localStorage.getItem('vion_device_key') || '';
+
+    // 1. Sincroniza exclusão no servidor e portal
+    try {
+      await fetch('https://vion.gestorpro.app.br/api/device/delete-playlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mac, key, id: p.id, url: p.url, name: p.name })
+      });
+    } catch (err) {
+      console.warn('Erro ao comunicar exclusão com o servidor:', err);
+    }
+
+    // 2. Remove do localStorage do aparelho
+    let playlists = [];
+    try {
+      const stored = localStorage.getItem(`vion_playlists_${mac}`);
+      if (stored) playlists = JSON.parse(stored);
+    } catch (e) {}
+
+    playlists = playlists.filter(item => {
+      if (p.id && item.id) return item.id !== p.id;
+      if (p.url && item.url) return item.url !== p.url;
+      return item.name !== p.name;
+    });
+    localStorage.setItem(`vion_playlists_${mac}`, JSON.stringify(playlists));
+
+    // 3. Se a playlist era a ativa ou era provedor
+    const wasActive = !this.activePlaylistUrl || this.activePlaylistUrl === p.url || this.activePlaylistUrl === 'cached' || (p.id === 'provider_account');
+    if (wasActive || playlists.length === 0) {
+      try {
+        await TVStorage.remove('cached_playlist');
+        await TVStorage.remove('cached_playlist_time');
+      } catch (e) {}
+      localStorage.removeItem('vion_active_playlist_url');
+      localStorage.removeItem('vion_active_playlist_name');
+      this.playlistData = null;
+      this.activePlaylistUrl = null;
+      if (this.player && typeof this.player.stopMini === 'function') {
+        try { this.player.stopMini(); } catch (e) {}
+      }
+    }
+
+    // 4. Se não sobrou nenhuma playlist
+    if (playlists.length === 0) {
+      try {
+        await fetch('https://vion.gestorpro.app.br/api/device/clear', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mac, key })
+        });
+      } catch(e) {}
+      localStorage.removeItem('vion_has_playlist');
+      localStorage.removeItem('vion_saved_provider_code');
+      localStorage.removeItem('vion_saved_provider_user');
+      localStorage.removeItem('vion_saved_provider_pass');
+      localStorage.removeItem('vion_provider_pass');
+
+      this.showToast('🗑️ Playlist excluída com sucesso.');
+      this.goToScreen('reseller-login');
+      return;
+    }
+
+    // 5. Se restam outras playlists
+    this.showToast(`🗑️ Playlist "${p.name}" excluída.`);
+    this.openPlaylistsManager();
   },
 
   // ===================================================================
@@ -3413,14 +3504,23 @@ const App = {
   },
 
   logoutAccount() {
-    this.openDialog('Sair da Conta?', 'Deseja realmente desconectar a conta e remover a lista ativa deste dispositivo?', async () => {
+    this.openDialog('Desconectar Conta?', 'Deseja realmente desconectar e voltar para a tela de login?', async () => {
       try {
         await TVStorage.remove('cached_playlist');
         await TVStorage.remove('cached_playlist_time');
       } catch (e) {}
-      const mac = localStorage.getItem('vion_mac_address');
+      const rawMac = localStorage.getItem('vion_mac_address');
+      const mac = this.normalizeMac(rawMac);
+      const key = localStorage.getItem('vion_device_key') || '';
       if (mac) {
         localStorage.removeItem(`vion_playlists_${mac}`);
+        try {
+          fetch('https://vion.gestorpro.app.br/api/device/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mac, key })
+          }).catch(() => {});
+        } catch (e) {}
       }
       localStorage.removeItem('vion_has_playlist');
       localStorage.removeItem('vion_saved_provider_code');
@@ -3432,9 +3532,8 @@ const App = {
 
       this.playlistData = null;
       this.activePlaylistUrl = null;
-      if (this.player) {
-        this.player.stopMini();
-        this.player.close();
+      if (this.player && typeof this.player.stopMini === 'function') {
+        try { this.player.stopMini(); } catch (e) {}
       }
 
       const codeInput = document.getElementById('input-reseller-code');
@@ -3444,7 +3543,8 @@ const App = {
       if (userInput) userInput.value = '';
       if (passInput) passInput.value = '';
 
-      this.showToast('âœ… Conta desconectada com sucesso.');
+      this._lastLoginBackTs = 0;
+      this.showToast('✅ Desconectado com sucesso.');
       this.goToScreen('reseller-login');
     });
   },

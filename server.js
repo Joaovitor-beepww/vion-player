@@ -1748,13 +1748,20 @@ downloadStateFromFirebase().then(() => {
 
           if (pathname === '/api/device/delete-playlist') {
             const id = payload.id;
-            targetDevice.playlists = targetDevice.playlists.filter(p => p.id !== id);
+            const url = payload.url;
+            const name = payload.name;
+            targetDevice.playlists = targetDevice.playlists.filter(p => {
+              if (id && p.id && p.id === id) return false;
+              if (url && p.url && p.url === url) return false;
+              if (name && p.name && p.name === name) return false;
+              return true;
+            });
 
             devices[normMac] = targetDevice;
             devices[cleanMac] = targetDevice;
             saveDevices(devices);
 
-            console.log(`[API] Playlist ${id} removida para MAC ${normMac}`);
+            console.log(`[API] Playlist ${id || name || url} removida para MAC ${normMac}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: true, playlists: targetDevice.playlists }));
             return;
